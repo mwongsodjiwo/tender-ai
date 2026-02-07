@@ -245,12 +245,13 @@ export async function generateArtifacts(
 	params: GenerateArtifactsParams
 ): Promise<GeneratedSection[]> {
 	const { briefingData, documentType, projectName } = params;
-	const sections: GeneratedSection[] = [];
 
-	for (const section of documentType.template_structure) {
-		const generated = await generateSection(briefingData, section, documentType.name, projectName);
-		sections.push(generated);
-	}
+	// Generate all sections in parallel for speed
+	const sections = await Promise.all(
+		documentType.template_structure.map((section) =>
+			generateSection(briefingData, section, documentType.name, projectName)
+		)
+	);
 
 	return sections;
 }
