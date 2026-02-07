@@ -117,9 +117,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				dt.applicable_procedures.includes(project.procedure_type);
 		});
 
-		// Generate artifacts for all document types in parallel
-		const generationResults = await Promise.allSettled(
-			applicableTypes.map(async (docType) => {
+		// Generate artifacts sequentially to respect API rate limits
+		for (const docType of applicableTypes) {
+			try {
 				const sections = await generateArtifacts({
 					briefingData: aiResponse.briefingData,
 					documentType: docType,
@@ -140,12 +140,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					});
 					artifactsGenerated++;
 				}
-			})
-		);
-
-		for (const result of generationResults) {
-			if (result.status === 'rejected') {
-				console.error('Failed to generate artifacts:', result.reason);
+			} catch (err) {
+				console.error(`Failed to generate artifacts for ${docType.name}:`, err);
 			}
 		}
 

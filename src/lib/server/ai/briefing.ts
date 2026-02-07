@@ -245,13 +245,13 @@ export async function generateArtifacts(
 	params: GenerateArtifactsParams
 ): Promise<GeneratedSection[]> {
 	const { briefingData, documentType, projectName } = params;
+	const sections: GeneratedSection[] = [];
 
-	// Generate all sections in parallel for speed
-	const sections = await Promise.all(
-		documentType.template_structure.map((section) =>
-			generateSection(briefingData, section, documentType.name, projectName)
-		)
-	);
+	// Generate sections sequentially to respect API rate limits
+	for (const section of documentType.template_structure) {
+		const generated = await generateSection(briefingData, section, documentType.name, projectName);
+		sections.push(generated);
+	}
 
 	return sections;
 }
@@ -275,7 +275,7 @@ Schrijf de volledige inhoud voor deze sectie. Gebruik Markdown-opmaak.`;
 		messages: [{ role: 'user', content: prompt }],
 		systemPrompt: GENERATION_SYSTEM_PROMPT,
 		temperature: 0.4,
-		maxTokens: AI_CONFIG.maxTokens
+		maxTokens: 2048
 	});
 
 	return {
