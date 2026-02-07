@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import { PROCEDURE_TYPE_LABELS } from '$types';
 	import type { Document } from '$types';
@@ -13,6 +15,26 @@
 
 	$: project = data.project;
 	$: artifacts = data.artifacts;
+
+	// Auto-poll when project is generating artifacts in the background
+	let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+	$: if (project.status === 'generating') {
+		if (!pollTimer) {
+			pollTimer = setInterval(() => {
+				invalidateAll();
+			}, 10000);
+		}
+	} else {
+		if (pollTimer) {
+			clearInterval(pollTimer);
+			pollTimer = null;
+		}
+	}
+
+	onDestroy(() => {
+		if (pollTimer) clearInterval(pollTimer);
+	});
 	$: members = data.members as { id: string; profile: { first_name: string; last_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
 	$: reviewers = data.reviewers as { id: string; email: string; name: string; review_status: string; token: string; artifact: { id: string; title: string } | null }[];
 	$: organizationMembers = data.organizationMembers as { profile_id: string; profile: { first_name: string; last_name: string; email: string } }[];
@@ -188,14 +210,21 @@
 		<!-- Hidden when not active -->
 	{:else if artifacts.length === 0}
 		<div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-			<h3 class="text-sm font-semibold text-gray-900">Nog geen documentsecties</h3>
-			<p class="mt-1 text-sm text-gray-500">
-				{#if project.status === 'draft' || project.status === 'briefing'}
+			{#if project.status === 'generating'}
+				<svg class="mx-auto h-10 w-10 animate-spin text-primary-600" fill="none" viewBox="0 0 24 24">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+				</svg>
+				<h3 class="mt-3 text-sm font-semibold text-gray-900">Documenten worden gegenereerd...</h3>
+				<p class="mt-1 text-sm text-gray-500">
+					Dit kan enkele minuten duren. De pagina ververst automatisch.
+				</p>
+			{:else}
+				<h3 class="text-sm font-semibold text-gray-900">Nog geen documentsecties</h3>
+				<p class="mt-1 text-sm text-gray-500">
 					Voltooi eerst de briefing om documenten te laten genereren.
-				{:else}
-					Er worden documentsecties gegenereerd...
-				{/if}
-			</p>
+				</p>
+			{/if}
 		</div>
 	{:else}
 		<h2 class="text-lg font-semibold text-gray-900">Documenten</h2>

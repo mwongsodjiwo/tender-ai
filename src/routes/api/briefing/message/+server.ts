@@ -5,7 +5,97 @@ import type { RequestHandler } from './$types';
 import { briefingMessageSchema } from '$server/api/validation';
 import { conductBriefing, generateArtifacts } from '$server/ai/briefing';
 import { logAudit } from '$server/db/audit';
+import { createServiceClient } from '$server/db/client';
 import type { DocumentType } from '$types';
+
+/**
+ * Background artifact generation — runs after the HTTP response is sent.
+ * Uses a service client so it doesn't depend on the user's request lifecycle.
+ */
+async function generateArtifactsInBackground(
+	projectId: string,
+	briefingData: Record<string, unknown>,
+	userId: string,
+	userEmail: string | undefined
+): Promise<void> {
+	const serviceClient = createServiceClient();
+
+	try {
+		const { data: project } = await serviceClient
+			.from('projects')
+			.select('name, procedure_type, organization_id')
+			.eq('id', projectId)
+			.single();
+
+		const { data: documentTypes } = await serviceClient
+			.from('document_types')
+			.select('*')
+			.eq('is_active', true)
+			.order('sort_order');
+
+		const applicableTypes = (documentTypes ?? []).filter((dt: DocumentType) => {
+			if (!project?.procedure_type) return true;
+			return dt.applicable_procedures.length === 0 ||
+				dt.applicable_procedures.includes(project.procedure_type);
+		});
+
+		let artifactsGenerated = 0;
+
+		// Generate artifacts sequentially to respect API rate limits
+		for (const docType of applicableTypes) {
+			try {
+				const sections = await generateArtifacts({
+					briefingData,
+					documentType: docType,
+					projectName: project?.name ?? 'Onbekend project'
+				});
+
+				for (let i = 0; i < sections.length; i++) {
+					const section = sections[i];
+					await serviceClient.from('artifacts').insert({
+						project_id: projectId,
+						document_type_id: docType.id,
+						section_key: section.sectionKey,
+						title: section.title,
+						content: section.content,
+						status: 'generated',
+						sort_order: i,
+						created_by: userId
+					});
+					artifactsGenerated++;
+				}
+				console.log(`Generated ${sections.length} sections for ${docType.name}`);
+			} catch (err) {
+				console.error(`Failed to generate artifacts for ${docType.name}:`, err);
+			}
+		}
+
+		// Update project status to review
+		await serviceClient
+			.from('projects')
+			.update({ status: 'review' })
+			.eq('id', projectId);
+
+		await logAudit(serviceClient, {
+			organizationId: project?.organization_id,
+			projectId,
+			actorId: userId,
+			actorEmail: userEmail,
+			action: 'generate',
+			entityType: 'artifacts',
+			changes: { artifacts_generated: artifactsGenerated }
+		});
+
+		console.log(`Background generation complete: ${artifactsGenerated} artifacts for project ${projectId}`);
+	} catch (err) {
+		console.error('Background artifact generation failed:', err);
+		// Set project back to briefing so user can retry
+		await serviceClient
+			.from('projects')
+			.update({ status: 'briefing' })
+			.eq('id', projectId);
+	}
+}
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
@@ -83,9 +173,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.select('id')
 		.single();
 
-	let artifactsGenerated = 0;
-
-	// If briefing is complete, generate artifacts
+	// If briefing is complete, kick off background generation
 	if (aiResponse.isComplete) {
 		// Update project with briefing data and status
 		await supabase
@@ -96,70 +184,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			})
 			.eq('id', project_id);
 
-		// Get project info
-		const { data: project } = await supabase
-			.from('projects')
-			.select('name, procedure_type, organization_id')
-			.eq('id', project_id)
-			.single();
-
-		// Get applicable document types
-		const { data: documentTypes } = await supabase
-			.from('document_types')
-			.select('*')
-			.eq('is_active', true)
-			.order('sort_order');
-
-		// Filter document types by procedure type if set
-		const applicableTypes = (documentTypes ?? []).filter((dt: DocumentType) => {
-			if (!project?.procedure_type) return true;
-			return dt.applicable_procedures.length === 0 ||
-				dt.applicable_procedures.includes(project.procedure_type);
-		});
-
-		// Generate artifacts sequentially to respect API rate limits
-		for (const docType of applicableTypes) {
-			try {
-				const sections = await generateArtifacts({
-					briefingData: aiResponse.briefingData,
-					documentType: docType,
-					projectName: project?.name ?? 'Onbekend project'
-				});
-
-				for (let i = 0; i < sections.length; i++) {
-					const section = sections[i];
-					await supabase.from('artifacts').insert({
-						project_id,
-						document_type_id: docType.id,
-						section_key: section.sectionKey,
-						title: section.title,
-						content: section.content,
-						status: 'generated',
-						sort_order: i,
-						created_by: user.id
-					});
-					artifactsGenerated++;
-				}
-			} catch (err) {
-				console.error(`Failed to generate artifacts for ${docType.name}:`, err);
-			}
-		}
-
-		// Update project status to review
-		await supabase
-			.from('projects')
-			.update({ status: 'review' })
-			.eq('id', project_id);
-
-		await logAudit(supabase, {
-			organizationId: project?.organization_id,
-			projectId: project_id,
-			actorId: user.id,
-			actorEmail: user.email ?? undefined,
-			action: 'generate',
-			entityType: 'artifacts',
-			changes: { artifacts_generated: artifactsGenerated }
-		});
+		// Fire-and-forget: generate artifacts in background
+		generateArtifactsInBackground(
+			project_id,
+			aiResponse.briefingData,
+			user.id,
+			user.email ?? undefined
+		).catch((err) => console.error('Unhandled background generation error:', err));
 	}
 
 	return json({
@@ -168,7 +199,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			content: aiResponse.content,
 			conversation_id,
 			briefing_complete: aiResponse.isComplete,
-			artifacts_generated: artifactsGenerated
+			artifacts_generated: 0
 		}
 	});
 };
