@@ -243,9 +243,9 @@
 	</div>
 
 	<!-- Main content area -->
-	<div class="flex flex-1 gap-4 overflow-hidden">
+	<div class="flex flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
 		<!-- Editor panel -->
-		<div class="flex flex-1 flex-col overflow-hidden">
+		<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
 			<!-- Editor toolbar -->
 			<div class="flex items-center justify-between rounded-t-lg border border-b-0 border-gray-200 bg-gray-50 px-4 py-2">
 				<div class="flex gap-2">
@@ -323,7 +323,7 @@
 		</div>
 
 		<!-- Side panel -->
-		<div class="flex w-96 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+		<div class="flex h-80 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white lg:h-auto lg:w-96">
 			<!-- Panel tabs -->
 			<div class="flex border-b border-gray-200">
 				<button

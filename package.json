@@ -6,13 +6,17 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "start": "node build",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:unit": "vitest run --config vitest.config.ts",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:production": "bash scripts/build-production.sh",
+    "docker:build": "docker build -t tendermanager .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env tendermanager"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",

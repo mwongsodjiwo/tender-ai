@@ -68,23 +68,25 @@
 		</div>
 	</div>
 
-	<!-- Tab navigation -->
-	<div class="border-b border-gray-200" role="tablist" aria-label="Kennisbank onderdelen">
-		{#each [
-			{ id: 'documents', label: 'Documenten' },
-			{ id: 'tenderned', label: 'TenderNed' }
-		] as tab}
-			<button
-				role="tab"
-				aria-selected={activeTab === tab.id}
-				on:click={() => (activeTab = tab.id)}
-				class="inline-flex items-center border-b-2 px-4 py-3 text-sm font-medium {activeTab === tab.id
-					? 'border-primary-500 text-primary-600'
-					: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
-			>
-				{tab.label}
-			</button>
-		{/each}
+	<!-- Tab navigation (scrollable on mobile) -->
+	<div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+		<div class="inline-flex min-w-full border-b border-gray-200" role="tablist" aria-label="Kennisbank onderdelen">
+			{#each [
+				{ id: 'documents', label: 'Documenten' },
+				{ id: 'tenderned', label: 'TenderNed' }
+			] as tab}
+				<button
+					role="tab"
+					aria-selected={activeTab === tab.id}
+					on:click={() => (activeTab = tab.id)}
+					class="inline-flex shrink-0 items-center border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap {activeTab === tab.id
+						? 'border-primary-500 text-primary-600'
+						: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+				>
+					{tab.label}
+				</button>
+			{/each}
+		</div>
 	</div>
 
 	<!-- Documents tab -->
