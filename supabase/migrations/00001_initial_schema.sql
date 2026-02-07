@@ -2,9 +2,13 @@
 -- All tables for Sprint 0
 
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS "vector";
+
+-- Make extension functions accessible without schema prefix
+CREATE OR REPLACE FUNCTION gen_random_bytes(int) RETURNS bytea
+LANGUAGE sql AS $$ SELECT extensions.gen_random_bytes($1) $$;
 
 -- =============================================================================
 -- ENUMS
@@ -25,7 +29,7 @@ CREATE TYPE audit_action AS ENUM ('create', 'update', 'delete', 'login', 'logout
 -- =============================================================================
 
 CREATE TABLE organizations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     description TEXT,
@@ -57,7 +61,7 @@ CREATE TABLE profiles (
 -- =============================================================================
 
 CREATE TABLE organization_members (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     role organization_role NOT NULL DEFAULT 'member',
@@ -74,7 +78,7 @@ CREATE INDEX idx_org_members_profile ON organization_members(profile_id);
 -- =============================================================================
 
 CREATE TABLE projects (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -99,7 +103,7 @@ CREATE INDEX idx_projects_status ON projects(status) WHERE deleted_at IS NULL;
 -- =============================================================================
 
 CREATE TABLE project_members (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -114,7 +118,7 @@ CREATE INDEX idx_project_members_project ON project_members(project_id);
 -- =============================================================================
 
 CREATE TABLE project_member_roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_member_id UUID NOT NULL REFERENCES project_members(id) ON DELETE CASCADE,
     role project_role NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -128,7 +132,7 @@ CREATE INDEX idx_pm_roles_member ON project_member_roles(project_member_id);
 -- =============================================================================
 
 CREATE TABLE document_types (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     description TEXT,
@@ -145,7 +149,7 @@ CREATE TABLE document_types (
 -- =============================================================================
 
 CREATE TABLE artifacts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     document_type_id UUID NOT NULL REFERENCES document_types(id),
     section_key TEXT NOT NULL,
@@ -170,7 +174,7 @@ CREATE INDEX idx_artifacts_parent ON artifacts(parent_artifact_id);
 -- =============================================================================
 
 CREATE TABLE conversations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     artifact_id UUID REFERENCES artifacts(id) ON DELETE SET NULL,
     title TEXT,
@@ -188,7 +192,7 @@ CREATE INDEX idx_conversations_artifact ON conversations(artifact_id);
 -- =============================================================================
 
 CREATE TABLE messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     role message_role NOT NULL,
     content TEXT NOT NULL,
@@ -206,7 +210,7 @@ CREATE INDEX idx_messages_created ON messages(created_at);
 -- =============================================================================
 
 CREATE TABLE documents (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
@@ -231,7 +235,7 @@ CREATE INDEX idx_documents_project ON documents(project_id) WHERE deleted_at IS 
 -- =============================================================================
 
 CREATE TABLE tenderned_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     external_id TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     description TEXT,
@@ -258,7 +262,7 @@ CREATE INDEX idx_tenderned_publication ON tenderned_items(publication_date);
 -- =============================================================================
 
 CREATE TABLE section_reviewers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     artifact_id UUID NOT NULL REFERENCES artifacts(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -279,7 +283,7 @@ CREATE INDEX idx_section_reviewers_token ON section_reviewers(token);
 -- =============================================================================
 
 CREATE TABLE audit_log (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID REFERENCES organizations(id),
     project_id UUID REFERENCES projects(id),
     actor_id UUID REFERENCES profiles(id),

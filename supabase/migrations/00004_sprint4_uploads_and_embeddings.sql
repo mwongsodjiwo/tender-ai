@@ -6,7 +6,7 @@
 -- =============================================================================
 
 CREATE TABLE document_chunks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,
@@ -24,7 +24,7 @@ CREATE INDEX idx_doc_chunks_order ON document_chunks(document_id, chunk_index);
 -- =============================================================================
 
 CREATE TABLE tenderned_chunks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenderned_item_id UUID NOT NULL REFERENCES tenderned_items(id) ON DELETE CASCADE,
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,

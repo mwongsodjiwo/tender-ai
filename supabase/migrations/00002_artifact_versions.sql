@@ -1,7 +1,7 @@
 -- Sprint 2: Artifact versioning table
 
 CREATE TABLE artifact_versions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     artifact_id UUID NOT NULL REFERENCES artifacts(id) ON DELETE CASCADE,
     version INTEGER NOT NULL,
     title TEXT NOT NULL,
