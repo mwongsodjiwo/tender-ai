@@ -9,10 +9,12 @@ import type {
 	ProjectMemberRole,
 	Artifact,
 	Conversation,
+	Document,
 	DocumentType,
+	TenderNedItem,
 	AuditLogEntry
 } from './database.js';
-import type { OrganizationRole, ProcedureType, ProjectRole, ArtifactStatus } from './enums.js';
+import type { OrganizationRole, ProcedureType, ProjectRole, ArtifactStatus, DocumentCategory } from './enums.js';
 
 // =============================================================================
 // COMMON
@@ -321,6 +323,7 @@ export interface AuditLogResponse {
 export interface ContextSearchRequest {
 	query: string;
 	project_id?: string;
+	organization_id?: string;
 	limit?: number;
 }
 
@@ -330,4 +333,50 @@ export interface ContextSearchResult {
 	title: string;
 	snippet: string;
 	relevance: number;
+}
+
+// =============================================================================
+// DOCUMENT UPLOAD — Sprint 4
+// =============================================================================
+
+export interface UploadDocumentRequest {
+	organization_id: string;
+	project_id?: string;
+	category: DocumentCategory;
+	name?: string;
+}
+
+export type DocumentResponse = Document;
+export type DocumentListResponse = Document[];
+
+export interface DeleteDocumentRequest {
+	document_id: string;
+}
+
+// =============================================================================
+// TENDERNED SEARCH — Sprint 4
+// =============================================================================
+
+export interface TenderNedSearchRequest {
+	query: string;
+	procedure_type?: ProcedureType;
+	cpv_code?: string;
+	limit?: number;
+	offset?: number;
+}
+
+export interface TenderNedSearchResponse {
+	items: TenderNedItem[];
+	total: number;
+}
+
+// =============================================================================
+// EMBEDDING STATUS — Sprint 4
+// =============================================================================
+
+export interface EmbeddingStatusResponse {
+	document_id: string;
+	total_chunks: number;
+	embedded_chunks: number;
+	status: 'pending' | 'processing' | 'complete' | 'error';
 }

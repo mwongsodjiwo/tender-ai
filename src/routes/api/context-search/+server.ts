@@ -22,13 +22,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		);
 	}
 
-	const { query, project_id, limit } = parsed.data;
+	const { query, project_id, organization_id, limit } = parsed.data;
 
 	try {
 		const results = await searchContext({
 			supabase,
 			query,
 			projectId: project_id,
+			organizationId: organization_id,
 			limit
 		});
 

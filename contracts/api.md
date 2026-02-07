@@ -266,9 +266,67 @@ All endpoints return JSON. Authentication is via Supabase session cookies (handl
 
 ---
 
+---
+
+## Document Uploads (Sprint 4)
+
+### `GET /api/projects/:id/uploads`
+- **Auth:** Required (must be project member or org member)
+- **Query:** `?category=reference` (optional filter)
+- **Response:** `{ data: Document[] }`
+
+### `POST /api/projects/:id/uploads`
+- **Auth:** Required (must be org member)
+- **Body:** `multipart/form-data` with fields:
+  - `file` (required) — The file to upload (max 50 MB, PDF/Word/Excel/TXT/CSV)
+  - `organization_id` (required) — UUID
+  - `project_id` (optional) — UUID, defaults to `:id`
+  - `category` (optional) — `"policy" | "specification" | "template" | "reference"`, default `"reference"`
+  - `name` (optional) — Display name, defaults to filename
+- **Response (201):** `{ data: Document }`
+- **Errors:** 400 (validation), 400 (file too large), 400 (unsupported type)
+- **Note:** Text content is extracted for plain text files. Other formats are processed by the RAG pipeline.
+
+### `GET /api/projects/:id/uploads/:documentId`
+- **Auth:** Required (must be project member or org member)
+- **Response:** `{ data: Document }`
+- **Errors:** 404 (not found)
+
+### `DELETE /api/projects/:id/uploads/:documentId`
+- **Auth:** Required (must be org member)
+- **Response:** `{ data: { message: "Document verwijderd" } }`
+- **Note:** Soft delete (sets deleted_at). Removes associated chunks.
+
+---
+
+## TenderNed Search (Sprint 4)
+
+### `GET /api/tenderned`
+- **Auth:** Required
+- **Query:**
+  - `query` (required) — Search term (min 2 chars)
+  - `procedure_type` (optional) — Filter by procedure type
+  - `cpv_code` (optional) — Filter by CPV code
+  - `limit` (optional) — Results per page (1-50, default 10)
+  - `offset` (optional) — Pagination offset (default 0)
+- **Response:** `{ data: { items: TenderNedItem[], total: number } }`
+- **Errors:** 400 (validation)
+
+---
+
+## Context Search (Sprint 4 — updated)
+
+### `POST /api/context-search`
+- **Auth:** Required
+- **Body:** `{ query: string, project_id?: string, organization_id?: string, limit?: number }`
+- **Response:** `{ data: ContextSearchResult[] }`
+- **Note:** Updated in Sprint 4 to use RAG pipeline with embedding-based semantic search. Falls back to text search when embeddings are unavailable. Added `organization_id` filter.
+
+---
+
 ## Type Definitions
 
 See `src/lib/types/` for full TypeScript type definitions:
-- `database.ts` — Row types for all tables
-- `api.ts` — Request/response types
-- `enums.ts` — All enum values
+- `database.ts` — Row types for all tables (includes DocumentChunk, TenderNedChunk)
+- `api.ts` — Request/response types (includes upload & TenderNed types)
+- `enums.ts` — All enum values (includes 'upload' audit action)

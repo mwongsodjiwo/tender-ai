@@ -47,11 +47,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select('profile_id, profile:profiles(full_name, email)')
 		.eq('organization_id', project.organization_id);
 
+	// Load uploaded documents for this project
+	const { data: uploadedDocuments } = await supabase
+		.from('documents')
+		.select('*')
+		.eq('project_id', params.id)
+		.is('deleted_at', null)
+		.order('created_at', { ascending: false });
+
 	return {
 		project,
 		artifacts: artifacts ?? [],
 		members: members ?? [],
 		reviewers,
-		organizationMembers: organizationMembers ?? []
+		organizationMembers: organizationMembers ?? [],
+		uploadedDocuments: uploadedDocuments ?? []
 	};
 };

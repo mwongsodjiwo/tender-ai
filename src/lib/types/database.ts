@@ -214,6 +214,30 @@ export interface ArtifactVersion {
 }
 
 // =============================================================================
+// DOCUMENT CHUNKS — Sprint 4 (for RAG pipeline)
+// =============================================================================
+
+export interface DocumentChunk {
+	id: string;
+	document_id: string;
+	chunk_index: number;
+	content: string;
+	token_count: number | null;
+	metadata: Record<string, unknown>;
+	created_at: string;
+}
+
+export interface TenderNedChunk {
+	id: string;
+	tenderned_item_id: string;
+	chunk_index: number;
+	content: string;
+	token_count: number | null;
+	metadata: Record<string, unknown>;
+	created_at: string;
+}
+
+// =============================================================================
 // JOINED / ENRICHED TYPES
 // =============================================================================
 
@@ -232,4 +256,12 @@ export interface ConversationWithMessages extends Conversation {
 
 export interface ArtifactWithReviewers extends Artifact {
 	reviewers: SectionReviewer[];
+}
+
+export interface DocumentWithChunks extends Document {
+	chunks: DocumentChunk[];
+}
+
+export interface TenderNedItemWithChunks extends TenderNedItem {
+	chunks: TenderNedChunk[];
 }

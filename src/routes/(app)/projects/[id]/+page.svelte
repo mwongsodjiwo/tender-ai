@@ -1,10 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { PROCEDURE_TYPE_LABELS } from '$types';
+	import type { Document } from '$types';
 	import TeamManager from '$components/TeamManager.svelte';
 	import ReviewerInvite from '$components/ReviewerInvite.svelte';
 	import RoleSwitcher from '$components/RoleSwitcher.svelte';
 	import AuditLog from '$components/AuditLog.svelte';
+	import DocumentUpload from '$components/DocumentUpload.svelte';
+	import DocumentList from '$components/DocumentList.svelte';
 
 	export let data: PageData;
 
@@ -13,6 +16,7 @@
 	$: members = data.members as { id: string; profile: { full_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
 	$: reviewers = data.reviewers as { id: string; email: string; name: string; review_status: string; token: string; artifact: { id: string; title: string } | null }[];
 	$: organizationMembers = data.organizationMembers as { profile_id: string; profile: { full_name: string; email: string } }[];
+	$: uploadedDocuments = (data.uploadedDocuments ?? []) as Document[];
 
 	// Determine current user's roles in this project
 	$: currentUserRoles = (() => {
@@ -26,7 +30,11 @@
 		activeRole = currentUserRoles[0];
 	}
 
-	let activeTab: 'documents' | 'team' | 'reviewers' | 'audit' = 'documents';
+	let activeTab: 'documents' | 'uploads' | 'team' | 'reviewers' | 'audit' = 'documents';
+
+	function reloadUploads(): void {
+		window.location.reload();
+	}
 
 	const STATUS_LABELS: Record<string, string> = {
 		draft: 'Concept',
@@ -155,6 +163,7 @@
 	<div class="border-b border-gray-200" role="tablist" aria-label="Projectonderdelen">
 		{#each [
 			{ id: 'documents', label: 'Documenten' },
+			{ id: 'uploads', label: 'Uploads' },
 			{ id: 'team', label: 'Team' },
 			{ id: 'reviewers', label: 'Kennishouders' },
 			{ id: 'audit', label: 'Audit log' }
@@ -229,6 +238,27 @@
 				</ul>
 			</div>
 		{/each}
+	{/if}
+
+	<!-- Uploads tab -->
+	{#if activeTab === 'uploads'}
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<div class="lg:col-span-2">
+				<h2 class="mb-4 text-lg font-semibold text-gray-900">Geüploade documenten</h2>
+				<DocumentList
+					documents={uploadedDocuments}
+					projectId={project.id}
+					onDelete={reloadUploads}
+				/>
+			</div>
+			<div>
+				<DocumentUpload
+					projectId={project.id}
+					organizationId={project.organization_id}
+					onUploadComplete={reloadUploads}
+				/>
+			</div>
+		</div>
 	{/if}
 
 	<!-- Team tab -->

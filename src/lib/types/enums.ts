@@ -48,6 +48,14 @@ export const DOCUMENT_CATEGORIES = [
 ] as const;
 export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
 
+export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
+	policy: 'Beleidsdocument',
+	specification: 'Bestek',
+	template: 'Sjabloon',
+	reference: 'Referentie',
+	tenderned: 'TenderNed'
+};
+
 export const PROCEDURE_TYPES = [
 	'open',
 	'restricted',
@@ -86,6 +94,7 @@ export const AUDIT_ACTIONS = [
 	'approve',
 	'reject',
 	'generate',
-	'export'
+	'export',
+	'upload'
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

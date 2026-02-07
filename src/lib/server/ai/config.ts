@@ -1,12 +1,28 @@
 // AI configuration — all LLM settings are centralized here
 
-import { ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS } from '$env/static/private';
+import {
+	ANTHROPIC_API_KEY,
+	ANTHROPIC_MODEL,
+	ANTHROPIC_MAX_TOKENS,
+	EMBEDDING_API_KEY,
+	EMBEDDING_API_ENDPOINT,
+	EMBEDDING_MODEL
+} from '$env/static/private';
 
 export const AI_CONFIG = {
 	apiKey: ANTHROPIC_API_KEY,
 	model: ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929',
 	maxTokens: Number(ANTHROPIC_MAX_TOKENS) || 4096,
 	defaultTemperature: 0.7
+} as const;
+
+export const EMBEDDING_CONFIG = {
+	apiKey: EMBEDDING_API_KEY || '',
+	endpoint: EMBEDDING_API_ENDPOINT || 'https://api.voyageai.com/v1/embeddings',
+	model: EMBEDDING_MODEL || 'voyage-3',
+	dimensions: 1536,
+	maxInputLength: 8000,
+	batchSize: 20
 } as const;
 
 export const SYSTEM_PROMPTS = {
