@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  supabase-db:
+    image: supabase/postgres:15.1.1.61
+    container_name: tendermanager-db
+    ports:
+      - '54322:5432'
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  supabase-studio:
+    image: supabase/studio:20240101
+    container_name: tendermanager-studio
+    ports:
+      - '54323:3000'
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_REST_URL: http://supabase-kong:8000/rest/v1/
+    depends_on:
+      - supabase-db
+
+volumes:
+  supabase-db-data:
