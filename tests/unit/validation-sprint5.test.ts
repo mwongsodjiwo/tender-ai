@@ -22,7 +22,8 @@ import {
 describe('updateProfileSchema — settings page', () => {
 	it('should accept full profile update', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'Jan de Vries',
+			first_name: 'Jan',
+			last_name: 'de Vries',
 			job_title: 'Inkoopadviseur',
 			phone: '+31612345678',
 			avatar_url: 'https://example.com/avatar.jpg'
@@ -35,9 +36,9 @@ describe('updateProfileSchema — settings page', () => {
 		expect(result.success).toBe(true);
 	});
 
-	it('should accept only full_name update', () => {
+	it('should accept only first_name update', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'Pieter Bakker'
+			first_name: 'Pieter'
 		});
 		expect(result.success).toBe(true);
 	});
@@ -63,16 +64,16 @@ describe('updateProfileSchema — settings page', () => {
 		expect(result.success).toBe(true);
 	});
 
-	it('should reject full_name shorter than 2 characters', () => {
+	it('should reject first_name that is empty', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'J'
+			first_name: ''
 		});
 		expect(result.success).toBe(false);
 	});
 
-	it('should reject full_name longer than 100 characters', () => {
+	it('should reject first_name longer than 50 characters', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'A'.repeat(101)
+			first_name: 'A'.repeat(51)
 		});
 		expect(result.success).toBe(false);
 	});
@@ -100,7 +101,8 @@ describe('updateProfileSchema — settings page', () => {
 
 	it('should strip unknown fields', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'Kees Jansen',
+			first_name: 'Kees',
+			last_name: 'Jansen',
 			email: 'hacked@example.com',
 			role: 'admin'
 		});
@@ -108,24 +110,26 @@ describe('updateProfileSchema — settings page', () => {
 		// because email/role are simply not part of the schema
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.full_name).toBe('Kees Jansen');
+			expect(result.data.first_name).toBe('Kees');
+			expect(result.data.last_name).toBe('Jansen');
 			expect('email' in result.data).toBe(false);
 			expect('role' in result.data).toBe(false);
 		}
 	});
 
-	it('should handle XSS attempt in full_name', () => {
+	it('should handle XSS attempt in first_name', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: '<script>alert("xss")</script>'
+			first_name: '<script>alert("xss")</script>'
 		});
 		// Schema validates length/type, not content filtering
-		// The value is a valid string > 2 chars
+		// The value is a valid string > 1 char
 		expect(result.success).toBe(true);
 	});
 
 	it('should accept Dutch name characters', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: "Jan-Willem van 't Hoff"
+			first_name: "Jan-Willem",
+			last_name: "van 't Hoff"
 		});
 		expect(result.success).toBe(true);
 	});
@@ -230,7 +234,8 @@ describe('Cross-schema validation — E2E data flow integrity', () => {
 		const registration = registerSchema.safeParse({
 			email: 'flow@gemeente.nl',
 			password: 'SterkWachtwoord1!',
-			full_name: 'Flow Test Gebruiker'
+			first_name: 'Flow Test',
+			last_name: 'Gebruiker'
 		});
 		expect(registration.success).toBe(true);
 	});
@@ -252,7 +257,8 @@ describe('Cross-schema validation — E2E data flow integrity', () => {
 		expect(orgCreation.success).toBe(true);
 
 		const profileUpdate = updateProfileSchema.safeParse({
-			full_name: 'Flow Test Gebruiker',
+			first_name: 'Flow Test',
+			last_name: 'Gebruiker',
 			job_title: 'Projectleider'
 		});
 		expect(profileUpdate.success).toBe(true);
@@ -321,14 +327,14 @@ describe('Cross-schema validation — E2E data flow integrity', () => {
 // =============================================================================
 
 describe('Boundary testing — field length limits', () => {
-	it('should accept full_name at exactly 2 characters', () => {
-		const result = updateProfileSchema.safeParse({ full_name: 'Jo' });
+	it('should accept first_name at exactly 1 character', () => {
+		const result = updateProfileSchema.safeParse({ first_name: 'J' });
 		expect(result.success).toBe(true);
 	});
 
-	it('should accept full_name at exactly 100 characters', () => {
+	it('should accept first_name at exactly 50 characters', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'A'.repeat(100)
+			first_name: 'A'.repeat(50)
 		});
 		expect(result.success).toBe(true);
 	});

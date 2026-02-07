@@ -6,7 +6,8 @@
 
 	let email = '';
 	let password = '';
-	let fullName = '';
+	let firstName = '';
+	let lastName = '';
 	let loading = false;
 	let errorMessage = '';
 
@@ -18,7 +19,7 @@
 			email,
 			password,
 			options: {
-				data: { full_name: fullName }
+				data: { first_name: firstName, last_name: lastName }
 			}
 		});
 
@@ -45,15 +46,32 @@
 
 	<div class="space-y-4">
 		<div>
-			<label for="fullName" class="block text-sm font-medium text-gray-700">Volledige naam</label>
+			<label for="firstName" class="block text-sm font-medium text-gray-700">Voornaam</label>
 			<input
-				id="fullName"
-				name="fullName"
+				id="firstName"
+				name="firstName"
 				type="text"
 				required
-				bind:value={fullName}
+				minlength="1"
+				maxlength="50"
+				bind:value={firstName}
 				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-				placeholder="Jan de Vries"
+				placeholder="Jan"
+			/>
+		</div>
+
+		<div>
+			<label for="lastName" class="block text-sm font-medium text-gray-700">Achternaam</label>
+			<input
+				id="lastName"
+				name="lastName"
+				type="text"
+				required
+				minlength="1"
+				maxlength="50"
+				bind:value={lastName}
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+				placeholder="de Vries"
 			/>
 		</div>
 

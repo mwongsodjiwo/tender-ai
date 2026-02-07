@@ -6,13 +6,13 @@
 	export let data: PageData;
 
 	// Form field constraints
-	const FULL_NAME_MIN_LENGTH = 2;
-	const FULL_NAME_MAX_LENGTH = 100;
+	const NAME_MAX_LENGTH = 50;
 	const JOB_TITLE_MAX_LENGTH = 100;
 	const PHONE_MAX_LENGTH = 20;
 
 	// Form state
-	let fullName = data.profile?.full_name ?? '';
+	let firstName = data.profile?.first_name ?? '';
+	let lastName = data.profile?.last_name ?? '';
 	let jobTitle = data.profile?.job_title ?? '';
 	let phone = data.profile?.phone ?? '';
 
@@ -27,11 +27,17 @@
 	function validateForm(): boolean {
 		validationErrors = {};
 
-		if (fullName.trim().length < FULL_NAME_MIN_LENGTH) {
-			validationErrors['full_name'] = `Naam moet minimaal ${FULL_NAME_MIN_LENGTH} tekens bevatten`;
+		if (firstName.trim().length < 1) {
+			validationErrors['first_name'] = 'Voornaam is verplicht';
 		}
-		if (fullName.length > FULL_NAME_MAX_LENGTH) {
-			validationErrors['full_name'] = `Naam mag maximaal ${FULL_NAME_MAX_LENGTH} tekens bevatten`;
+		if (firstName.length > NAME_MAX_LENGTH) {
+			validationErrors['first_name'] = `Voornaam mag maximaal ${NAME_MAX_LENGTH} tekens bevatten`;
+		}
+		if (lastName.trim().length < 1) {
+			validationErrors['last_name'] = 'Achternaam is verplicht';
+		}
+		if (lastName.length > NAME_MAX_LENGTH) {
+			validationErrors['last_name'] = `Achternaam mag maximaal ${NAME_MAX_LENGTH} tekens bevatten`;
 		}
 		if (jobTitle.length > JOB_TITLE_MAX_LENGTH) {
 			validationErrors['job_title'] = `Functietitel mag maximaal ${JOB_TITLE_MAX_LENGTH} tekens bevatten`;
@@ -62,7 +68,8 @@
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					full_name: fullName.trim(),
+					first_name: firstName.trim(),
+					last_name: lastName.trim(),
 					job_title: jobTitle.trim() || undefined,
 					phone: phone.trim() || undefined
 				})
@@ -133,25 +140,47 @@
 			class="rounded-lg border border-gray-200 bg-white shadow-sm"
 		>
 			<div class="space-y-6 p-6">
-				<!-- Full name -->
+				<!-- First name -->
 				<div>
-					<label for="full-name" class="block text-sm font-medium text-gray-700">
-						Volledige naam
+					<label for="first-name" class="block text-sm font-medium text-gray-700">
+						Voornaam
 					</label>
 					<input
-						id="full-name"
+						id="first-name"
 						type="text"
-						bind:value={fullName}
+						bind:value={firstName}
 						required
-						minlength={FULL_NAME_MIN_LENGTH}
-						maxlength={FULL_NAME_MAX_LENGTH}
+						minlength={1}
+						maxlength={NAME_MAX_LENGTH}
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{validationErrors['full_name'] ? 'border-red-300' : ''}"
-						aria-describedby={validationErrors['full_name'] ? 'full-name-error' : undefined}
-						aria-invalid={validationErrors['full_name'] ? 'true' : undefined}
+							{validationErrors['first_name'] ? 'border-red-300' : ''}"
+						aria-describedby={validationErrors['first_name'] ? 'first-name-error' : undefined}
+						aria-invalid={validationErrors['first_name'] ? 'true' : undefined}
 					/>
-					{#if validationErrors['full_name']}
-						<p id="full-name-error" class="mt-1 text-sm text-red-600">{validationErrors['full_name']}</p>
+					{#if validationErrors['first_name']}
+						<p id="first-name-error" class="mt-1 text-sm text-red-600">{validationErrors['first_name']}</p>
+					{/if}
+				</div>
+
+				<!-- Last name -->
+				<div>
+					<label for="last-name" class="block text-sm font-medium text-gray-700">
+						Achternaam
+					</label>
+					<input
+						id="last-name"
+						type="text"
+						bind:value={lastName}
+						required
+						minlength={1}
+						maxlength={NAME_MAX_LENGTH}
+						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
+							{validationErrors['last_name'] ? 'border-red-300' : ''}"
+						aria-describedby={validationErrors['last_name'] ? 'last-name-error' : undefined}
+						aria-invalid={validationErrors['last_name'] ? 'true' : undefined}
+					/>
+					{#if validationErrors['last_name']}
+						<p id="last-name-error" class="mt-1 text-sm text-red-600">{validationErrors['last_name']}</p>
 					{/if}
 				</div>
 

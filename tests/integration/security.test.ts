@@ -254,14 +254,15 @@ describe('Security: Auth Token Validation', () => {
 // =============================================================================
 
 describe('Security: XSS Prevention', () => {
-	it('should reject XSS in registration full_name', async () => {
+	it('should reject XSS in registration first_name', async () => {
 		const response = await fetch(`${BASE_URL}/api/auth/register`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				email: 'xss-test@example.com',
 				password: 'password123',
-				full_name: '<script>alert("xss")</script>'
+				first_name: '<script>alert("xss")</script>',
+				last_name: 'Test'
 			})
 		});
 
@@ -438,7 +439,7 @@ describe('Security: CSRF Protection', () => {
 		const response = await fetch(`${BASE_URL}/api/auth/register`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: 'email=test@example.com&password=password123&full_name=Test'
+			body: 'email=test@example.com&password=password123&first_name=Test&last_name=User'
 		});
 
 		// Should either reject or fail to parse non-JSON body
@@ -586,7 +587,7 @@ describe('Security: Session Management', () => {
 		const response = await fetch(`${BASE_URL}/api/profile`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ full_name: 'Hijacked Name' })
+			body: JSON.stringify({ first_name: 'Hijacked', last_name: 'Name' })
 		});
 		expect(response.status).toBe(401);
 	});
@@ -652,7 +653,8 @@ describe('Security: HTTP Method Validation', () => {
 			body: JSON.stringify({
 				email: 'test@example.com',
 				password: 'password123',
-				full_name: 'Test'
+				first_name: 'Test',
+				last_name: 'User'
 			})
 		});
 

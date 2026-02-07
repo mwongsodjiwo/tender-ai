@@ -16,14 +16,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		);
 	}
 
-	const { email, password, full_name } = parsed.data;
+	const { email, password, first_name, last_name } = parsed.data;
 	const { supabase } = locals;
 
 	const { data, error } = await supabase.auth.signUp({
 		email,
 		password,
 		options: {
-			data: { full_name }
+			data: { first_name, last_name }
 		}
 	});
 

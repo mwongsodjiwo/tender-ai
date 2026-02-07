@@ -13,9 +13,9 @@
 
 	$: project = data.project;
 	$: artifacts = data.artifacts;
-	$: members = data.members as { id: string; profile: { full_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
+	$: members = data.members as { id: string; profile: { first_name: string; last_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
 	$: reviewers = data.reviewers as { id: string; email: string; name: string; review_status: string; token: string; artifact: { id: string; title: string } | null }[];
-	$: organizationMembers = data.organizationMembers as { profile_id: string; profile: { full_name: string; email: string } }[];
+	$: organizationMembers = data.organizationMembers as { profile_id: string; profile: { first_name: string; last_name: string; email: string } }[];
 	$: uploadedDocuments = (data.uploadedDocuments ?? []) as Document[];
 
 	// Determine current user's roles in this project

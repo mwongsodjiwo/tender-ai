@@ -80,7 +80,7 @@
 					>
 						<span class="sr-only">Gebruikersmenu openen</span>
 						<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-700">
-							{profile?.full_name?.charAt(0)?.toUpperCase() ?? '?'}
+							{profile?.first_name?.charAt(0)?.toUpperCase() ?? '?'}
 						</div>
 					</button>
 
@@ -92,7 +92,7 @@
 							on:click|stopPropagation
 						>
 							<div class="border-b border-gray-100 px-4 py-2">
-								<p class="text-sm font-medium text-gray-900">{profile?.full_name}</p>
+								<p class="text-sm font-medium text-gray-900">{profile?.first_name} {profile?.last_name}</p>
 								<p class="truncate text-xs text-gray-500">{profile?.email}</p>
 							</div>
 							<a
@@ -153,10 +153,10 @@
 			<div class="border-t border-gray-200 px-4 pb-3 pt-4">
 				<div class="flex items-center">
 					<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-700">
-						{profile?.full_name?.charAt(0)?.toUpperCase() ?? '?'}
+						{profile?.first_name?.charAt(0)?.toUpperCase() ?? '?'}
 					</div>
 					<div class="ml-3">
-						<p class="text-base font-medium text-gray-800">{profile?.full_name}</p>
+						<p class="text-base font-medium text-gray-800">{profile?.first_name} {profile?.last_name}</p>
 						<p class="text-sm text-gray-500">{profile?.email}</p>
 					</div>
 				</div>

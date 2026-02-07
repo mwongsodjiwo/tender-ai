@@ -49,7 +49,8 @@ export interface LoginRequest {
 export interface RegisterRequest {
 	email: string;
 	password: string;
-	full_name: string;
+	first_name: string;
+	last_name: string;
 }
 
 export interface AuthResponse {
@@ -91,7 +92,8 @@ export type OrganizationMemberResponse = OrganizationMember;
 // =============================================================================
 
 export interface UpdateProfileRequest {
-	full_name?: string;
+	first_name?: string;
+	last_name?: string;
 	job_title?: string;
 	phone?: string;
 	avatar_url?: string;

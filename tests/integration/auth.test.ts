@@ -16,7 +16,8 @@ describe('Auth Flow', () => {
 			body: JSON.stringify({
 				email: testEmail,
 				password: testPassword,
-				full_name: testName
+				first_name: 'Test',
+				last_name: 'Gebruiker'
 			})
 		});
 
@@ -32,7 +33,8 @@ describe('Auth Flow', () => {
 			body: JSON.stringify({
 				email: 'invalid-email',
 				password: testPassword,
-				full_name: testName
+				first_name: 'Test',
+				last_name: 'Gebruiker'
 			})
 		});
 
@@ -48,7 +50,8 @@ describe('Auth Flow', () => {
 			body: JSON.stringify({
 				email: 'valid@example.com',
 				password: 'short',
-				full_name: testName
+				first_name: 'Test',
+				last_name: 'Gebruiker'
 			})
 		});
 

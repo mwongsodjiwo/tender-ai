@@ -9,7 +9,8 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:5173';
 const testState = {
 	email: `e2e-${Date.now()}@example.com`,
 	password: 'SecurePassword123!',
-	fullName: 'E2E Test Gebruiker',
+	firstName: 'E2E Test',
+	lastName: 'Gebruiker',
 	accessToken: '',
 	userId: '',
 	organizationId: '',
@@ -44,7 +45,8 @@ describe('E2E: Complete User Journey', () => {
 				body: JSON.stringify({
 					email: testState.email,
 					password: testState.password,
-					full_name: testState.fullName
+					first_name: testState.firstName,
+					last_name: testState.lastName
 				})
 			});
 
@@ -64,7 +66,8 @@ describe('E2E: Complete User Journey', () => {
 				body: JSON.stringify({
 					email: testState.email,
 					password: testState.password,
-					full_name: testState.fullName
+					first_name: testState.firstName,
+					last_name: testState.lastName
 				})
 			});
 
@@ -134,7 +137,8 @@ describe('E2E: Complete User Journey', () => {
 				method: 'PATCH',
 				headers: authHeaders(),
 				body: JSON.stringify({
-					full_name: 'E2E Bijgewerkt Naam',
+					first_name: 'E2E Bijgewerkt',
+					last_name: 'Naam',
 					job_title: 'Inkoopadviseur'
 				})
 			});

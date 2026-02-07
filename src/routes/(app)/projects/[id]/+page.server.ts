@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const { data: members } = await supabase
 		.from('project_members')
-		.select('*, profile:profiles(full_name, email), roles:project_member_roles(role)')
+		.select('*, profile:profiles(first_name, last_name, email), roles:project_member_roles(role)')
 		.eq('project_id', params.id);
 
 	// Load reviewers for all artifacts in this project
@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Load organization members for the add-member dropdown
 	const { data: organizationMembers } = await supabase
 		.from('organization_members')
-		.select('profile_id, profile:profiles(full_name, email)')
+		.select('profile_id, profile:profiles(first_name, last_name, email)')
 		.eq('organization_id', project.organization_id);
 
 	// Load uploaded documents for this project

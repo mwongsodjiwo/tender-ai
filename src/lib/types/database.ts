@@ -30,7 +30,8 @@ export interface Organization {
 export interface Profile {
 	id: string;
 	email: string;
-	full_name: string;
+	first_name: string;
+	last_name: string;
 	avatar_url: string | null;
 	job_title: string | null;
 	phone: string | null;

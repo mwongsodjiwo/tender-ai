@@ -40,24 +40,26 @@ describe('registerSchema', () => {
 		const result = registerSchema.safeParse({
 			email: 'test@example.com',
 			password: 'password123',
-			full_name: 'Jan de Vries'
+			first_name: 'Jan',
+			last_name: 'de Vries'
 		});
 		expect(result.success).toBe(true);
 	});
 
-	it('should reject missing full_name', () => {
+	it('should reject missing first_name', () => {
 		const result = registerSchema.safeParse({
 			email: 'test@example.com',
-			password: 'password123'
+			password: 'password123',
+			last_name: 'de Vries'
 		});
 		expect(result.success).toBe(false);
 	});
 
-	it('should reject short full_name', () => {
+	it('should reject missing last_name', () => {
 		const result = registerSchema.safeParse({
 			email: 'test@example.com',
 			password: 'password123',
-			full_name: 'J'
+			first_name: 'Jan'
 		});
 		expect(result.success).toBe(false);
 	});
@@ -101,7 +103,8 @@ describe('createOrganizationSchema', () => {
 describe('updateProfileSchema', () => {
 	it('should accept partial update', () => {
 		const result = updateProfileSchema.safeParse({
-			full_name: 'Jan de Vries'
+			first_name: 'Jan',
+			last_name: 'de Vries'
 		});
 		expect(result.success).toBe(true);
 	});

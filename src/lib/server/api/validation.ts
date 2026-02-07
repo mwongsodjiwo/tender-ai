@@ -15,7 +15,8 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
 	email: z.string().email('Ongeldig e-mailadres'),
 	password: z.string().min(8, 'Wachtwoord moet minimaal 8 tekens bevatten'),
-	full_name: z.string().min(2, 'Naam moet minimaal 2 tekens bevatten').max(100)
+	first_name: z.string().min(1, 'Voornaam is verplicht').max(50),
+	last_name: z.string().min(1, 'Achternaam is verplicht').max(50)
 });
 
 // =============================================================================
@@ -64,7 +65,8 @@ export const adminUpdateMemberRoleSchema = z.object({
 // =============================================================================
 
 export const updateProfileSchema = z.object({
-	full_name: z.string().min(2).max(100).optional(),
+	first_name: z.string().min(1).max(50).optional(),
+	last_name: z.string().min(1).max(50).optional(),
 	job_title: z.string().max(100).optional(),
 	phone: z.string().max(20).optional(),
 	avatar_url: z.string().url().optional()

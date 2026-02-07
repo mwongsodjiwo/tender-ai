@@ -5,10 +5,10 @@
 	export let projectId: string;
 	export let members: {
 		id: string;
-		profile: { full_name: string; email: string };
+		profile: { first_name: string; last_name: string; email: string };
 		roles: { role: ProjectRole }[];
 	}[];
-	export let organizationMembers: { profile_id: string; profile: { full_name: string; email: string } }[];
+	export let organizationMembers: { profile_id: string; profile: { first_name: string; last_name: string; email: string } }[];
 
 	let showAddForm = false;
 	let selectedProfileId = '';
@@ -126,7 +126,7 @@
 						<option value="">Selecteer een lid...</option>
 						{#each availableMembers as om}
 							<option value={om.profile_id}>
-								{om.profile.full_name} ({om.profile.email})
+								{om.profile.first_name} {om.profile.last_name} ({om.profile.email})
 							</option>
 						{/each}
 					</select>
@@ -174,7 +174,7 @@
 				<li class="px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div>
-							<p class="font-medium text-gray-900">{member.profile.full_name}</p>
+							<p class="font-medium text-gray-900">{member.profile.first_name} {member.profile.last_name}</p>
 							<p class="text-sm text-gray-500">{member.profile.email}</p>
 						</div>
 						<div class="flex items-center gap-2">
@@ -216,14 +216,14 @@
 								<button
 									on:click={() => startEdit(member)}
 									class="rounded px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50"
-									aria-label="Rollen bewerken voor {member.profile.full_name}"
+									aria-label="Rollen bewerken voor {member.profile.first_name} {member.profile.last_name}"
 								>
 									Bewerken
 								</button>
 								<button
 									on:click={() => removeMember(member.id)}
 									class="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
-									aria-label="Verwijder {member.profile.full_name}"
+									aria-label="Verwijder {member.profile.first_name} {member.profile.last_name}"
 								>
 									Verwijderen
 								</button>

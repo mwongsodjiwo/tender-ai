@@ -238,11 +238,11 @@
 						<li class="flex items-center justify-between px-6 py-4">
 							<div class="flex items-center">
 								<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-700">
-									{member.profile?.full_name?.charAt(0)?.toUpperCase() ?? '?'}
+									{member.profile?.first_name?.charAt(0)?.toUpperCase() ?? '?'}
 								</div>
 								<div class="ml-4">
 									<p class="text-sm font-medium text-gray-900">
-										{member.profile?.full_name ?? 'Onbekend'}
+										{member.profile?.first_name ?? ''} {member.profile?.last_name ?? ''}
 									</p>
 									<p class="text-sm text-gray-500">
 										{member.profile?.email ?? ''}
@@ -260,7 +260,7 @@
 									<option value="member">Lid</option>
 								</select>
 								<button
-									on:click={() => handleRemoveMember(member.id, member.profile?.full_name ?? 'dit lid')}
+									on:click={() => handleRemoveMember(member.id, member.profile ? `${member.profile.first_name} ${member.profile.last_name}` : 'dit lid')}
 									class="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
 									title="Lid verwijderen"
 								>
