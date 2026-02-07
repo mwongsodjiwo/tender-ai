@@ -34,6 +34,7 @@ export interface Profile {
 	avatar_url: string | null;
 	job_title: string | null;
 	phone: string | null;
+	is_superadmin: boolean;
 	created_at: string;
 	updated_at: string;
 }

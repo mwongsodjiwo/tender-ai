@@ -2,6 +2,7 @@
 
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import type { Organization } from '$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const { session, user } = await locals.safeGetSession();
@@ -16,14 +17,21 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		.eq('id', user.id)
 		.single();
 
-	const { data: organizations } = await locals.supabase
-		.from('organizations')
-		.select('*')
-		.is('deleted_at', null)
-		.order('name');
+	// Load organizations the user is a member of (via join, so superadmins don't see all orgs in nav)
+	const { data: memberships } = await locals.supabase
+		.from('organization_members')
+		.select('organization:organizations(*)')
+		.eq('profile_id', user.id);
+
+	const organizations = (memberships ?? [])
+		.map((m: { organization: unknown }) => m.organization as Organization | null)
+		.filter((org): org is Organization => org != null && org.deleted_at == null)
+		.sort((a, b) => a.name.localeCompare(b.name));
 
 	return {
 		profile,
-		organizations: organizations ?? []
+		organizations,
+		isSuperadmin: profile?.is_superadmin ?? false,
+		hasOrganization: organizations.length > 0
 	};
 };

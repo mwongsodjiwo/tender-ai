@@ -4,6 +4,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { inviteMemberSchema } from '$server/api/validation';
+import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -32,9 +33,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
-	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
-	}
+	const guardResponse = await requireSuperadmin(supabase, user);
+	if (guardResponse) return guardResponse;
 
 	const body = await request.json();
 	const parsed = inviteMemberSchema.safeParse(body);

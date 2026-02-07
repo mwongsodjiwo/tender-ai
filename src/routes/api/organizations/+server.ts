@@ -4,6 +4,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createOrganizationSchema } from '$server/api/validation';
+import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -32,9 +33,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
-	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
-	}
+	const guardResponse = await requireSuperadmin(supabase, user);
+	if (guardResponse) return guardResponse;
 
 	const body = await request.json();
 	const parsed = createOrganizationSchema.safeParse(body);

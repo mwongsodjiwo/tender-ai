@@ -47,6 +47,19 @@ export const inviteMemberSchema = z.object({
 });
 
 // =============================================================================
+// ADMIN — member management (superadmin only)
+// =============================================================================
+
+export const adminAddMemberSchema = z.object({
+	email: z.string().email('Ongeldig e-mailadres'),
+	role: z.enum(ORGANIZATION_ROLES)
+});
+
+export const adminUpdateMemberRoleSchema = z.object({
+	role: z.enum(ORGANIZATION_ROLES)
+});
+
+// =============================================================================
 // PROFILES
 // =============================================================================
 

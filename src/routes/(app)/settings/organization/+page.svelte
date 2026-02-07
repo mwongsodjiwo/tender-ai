@@ -20,8 +20,11 @@
 	// Roles that are allowed to edit the organization
 	const EDITABLE_ROLES: ReadonlyArray<string> = ['owner', 'admin'];
 
-	// Whether current user can edit organization settings
-	$: canEdit = data.currentMemberRole !== null && EDITABLE_ROLES.includes(data.currentMemberRole);
+	// Whether current user can edit organization settings (owner/admin/superadmin)
+	$: canEditOrg = (data.currentMemberRole !== null && EDITABLE_ROLES.includes(data.currentMemberRole)) || data.isSuperadmin;
+
+	// Whether current user can manage members (superadmin only)
+	$: canManageMembers = data.isSuperadmin === true;
 
 	// Organization form state
 	let orgName = data.organization?.name ?? '';
@@ -204,11 +207,11 @@
 						type="text"
 						bind:value={orgName}
 						required
-						disabled={!canEdit}
+						disabled={!canEditOrg}
 						minlength={ORG_NAME_MIN_LENGTH}
 						maxlength={ORG_NAME_MAX_LENGTH}
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{!canEdit ? 'bg-gray-50 text-gray-500' : ''}
+							{!canEditOrg ? 'bg-gray-50 text-gray-500' : ''}
 							{validationErrors['name'] ? 'border-red-300' : ''}"
 						aria-describedby={validationErrors['name'] ? 'org-name-error' : undefined}
 						aria-invalid={validationErrors['name'] ? 'true' : undefined}
@@ -245,12 +248,12 @@
 					<textarea
 						id="org-description"
 						bind:value={orgDescription}
-						disabled={!canEdit}
+						disabled={!canEditOrg}
 						maxlength={ORG_DESCRIPTION_MAX_LENGTH}
 						rows="3"
 						placeholder="Korte beschrijving van uw organisatie"
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{!canEdit ? 'bg-gray-50 text-gray-500' : ''}
+							{!canEditOrg ? 'bg-gray-50 text-gray-500' : ''}
 							{validationErrors['description'] ? 'border-red-300' : ''}"
 						aria-describedby={validationErrors['description'] ? 'org-description-error' : undefined}
 						aria-invalid={validationErrors['description'] ? 'true' : undefined}
@@ -261,7 +264,7 @@
 				</div>
 			</div>
 
-			{#if canEdit}
+			{#if canEditOrg}
 				<div class="flex justify-end border-t border-gray-200 bg-gray-50 px-6 py-3">
 					<button
 						type="submit"
@@ -328,8 +331,8 @@
 				</div>
 			{/if}
 
-			<!-- Invite member form (only for owner/admin) -->
-			{#if canEdit}
+			<!-- Invite member form (only for superadmin) -->
+			{#if canManageMembers}
 				<div class="border-t border-gray-200 bg-gray-50 p-6">
 					<h4 class="text-sm font-medium text-gray-900">Lid uitnodigen</h4>
 

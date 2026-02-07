@@ -2,16 +2,18 @@
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ parent, locals }) => {
+	const { hasOrganization } = await parent();
 	const { supabase } = locals;
 
-	const { data: projects, error } = await supabase
+	const { data: projects } = await supabase
 		.from('projects')
 		.select('*')
 		.is('deleted_at', null)
 		.order('updated_at', { ascending: false });
 
 	return {
-		projects: projects ?? []
+		projects: projects ?? [],
+		hasOrganization
 	};
 };

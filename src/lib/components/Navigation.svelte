@@ -6,14 +6,19 @@
 
 	export let supabase: SupabaseClient;
 	export let profile: Profile | null;
+	export let isSuperadmin: boolean = false;
 
 	let menuOpen = false;
 	let mobileMenuOpen = false;
 
-	const NAV_LINKS = [
+	const BASE_NAV_LINKS = [
 		{ href: '/dashboard', label: 'Dashboard' },
 		{ href: '/kennisbank', label: 'Kennisbank' }
-	] as const;
+	];
+
+	$: NAV_LINKS = isSuperadmin
+		? [...BASE_NAV_LINKS, { href: '/admin', label: 'Beheer' }]
+		: BASE_NAV_LINKS;
 
 	async function handleLogout() {
 		await supabase.auth.signOut();

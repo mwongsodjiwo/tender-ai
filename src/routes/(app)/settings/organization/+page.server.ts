@@ -4,7 +4,7 @@ import type { PageServerLoad } from './$types';
 import type { Organization, OrganizationMemberWithProfile } from '$types';
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
-	const { organizations, profile } = await parent();
+	const { organizations, profile, isSuperadmin } = await parent();
 	const { supabase } = locals;
 
 	// Use the first organization (MVP: single-org assumption)
@@ -14,7 +14,8 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		return {
 			organization: null,
 			members: [],
-			currentMemberRole: null
+			currentMemberRole: null,
+			isSuperadmin: isSuperadmin ?? false
 		};
 	}
 
@@ -33,6 +34,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 	return {
 		organization,
 		members: (members ?? []) as OrganizationMemberWithProfile[],
-		currentMemberRole: currentMember?.role ?? null
+		currentMemberRole: currentMember?.role ?? null,
+		isSuperadmin: isSuperadmin ?? false
 	};
 };

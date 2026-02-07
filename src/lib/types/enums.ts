@@ -95,6 +95,7 @@ export const AUDIT_ACTIONS = [
 	'reject',
 	'generate',
 	'export',
-	'upload'
+	'upload',
+	'admin_action'
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
