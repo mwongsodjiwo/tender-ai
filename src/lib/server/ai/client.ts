@@ -1,10 +1,10 @@
-// Anthropic Claude API client
+// OpenAI API client
 
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { AI_CONFIG, SYSTEM_PROMPTS } from './config.js';
 import type { Message } from '$types';
 
-const anthropic = new Anthropic({
+const openai = new OpenAI({
 	apiKey: AI_CONFIG.apiKey
 });
 
@@ -34,36 +34,35 @@ export async function chat(params: ChatParams): Promise<ChatResult> {
 		maxTokens = AI_CONFIG.maxTokens
 	} = params;
 
-	const formattedMessages = messages.map((msg) => ({
-		role: msg.role as 'user' | 'assistant',
-		content: msg.content
-	}));
+	const openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+		{ role: 'system', content: systemPrompt },
+		...messages.map((msg) => ({
+			role: msg.role as 'user' | 'assistant',
+			content: msg.content
+		}))
+	];
 
 	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
 		try {
-			const response = await anthropic.messages.create({
+			const response = await openai.chat.completions.create({
 				model: AI_CONFIG.model,
 				max_tokens: maxTokens,
 				temperature,
-				system: systemPrompt,
-				messages: formattedMessages
+				messages: openaiMessages
 			});
 
-			const textBlock = response.content.find((block) => block.type === 'text');
-			const content = textBlock?.type === 'text' ? textBlock.text : '';
+			const content = response.choices[0]?.message?.content ?? '';
+			const tokenCount =
+				(response.usage?.prompt_tokens ?? 0) + (response.usage?.completion_tokens ?? 0);
 
-			return {
-				content,
-				tokenCount: response.usage.input_tokens + response.usage.output_tokens
-			};
+			return { content, tokenCount };
 		} catch (err: unknown) {
-			const isRateLimit = err instanceof Error && 'status' in err && (err as { status: number }).status === 429;
+			const isRateLimit = err instanceof OpenAI.APIError && err.status === 429;
 			if (!isRateLimit || attempt === MAX_RETRIES) {
 				throw err;
 			}
-			// Parse retry-after header or use exponential backoff
-			const retryAfter = err instanceof Error && 'headers' in err
-				? Number((err as { headers: Record<string, string> }).headers?.['retry-after'] || 0)
+			const retryAfter = err instanceof OpenAI.APIError
+				? Number(err.headers?.['retry-after'] || 0)
 				: 0;
 			const delay = Math.max(retryAfter * 1000, (2 ** attempt) * 5000);
 			console.log(`Rate limited, retrying in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${MAX_RETRIES})...`);

@@ -1,18 +1,18 @@
 // AI configuration — all LLM settings are centralized here
 
 import {
-	ANTHROPIC_API_KEY,
-	ANTHROPIC_MODEL,
-	ANTHROPIC_MAX_TOKENS,
+	OPENAI_API_KEY,
+	OPENAI_MODEL,
+	OPENAI_MAX_TOKENS,
 	EMBEDDING_API_KEY,
 	EMBEDDING_API_ENDPOINT,
 	EMBEDDING_MODEL
 } from '$env/static/private';
 
 export const AI_CONFIG = {
-	apiKey: ANTHROPIC_API_KEY,
-	model: ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929',
-	maxTokens: Number(ANTHROPIC_MAX_TOKENS) || 4096,
+	apiKey: OPENAI_API_KEY,
+	model: OPENAI_MODEL || 'gpt-4o',
+	maxTokens: Number(OPENAI_MAX_TOKENS) || 4096,
 	defaultTemperature: 0.7
 } as const;
 
