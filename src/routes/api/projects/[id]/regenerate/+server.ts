@@ -4,6 +4,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { regenerateSectionSchema } from '$server/api/validation';
 import { regenerateSection } from '$server/ai/generation';
+import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -55,6 +56,29 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.eq('id', params.id)
 		.single();
 
+	// Search for relevant context from uploaded documents via RAG
+	const contextQuery = buildContextQuery(artifact.title, instructions, project?.briefing_data);
+	let contextSnippets: string[] = [];
+
+	try {
+		const contextResults = await searchContext({
+			supabase,
+			query: contextQuery,
+			projectId: params.id,
+			organizationId: project?.organization_id,
+			limit: 5
+		});
+
+		if (contextResults.length > 0) {
+			contextSnippets = contextResults.map((r) =>
+				`[${r.source === 'document' ? 'Document' : 'TenderNed'}: ${r.title}]\n${r.snippet}`
+			);
+		}
+	} catch (err) {
+		// Context search failure should not block generation
+		console.error('Context search failed during regeneration:', err instanceof Error ? err.message : err);
+	}
+
 	// Save current version before regeneration
 	await supabase.from('artifact_versions').insert({
 		artifact_id: artifact.id,
@@ -66,14 +90,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	const previousVersion = artifact.version;
 
-	// Regenerate
+	// Regenerate with context from RAG
 	let result;
 	try {
 		result = await regenerateSection({
 			artifact,
 			documentType,
 			briefingData: project?.briefing_data ?? {},
-			instructions
+			instructions,
+			contextSnippets
 		});
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Generatiefout';
@@ -104,13 +129,40 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		action: 'generate',
 		entityType: 'artifact',
 		entityId: artifact_id,
-		changes: { previous_version: previousVersion, new_version: updated.version, instructions }
+		changes: {
+			previous_version: previousVersion,
+			new_version: updated.version,
+			instructions,
+			context_snippets_used: contextSnippets.length
+		}
 	});
 
 	return json({
 		data: {
 			artifact: updated,
-			previous_version: previousVersion
+			previous_version: previousVersion,
+			context_used: contextSnippets.length
 		}
 	});
 };
+
+function buildContextQuery(
+	sectionTitle: string,
+	instructions: string | undefined,
+	briefingData: Record<string, unknown> | undefined
+): string {
+	const parts = [sectionTitle];
+
+	if (instructions) {
+		parts.push(instructions);
+	}
+
+	if (briefingData) {
+		const summary = briefingData.summary ?? briefingData.project_description ?? '';
+		if (typeof summary === 'string' && summary.length > 0) {
+			parts.push(summary.substring(0, 200));
+		}
+	}
+
+	return parts.join(' — ');
+}

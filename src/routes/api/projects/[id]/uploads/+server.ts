@@ -6,6 +6,8 @@ import type { RequestHandler } from './$types';
 import { uploadDocumentSchema, uploadFileValidation } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
 import { createServiceClient } from '$server/db/client';
+import { extractText, isTextExtractable } from '$server/ai/parser';
+import { processDocumentChunks } from '$server/ai/rag';
 
 const STORAGE_BUCKET = 'documents';
 
@@ -104,8 +106,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		);
 	}
 
-	// Extract text content (basic — will be enhanced by RAG pipeline)
-	const contentText = await extractTextContent(file);
+	// Extract text content from PDF, Word, TXT, CSV
+	let contentText: string | null = null;
+	if (isTextExtractable(file.type)) {
+		contentText = await extractText(file);
+	}
 
 	// Save metadata to documents table
 	const { data: document, error: dbError } = await serviceClient
@@ -122,7 +127,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			uploaded_by: user.id,
 			metadata: {
 				original_filename: file.name,
-				extension: fileExt
+				extension: fileExt,
+				text_extracted: contentText !== null,
+				text_length: contentText?.length ?? 0
 			}
 		})
 		.select()
@@ -146,20 +153,21 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			name: document.name,
 			category: meta.category,
 			file_size: file.size,
-			mime_type: file.type
+			mime_type: file.type,
+			text_extracted: contentText !== null
 		}
 	});
 
-	return json({ data: document }, { status: 201 });
-};
-
-async function extractTextContent(file: File): Promise<string | null> {
-	// For plain text files, extract directly
-	if (file.type === 'text/plain' || file.type === 'text/csv') {
-		return await file.text();
+	// Trigger chunking + embedding in background (non-blocking)
+	if (contentText && contentText.length > 0) {
+		processDocumentChunks(serviceClient, document.id, contentText)
+			.then((chunkCount) => {
+				console.log(`Document ${document.id}: ${chunkCount} chunks created with embeddings`);
+			})
+			.catch((err) => {
+				console.error(`Document ${document.id}: chunking failed:`, err instanceof Error ? err.message : err);
+			});
 	}
 
-	// For other file types, text extraction will be handled by the RAG pipeline
-	// which uses more sophisticated parsing (pdf-parse, mammoth for docx, etc.)
-	return null;
-}
+	return json({ data: document }, { status: 201 });
+};

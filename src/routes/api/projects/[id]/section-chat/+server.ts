@@ -4,6 +4,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { sectionChatSchema } from '$server/api/validation';
 import { chatAboutSection } from '$server/ai/generation';
+import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -35,6 +36,30 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	if (artError || !artifact) {
 		return json({ message: 'Sectie niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+	}
+
+	// Get project org for context scoping
+	const { data: project } = await supabase
+		.from('projects')
+		.select('organization_id')
+		.eq('id', params.id)
+		.single();
+
+	// Search relevant context from uploaded documents for this conversation
+	let contextBlock = '';
+	try {
+		const contextResults = await searchContext({
+			supabase,
+			query: `${artifact.title} ${message}`,
+			projectId: params.id,
+			organizationId: project?.organization_id,
+			limit: 3
+		});
+
+		contextBlock = formatContextForPrompt(contextResults);
+	} catch (err) {
+		// Context search failure should not block the chat
+		console.error('Context search failed during section chat:', err instanceof Error ? err.message : err);
 	}
 
 	// Get or create conversation
@@ -74,11 +99,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.eq('conversation_id', convId)
 		.order('created_at', { ascending: true });
 
-	// Call AI
+	// Call AI with RAG context injected into the artifact
 	let result;
 	try {
+		const artifactWithContext = contextBlock
+			? { ...artifact, content: `${artifact.content}${contextBlock}` }
+			: artifact;
+
 		result = await chatAboutSection({
-			artifact,
+			artifact: artifactWithContext,
 			messages: (history ?? []).map((msg) => ({
 				role: msg.role,
 				content: msg.content
@@ -125,12 +154,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			.single();
 
 		updatedArtifact = updated;
-
-		const { data: project } = await supabase
-			.from('projects')
-			.select('organization_id')
-			.eq('id', params.id)
-			.single();
 
 		await logAudit(supabase, {
 			organizationId: project?.organization_id,
