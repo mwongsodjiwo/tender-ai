@@ -207,8 +207,8 @@
 	<title>{documentType.name} — {project.name} — Tendermanager</title>
 </svelte:head>
 
-<!-- Fullscreen wizard overlay -->
-<div class="fixed inset-0 z-40 flex flex-col bg-[#F5F5F5]">
+<!-- Fullscreen wizard overlay — z-[60] to cover the app Navigation sidebar (z-50) -->
+<div class="fixed inset-0 z-[60] flex flex-col bg-[#F5F5F5]">
 	<!-- Header -->
 	<header class="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm sm:px-6">
 		<div class="flex items-center gap-4">
@@ -341,7 +341,7 @@
 	{#if activeArtifact}
 		<button
 			type="button"
-			class="fixed bottom-20 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+			class="fixed bottom-20 right-6 z-[70] inline-flex items-center gap-2 rounded-full bg-primary-600 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 			on:click={() => { chatOpen = !chatOpen; }}
 			aria-label="Chat met AI"
 		>
@@ -356,7 +356,7 @@
 
 	<!-- Chat panel (slide-up overlay) -->
 	{#if chatOpen && activeArtifact}
-		<div class="fixed inset-x-0 bottom-0 z-50 flex flex-col bg-white shadow-2xl lg:inset-x-auto lg:right-0 lg:top-0 lg:w-96 lg:border-l lg:border-gray-200 lg:shadow-none">
+		<div class="fixed inset-x-0 bottom-0 z-[70] flex flex-col bg-white shadow-2xl lg:inset-x-auto lg:right-0 lg:top-0 lg:w-96 lg:border-l lg:border-gray-200 lg:shadow-none">
 			<!-- Chat header -->
 			<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">
 				<div>
@@ -449,7 +449,7 @@
 </div>
 
 <!-- Mobile stepper (bottom sheet trigger) -->
-<div class="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white p-2 lg:hidden">
+<div class="fixed bottom-0 left-0 right-0 z-[60] border-t border-gray-200 bg-white p-2 lg:hidden">
 	<div class="flex items-center justify-between px-2">
 		<span class="text-xs text-gray-500">
 			Stap {currentSectionIndex + 1} van {totalCount}
