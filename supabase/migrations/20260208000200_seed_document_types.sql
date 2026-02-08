@@ -87,4 +87,18 @@ INSERT INTO document_types (name, slug, description, template_structure, applica
   ]'::jsonb,
   '{}',
   5
+),
+
+-- 6. Uniform Europees Aanbestedingsdocument (UEA)
+(
+  'Uniform Europees Aanbestedingsdocument',
+  'uniform-europees-aanbestedingsdocument',
+  'Eigen verklaring van ondernemers als voorlopig bewijs bij Europese aanbestedingen (UEA/ESPD).',
+  '[
+    {"key": "deel-ii", "title": "Deel II — Informatie over de ondernemer", "description": "Identificatie, vertegenwoordigers, onderaanneming en combinatievorming."},
+    {"key": "deel-iii", "title": "Deel III — Uitsluitingsgronden", "description": "Verplichte en facultatieve uitsluitingsgronden."},
+    {"key": "deel-iv", "title": "Deel IV — Selectiecriteria", "description": "Geschiktheid, economische draagkracht, technische bekwaamheid en certificeringen."}
+  ]'::jsonb,
+  '{open,restricted,negotiated_with_publication,competitive_dialogue,innovation_partnership}',
+  6
 );

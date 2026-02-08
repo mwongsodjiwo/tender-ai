@@ -9,7 +9,14 @@ import type {
 	DocumentCategory,
 	ProcedureType,
 	ReviewStatus,
-	AuditAction
+	AuditAction,
+	RequirementType,
+	RequirementCategory,
+	ScoringMethodology,
+	CriterionType,
+	ContractType,
+	GeneralConditionsType,
+	UeaPart
 } from './enums.js';
 
 // =============================================================================
@@ -61,6 +68,9 @@ export interface Project {
 	publication_date: string | null;
 	deadline_date: string | null;
 	briefing_data: Record<string, unknown>;
+	scoring_methodology: ScoringMethodology | null;
+	contract_type: ContractType | null;
+	general_conditions: GeneralConditionsType | null;
 	created_by: string;
 	created_at: string;
 	updated_at: string;
@@ -213,6 +223,111 @@ export interface ArtifactVersion {
 	content: string;
 	created_by: string | null;
 	created_at: string;
+}
+
+// =============================================================================
+// REQUIREMENTS — Sprint R5 (PvE eisenmanager)
+// =============================================================================
+
+export interface Requirement {
+	id: string;
+	project_id: string;
+	document_type_id: string;
+	requirement_number: string;
+	title: string;
+	description: string;
+	requirement_type: RequirementType;
+	category: RequirementCategory;
+	weight_percentage: number;
+	priority: number;
+	sort_order: number;
+	metadata: Record<string, unknown>;
+	created_by: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// EMVI CRITERIA — Sprint R6 (wegingstool)
+// =============================================================================
+
+export interface EmviCriterion {
+	id: string;
+	project_id: string;
+	name: string;
+	description: string;
+	criterion_type: CriterionType;
+	weight_percentage: number;
+	sort_order: number;
+	metadata: Record<string, unknown>;
+	created_by: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// CONTRACT STANDARD TEXTS — Sprint R7 (Conceptovereenkomst wizard)
+// =============================================================================
+
+export interface ContractStandardText {
+	id: string;
+	section_key: string;
+	general_conditions: GeneralConditionsType;
+	title: string;
+	content: string;
+	sort_order: number;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+// =============================================================================
+// UEA — Sprint R8 (Uniform Europees Aanbestedingsdocument)
+// =============================================================================
+
+export interface UeaSection {
+	id: string;
+	part_number: UeaPart;
+	part_title: string;
+	section_key: string;
+	section_title: string;
+	description: string;
+	sort_order: number;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface UeaQuestion {
+	id: string;
+	section_id: string;
+	question_number: string;
+	title: string;
+	description: string;
+	is_mandatory: boolean;
+	sort_order: number;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface UeaProjectSelection {
+	id: string;
+	project_id: string;
+	question_id: string;
+	is_selected: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface UeaQuestionWithSelection extends UeaQuestion {
+	is_selected: boolean;
+}
+
+export interface UeaSectionWithQuestions extends UeaSection {
+	questions: UeaQuestionWithSelection[];
 }
 
 // =============================================================================
