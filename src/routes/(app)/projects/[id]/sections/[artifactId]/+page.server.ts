@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.single();
 
 	if (artError || !artifact) {
+		console.error('Artifact load failed:', { artError, artifactId: params.artifactId, projectId: params.id });
 		throw error(404, 'Sectie niet gevonden');
 	}
 

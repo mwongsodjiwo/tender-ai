@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
+	import TiptapEditor from '$components/TiptapEditor.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-
-	$: artifact = data.artifact;
-	$: project = data.project;
-	$: versions = data.versions;
 
 	const STATUS_LABELS: Record<string, string> = {
 		draft: 'Concept',
@@ -26,16 +23,16 @@
 	};
 
 	// Editor state
-	let editedContent = artifact.content ?? '';
+	let editedContent = data.artifact?.content ?? '';
+	let savedContent = editedContent;
 	let saving = false;
 	let saveMessage = '';
-	let hasChanges = false;
 
-	$: hasChanges = editedContent !== (artifact.content ?? '');
+	$: hasChanges = editedContent !== savedContent;
 
 	// Chat state
 	let conversationId = data.conversationId;
-	let chatMessages = [...data.messages];
+	let chatMessages = [...(data.messages ?? [])];
 	let chatInput = '';
 	let chatLoading = false;
 	let chatContainer: HTMLElement;
@@ -63,7 +60,7 @@
 		saving = true;
 		saveMessage = '';
 
-		const response = await fetch(`/api/projects/${project.id}/artifacts/${artifact.id}`, {
+		const response = await fetch(`/api/projects/${data.project.id}/artifacts/${data.artifact.id}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ content: editedContent })
@@ -71,8 +68,8 @@
 
 		if (response.ok) {
 			saveMessage = 'Opgeslagen';
+			savedContent = editedContent;
 			await invalidateAll();
-			editedContent = data.artifact.content ?? '';
 			setTimeout(() => { saveMessage = ''; }, 2000);
 		} else {
 			saveMessage = 'Fout bij opslaan';
@@ -82,7 +79,7 @@
 	}
 
 	async function updateStatus(status: string) {
-		const response = await fetch(`/api/projects/${project.id}/artifacts/${artifact.id}`, {
+		const response = await fetch(`/api/projects/${data.project.id}/artifacts/${data.artifact.id}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ status })
@@ -111,11 +108,11 @@
 		];
 		await scrollChatToBottom();
 
-		const response = await fetch(`/api/projects/${project.id}/section-chat`, {
+		const response = await fetch(`/api/projects/${data.project.id}/section-chat`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				artifact_id: artifact.id,
+				artifact_id: data.artifact.id,
 				conversation_id: conversationId ?? undefined,
 				message: userMessage
 			})
@@ -153,7 +150,8 @@
 		// If AI updated the artifact, refresh
 		if (result.data.has_update && result.data.updated_artifact) {
 			await invalidateAll();
-			editedContent = data.artifact.content ?? '';
+			editedContent = data.artifact?.content ?? '';
+			savedContent = editedContent;
 		}
 
 		chatLoading = false;
@@ -171,11 +169,11 @@
 		if (regenerating) return;
 		regenerating = true;
 
-		const response = await fetch(`/api/projects/${project.id}/regenerate`, {
+		const response = await fetch(`/api/projects/${data.project.id}/regenerate`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				artifact_id: artifact.id,
+				artifact_id: data.artifact.id,
 				instructions: regenerateInstructions || undefined
 			})
 		});
@@ -184,7 +182,8 @@
 			showRegenerateForm = false;
 			regenerateInstructions = '';
 			await invalidateAll();
-			editedContent = data.artifact.content ?? '';
+			editedContent = data.artifact?.content ?? '';
+			savedContent = editedContent;
 		}
 
 		regenerating = false;
@@ -208,9 +207,13 @@
 </script>
 
 <svelte:head>
-	<title>{artifact.title} — {project.name} — Tendermanager</title>
+	<title>{data.artifact?.title ?? 'Sectie'} — {data.project?.name ?? 'Project'} — Tendermanager</title>
 </svelte:head>
 
+{#if data.artifact && data.project}
+{@const artifact = data.artifact}
+{@const project = data.project}
+{@const versions = data.versions ?? []}
 <div class="flex h-[calc(100vh-8rem)] flex-col">
 	<!-- Header -->
 	<div class="mb-4 flex items-center justify-between">
@@ -246,12 +249,13 @@
 	<div class="flex flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
 		<!-- Editor panel -->
 		<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
-			<!-- Editor toolbar -->
-			<div class="flex items-center justify-between rounded-t-lg border border-b-0 border-gray-200 bg-gray-50 px-4 py-2">
+			<!-- Action toolbar -->
+			<div class="flex items-center justify-between border border-b-0 border-gray-200 bg-gray-50 px-4 py-2" style="border-radius: 0.5rem 0.5rem 0 0;">
 				<div class="flex gap-2">
 					<button
 						on:click={() => { showRegenerateForm = !showRegenerateForm; }}
 						class="rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-white"
+						type="button"
 					>
 						Hergenereren
 					</button>
@@ -259,6 +263,7 @@
 						<button
 							on:click={() => updateStatus('review')}
 							class="rounded border border-purple-300 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-50"
+							type="button"
 						>
 							Naar review
 						</button>
@@ -267,12 +272,14 @@
 						<button
 							on:click={() => updateStatus('approved')}
 							class="rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
+							type="button"
 						>
 							Goedkeuren
 						</button>
 						<button
 							on:click={() => updateStatus('rejected')}
 							class="rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+							type="button"
 						>
 							Afwijzen
 						</button>
@@ -300,12 +307,14 @@
 							on:click={handleRegenerate}
 							disabled={regenerating}
 							class="rounded bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+							type="button"
 						>
 							{regenerating ? 'Bezig met genereren...' : 'Hergenereren'}
 						</button>
 						<button
 							on:click={() => { showRegenerateForm = false; }}
 							class="rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-white"
+							type="button"
 						>
 							Annuleren
 						</button>
@@ -313,13 +322,16 @@
 				</div>
 			{/if}
 
-			<!-- Text editor -->
-			<textarea
-				bind:value={editedContent}
-				class="flex-1 resize-none rounded-b-lg border border-gray-200 p-4 font-mono text-sm leading-relaxed text-gray-900 focus:border-primary-500 focus:ring-primary-500"
-				placeholder="Sectie-inhoud..."
-				aria-label="Sectie-inhoud bewerken"
-			></textarea>
+			<!-- Rich text editor -->
+			<TiptapEditor
+				content={editedContent}
+				placeholder="Begin hier met het bewerken van de sectie-inhoud..."
+				on:change={(e) => {
+					const isInitialLoad = editedContent === (data.artifact?.content ?? '');
+					editedContent = e.detail;
+					if (isInitialLoad) savedContent = editedContent;
+				}}
+			/>
 		</div>
 
 		<!-- Side panel -->
@@ -483,7 +495,7 @@
 					</button>
 				</div>
 				<div class="flex-1 overflow-y-auto p-6">
-					<div class="whitespace-pre-wrap font-mono text-sm text-gray-800">{viewingVersion.content}</div>
+					<div class="prose prose-sm max-w-none text-gray-800">{@html viewingVersion.content}</div>
 				</div>
 				<div class="flex justify-end gap-2 border-t border-gray-200 px-6 py-4">
 					<button
@@ -503,3 +515,8 @@
 		</div>
 	{/if}
 </div>
+{:else}
+<div class="flex h-64 items-center justify-center">
+	<p class="text-gray-500">Sectie wordt geladen...</p>
+</div>
+{/if}
