@@ -36,9 +36,9 @@ async function extractPdfText(file: File): Promise<string | null> {
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
-		// pdf-parse uses dynamic import to avoid bundling issues in SvelteKit
-		const pdfParse = (await import('pdf-parse')).default;
-		const result = await pdfParse(buffer);
+		// pdf-parse exports { pdf, PDFParse, initPDFJS }
+		const { pdf } = await import('pdf-parse');
+		const result = await pdf(buffer);
 
 		const text = result?.text?.trim();
 		return text && text.length > 0 ? text : null;
