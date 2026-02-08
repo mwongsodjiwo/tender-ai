@@ -105,39 +105,39 @@
 
 	{#if !data.profile}
 		<!-- Error state -->
-		<div class="rounded-md bg-red-50 p-4" role="alert">
-			<p class="text-sm text-red-700">
+		<div class="rounded-badge bg-error-50 p-4" role="alert">
+			<p class="text-sm text-error-700">
 				Profiel kon niet worden geladen. Ververs de pagina of neem contact op met support.
 			</p>
 		</div>
 	{:else}
 		<!-- Success message -->
 		{#if successMessage}
-			<div class="rounded-md bg-green-50 p-4" role="status">
+			<div class="rounded-badge bg-success-50 p-4" role="status">
 				<div class="flex">
-					<svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<svg class="h-5 w-5 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 					</svg>
-					<p class="ml-3 text-sm text-green-700">{successMessage}</p>
+					<p class="ml-3 text-sm text-success-700">{successMessage}</p>
 				</div>
 			</div>
 		{/if}
 
 		<!-- Error message -->
 		{#if errorMessage}
-			<div class="rounded-md bg-red-50 p-4" role="alert">
+			<div class="rounded-badge bg-error-50 p-4" role="alert">
 				<div class="flex">
-					<svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<svg class="h-5 w-5 text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
-					<p class="ml-3 text-sm text-red-700">{errorMessage}</p>
+					<p class="ml-3 text-sm text-error-700">{errorMessage}</p>
 				</div>
 			</div>
 		{/if}
 
 		<form
 			on:submit|preventDefault={handleSubmit}
-			class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
+			class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover"
 		>
 			<div class="space-y-6 p-6">
 				<!-- First name -->
@@ -153,12 +153,12 @@
 						minlength={1}
 						maxlength={NAME_MAX_LENGTH}
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{validationErrors['first_name'] ? 'border-red-300' : ''}"
+							{validationErrors['first_name'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['first_name'] ? 'first-name-error' : undefined}
 						aria-invalid={validationErrors['first_name'] ? 'true' : undefined}
 					/>
 					{#if validationErrors['first_name']}
-						<p id="first-name-error" class="mt-1 text-sm text-red-600">{validationErrors['first_name']}</p>
+						<p id="first-name-error" class="mt-1 text-sm text-error-600">{validationErrors['first_name']}</p>
 					{/if}
 				</div>
 
@@ -175,12 +175,12 @@
 						minlength={1}
 						maxlength={NAME_MAX_LENGTH}
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{validationErrors['last_name'] ? 'border-red-300' : ''}"
+							{validationErrors['last_name'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['last_name'] ? 'last-name-error' : undefined}
 						aria-invalid={validationErrors['last_name'] ? 'true' : undefined}
 					/>
 					{#if validationErrors['last_name']}
-						<p id="last-name-error" class="mt-1 text-sm text-red-600">{validationErrors['last_name']}</p>
+						<p id="last-name-error" class="mt-1 text-sm text-error-600">{validationErrors['last_name']}</p>
 					{/if}
 				</div>
 
@@ -215,12 +215,12 @@
 						maxlength={JOB_TITLE_MAX_LENGTH}
 						placeholder="bijv. Inkoopadviseur"
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{validationErrors['job_title'] ? 'border-red-300' : ''}"
+							{validationErrors['job_title'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['job_title'] ? 'job-title-error' : undefined}
 						aria-invalid={validationErrors['job_title'] ? 'true' : undefined}
 					/>
 					{#if validationErrors['job_title']}
-						<p id="job-title-error" class="mt-1 text-sm text-red-600">{validationErrors['job_title']}</p>
+						<p id="job-title-error" class="mt-1 text-sm text-error-600">{validationErrors['job_title']}</p>
 					{/if}
 				</div>
 
@@ -236,12 +236,12 @@
 						maxlength={PHONE_MAX_LENGTH}
 						placeholder="bijv. +31 6 12345678"
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
-							{validationErrors['phone'] ? 'border-red-300' : ''}"
+							{validationErrors['phone'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['phone'] ? 'phone-error' : undefined}
 						aria-invalid={validationErrors['phone'] ? 'true' : undefined}
 					/>
 					{#if validationErrors['phone']}
-						<p id="phone-error" class="mt-1 text-sm text-red-600">{validationErrors['phone']}</p>
+						<p id="phone-error" class="mt-1 text-sm text-error-600">{validationErrors['phone']}</p>
 					{/if}
 				</div>
 			</div>
@@ -251,7 +251,7 @@
 				<button
 					type="submit"
 					disabled={saving}
-					class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if saving}
 						<svg class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">

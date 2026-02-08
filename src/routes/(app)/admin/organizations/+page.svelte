@@ -73,28 +73,28 @@
 		</div>
 		<button
 			on:click={() => (showForm = !showForm)}
-			class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+			class="rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 		>
 			{showForm ? 'Annuleren' : 'Nieuwe organisatie'}
 		</button>
 	</div>
 
 	{#if successMessage}
-		<div class="rounded-md bg-green-50 p-4" role="status">
-			<p class="text-sm text-green-700">{successMessage}</p>
+		<div class="rounded-badge bg-success-50 p-4" role="status">
+			<p class="text-sm text-success-700">{successMessage}</p>
 		</div>
 	{/if}
 
 	{#if showForm}
 		<form
 			on:submit|preventDefault={handleCreateOrg}
-			class="rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm"
+			class="rounded-card border border-gray-200 bg-white p-6 shadow-card transition hover:shadow-card-hover"
 		>
 			<h3 class="text-base font-medium text-gray-900">Nieuwe organisatie</h3>
 
 			{#if errorMessage}
-				<div class="mt-3 rounded-md bg-red-50 p-3" role="alert">
-					<p class="text-sm text-red-700">{errorMessage}</p>
+				<div class="mt-3 rounded-badge bg-error-50 p-3" role="alert">
+					<p class="text-sm text-error-700">{errorMessage}</p>
 				</div>
 			{/if}
 
@@ -142,7 +142,7 @@
 				<button
 					type="submit"
 					disabled={saving}
-					class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if saving}
 						Aanmaken...
@@ -156,12 +156,12 @@
 
 	<!-- Organizations table -->
 	{#if data.organizations.length === 0}
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+		<div class="rounded-card border-2 border-dashed border-gray-300 p-12 text-center">
 			<h3 class="mt-2 text-sm font-semibold text-gray-900">Geen organisaties</h3>
 			<p class="mt-1 text-sm text-gray-500">Er zijn nog geen organisaties aangemaakt.</p>
 		</div>
 	{:else}
-		<div class="overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+		<div class="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover">
 			<table class="min-w-full divide-y divide-gray-200">
 				<thead class="bg-gray-50">
 					<tr>

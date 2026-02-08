@@ -155,7 +155,7 @@
 
 	{#if !data.organization}
 		<!-- Empty state -->
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+		<div class="rounded-card border-2 border-dashed border-gray-300 p-12 text-center">
 			<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
 			</svg>
@@ -167,24 +167,24 @@
 	{:else}
 		<!-- Success message -->
 		{#if successMessage}
-			<div class="rounded-md bg-green-50 p-4" role="status">
+			<div class="rounded-badge bg-success-50 p-4" role="status">
 				<div class="flex">
-					<svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<svg class="h-5 w-5 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 					</svg>
-					<p class="ml-3 text-sm text-green-700">{successMessage}</p>
+					<p class="ml-3 text-sm text-success-700">{successMessage}</p>
 				</div>
 			</div>
 		{/if}
 
 		<!-- Error message -->
 		{#if errorMessage}
-			<div class="rounded-md bg-red-50 p-4" role="alert">
+			<div class="rounded-badge bg-error-50 p-4" role="alert">
 				<div class="flex">
-					<svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<svg class="h-5 w-5 text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
-					<p class="ml-3 text-sm text-red-700">{errorMessage}</p>
+					<p class="ml-3 text-sm text-error-700">{errorMessage}</p>
 				</div>
 			</div>
 		{/if}
@@ -192,7 +192,7 @@
 		<!-- Organization details form -->
 		<form
 			on:submit|preventDefault={handleSaveOrg}
-		class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
+		class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover"
 	>
 		<div class="space-y-6 p-6">
 			<h3 class="text-base font-medium text-gray-900">Organisatiegegevens</h3>
@@ -212,12 +212,12 @@
 						maxlength={ORG_NAME_MAX_LENGTH}
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
 							{!canEditOrg ? 'bg-gray-50 text-gray-500' : ''}
-							{validationErrors['name'] ? 'border-red-300' : ''}"
+							{validationErrors['name'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['name'] ? 'org-name-error' : undefined}
 						aria-invalid={validationErrors['name'] ? 'true' : undefined}
 					/>
 					{#if validationErrors['name']}
-						<p id="org-name-error" class="mt-1 text-sm text-red-600">{validationErrors['name']}</p>
+						<p id="org-name-error" class="mt-1 text-sm text-error-600">{validationErrors['name']}</p>
 					{/if}
 				</div>
 
@@ -254,12 +254,12 @@
 						placeholder="Korte beschrijving van uw organisatie"
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm
 							{!canEditOrg ? 'bg-gray-50 text-gray-500' : ''}
-							{validationErrors['description'] ? 'border-red-300' : ''}"
+							{validationErrors['description'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['description'] ? 'org-description-error' : undefined}
 						aria-invalid={validationErrors['description'] ? 'true' : undefined}
 					/>
 					{#if validationErrors['description']}
-						<p id="org-description-error" class="mt-1 text-sm text-red-600">{validationErrors['description']}</p>
+						<p id="org-description-error" class="mt-1 text-sm text-error-600">{validationErrors['description']}</p>
 					{/if}
 				</div>
 			</div>
@@ -269,7 +269,7 @@
 					<button
 						type="submit"
 						disabled={saving}
-						class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if saving}
 							<svg class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -286,7 +286,7 @@
 		</form>
 
 		<!-- Members section -->
-		<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+		<div class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover">
 			<div class="p-6">
 				<h3 class="text-base font-medium text-gray-900">Teamleden</h3>
 				<p class="mt-1 text-sm text-gray-500">
@@ -320,7 +320,7 @@
 								<span
 									class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
 										{member.role === 'owner' ? 'bg-yellow-100 text-yellow-800' :
-										 member.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+										 member.role === 'admin' ? 'bg-primary-100 text-primary-800' :
 										 'bg-gray-100 text-gray-800'}"
 								>
 									{ROLE_LABELS[member.role]}
@@ -337,14 +337,14 @@
 					<h4 class="text-sm font-medium text-gray-900">Lid uitnodigen</h4>
 
 					{#if inviteSuccess}
-						<div class="mt-3 rounded-md bg-green-50 p-3" role="status">
-							<p class="text-sm text-green-700">{inviteSuccess}</p>
+						<div class="mt-3 rounded-badge bg-success-50 p-3" role="status">
+							<p class="text-sm text-success-700">{inviteSuccess}</p>
 						</div>
 					{/if}
 
 					{#if inviteError}
-						<div class="mt-3 rounded-md bg-red-50 p-3" role="alert">
-							<p class="text-sm text-red-700">{inviteError}</p>
+						<div class="mt-3 rounded-badge bg-error-50 p-3" role="alert">
+							<p class="text-sm text-error-700">{inviteError}</p>
 						</div>
 					{/if}
 
@@ -374,7 +374,7 @@
 						<button
 							type="submit"
 							disabled={inviting}
-							class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#if inviting}
 								Uitnodigen...

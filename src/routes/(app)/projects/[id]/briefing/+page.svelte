@@ -139,7 +139,7 @@
 			<h1 class="mt-1 text-xl font-bold text-gray-900">Briefing: {data.project.name}</h1>
 		</div>
 		{#if briefingComplete}
-			<span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+			<span class="rounded-full bg-success-100 px-3 py-1 text-sm font-medium text-success-800">
 				Briefing voltooid — {artifactsGenerated} secties gegenereerd
 			</span>
 		{/if}
@@ -148,7 +148,7 @@
 	<!-- Chat area -->
 	<div
 		bind:this={chatContainer}
-		class="flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4"
+		class="flex-1 overflow-y-auto rounded-card border border-gray-200 bg-white p-4 shadow-card"
 		role="log"
 		aria-label="Briefing gesprek"
 	>
@@ -163,7 +163,7 @@
 					<button
 						on:click={startBriefing}
 						disabled={loading}
-						class="mt-4 rounded-md bg-primary-600 px-6 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+						class="mt-4 rounded-card bg-primary-600 px-6 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
 					>
 						{loading ? 'Bezig...' : 'Briefing starten'}
 					</button>
@@ -174,7 +174,7 @@
 				{#each messages as msg (msg.id)}
 					<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
 						<div
-							class="max-w-[80%] rounded-lg px-4 py-3 {msg.role === 'user'
+							class="max-w-[80%] rounded-card px-4 py-3 {msg.role === 'user'
 								? 'bg-primary-600 text-white'
 								: 'bg-gray-100 text-gray-900'}"
 						>
@@ -207,26 +207,26 @@
 				disabled={loading}
 				rows="2"
 				placeholder="Typ uw antwoord..."
-				class="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50"
+				class="flex-1 resize-none rounded-card border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50"
 				aria-label="Bericht invoeren"
 			></textarea>
 			<button
 				on:click={sendMessage}
 				disabled={loading || !inputMessage.trim()}
-				class="self-end rounded-lg bg-primary-600 px-6 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+				class="self-end rounded-card bg-primary-600 px-6 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
 				aria-label="Bericht versturen"
 			>
 				Verstuur
 			</button>
 		</div>
 	{:else if briefingComplete}
-		<div class="mt-4 rounded-lg bg-green-50 p-4 text-center">
-			<p class="text-sm text-green-800">
+		<div class="mt-4 rounded-card bg-success-50 p-4 text-center">
+			<p class="text-sm text-success-800">
 				De briefing is voltooid. Er zijn {artifactsGenerated} documentsecties gegenereerd.
 			</p>
 			<a
 				href="/projects/{data.project.id}"
-				class="mt-2 inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+				class="mt-2 inline-flex items-center rounded-card bg-success-600 px-4 py-2 text-sm font-medium text-white hover:bg-success-700"
 			>
 				Bekijk gegenereerde documenten
 			</a>

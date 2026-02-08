@@ -42,6 +42,7 @@
 	let editType: CriterionType = 'quality';
 	let editWeight = 0;
 	let methodologySaving = false;
+	let errorMessage = '';
 
 	const METHODOLOGY_ICONS: Record<ScoringMethodology, string> = {
 		lowest_price: 'tag',
@@ -51,13 +52,21 @@
 
 	async function selectMethodology(methodology: ScoringMethodology): Promise<void> {
 		methodologySaving = true;
-		const response = await fetch(`/api/projects/${project.id}/emvi/methodology`, {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ scoring_methodology: methodology })
-		});
-		if (response.ok) {
-			scoringMethodology = methodology;
+		errorMessage = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/emvi/methodology`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ scoring_methodology: methodology })
+			});
+			if (response.ok) {
+				scoringMethodology = methodology;
+			} else {
+				const result = await response.json();
+				errorMessage = result.message ?? 'Kon de gunningssystematiek niet opslaan.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden. Probeer het opnieuw.';
 		}
 		methodologySaving = false;
 	}
@@ -65,20 +74,28 @@
 	async function createCriterion(): Promise<void> {
 		if (!newName.trim()) return;
 		saving = true;
-		const response = await fetch(`/api/projects/${project.id}/emvi`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				name: newName.trim(),
-				description: newDescription.trim(),
-				criterion_type: newType,
-				weight_percentage: newWeight
-			})
-		});
-		if (response.ok) {
-			const { data: criterion } = await response.json();
-			criteria = [...criteria, criterion];
-			resetNewForm();
+		errorMessage = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/emvi`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: newName.trim(),
+					description: newDescription.trim(),
+					criterion_type: newType,
+					weight_percentage: newWeight
+				})
+			});
+			if (response.ok) {
+				const { data: criterion } = await response.json();
+				criteria = [...criteria, criterion];
+				resetNewForm();
+			} else {
+				const result = await response.json();
+				errorMessage = result.message ?? 'Kon het criterium niet toevoegen.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden. Probeer het opnieuw.';
 		}
 		saving = false;
 	}
@@ -104,29 +121,45 @@
 	}
 
 	async function saveEdit(id: string): Promise<void> {
-		const response = await fetch(`/api/projects/${project.id}/emvi/criteria/${id}`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				name: editName.trim(),
-				description: editDescription.trim(),
-				criterion_type: editType,
-				weight_percentage: editWeight
-			})
-		});
-		if (response.ok) {
-			const { data: updated } = await response.json();
-			criteria = criteria.map((c) => (c.id === id ? updated : c));
-			editingId = null;
+		errorMessage = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/emvi/criteria/${id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: editName.trim(),
+					description: editDescription.trim(),
+					criterion_type: editType,
+					weight_percentage: editWeight
+				})
+			});
+			if (response.ok) {
+				const { data: updated } = await response.json();
+				criteria = criteria.map((c) => (c.id === id ? updated : c));
+				editingId = null;
+			} else {
+				const result = await response.json();
+				errorMessage = result.message ?? 'Kon het criterium niet bijwerken.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden. Probeer het opnieuw.';
 		}
 	}
 
 	async function deleteCriterion(id: string): Promise<void> {
-		const response = await fetch(`/api/projects/${project.id}/emvi/criteria/${id}`, {
-			method: 'DELETE'
-		});
-		if (response.ok) {
-			criteria = criteria.filter((c) => c.id !== id);
+		errorMessage = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/emvi/criteria/${id}`, {
+				method: 'DELETE'
+			});
+			if (response.ok) {
+				criteria = criteria.filter((c) => c.id !== id);
+			} else {
+				const result = await response.json();
+				errorMessage = result.message ?? 'Kon het criterium niet verwijderen.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden. Probeer het opnieuw.';
 		}
 	}
 </script>
@@ -142,6 +175,17 @@
 			Kies de gunningssystematiek en beheer de criteria met weging voor {project.name}
 		</p>
 	</div>
+
+	{#if errorMessage}
+		<div class="rounded-badge bg-error-50 p-4" role="alert">
+			<div class="flex items-center gap-2">
+				<svg class="h-5 w-5 text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+				</svg>
+				<p class="text-sm text-error-700">{errorMessage}</p>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Gunningssystematiek choice — 3 clickable cards -->
 	<section aria-labelledby="methodology-heading">

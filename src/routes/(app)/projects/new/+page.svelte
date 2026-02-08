@@ -61,15 +61,15 @@
 
 	<form on:submit|preventDefault={handleSubmit} class="mt-8 space-y-6">
 		{#if errorMessage}
-			<div class="rounded-md bg-red-50 p-4" role="alert">
-				<p class="text-sm text-red-700">{errorMessage}</p>
+			<div class="rounded-badge bg-error-50 p-4" role="alert">
+				<p class="text-sm text-error-700">{errorMessage}</p>
 			</div>
 		{/if}
 
 		<div>
 			<label for="organization" class="block text-sm font-medium text-gray-700">Organisatie</label>
 			{#if data.organizations.length === 0}
-				<p class="mt-1 text-sm text-red-600">
+				<p class="mt-1 text-sm text-error-600">
 					U bent nog geen lid van een organisatie. Maak eerst een organisatie aan.
 				</p>
 			{:else}
@@ -132,14 +132,14 @@
 		<div class="flex justify-end space-x-3">
 			<a
 				href="/dashboard"
-				class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+				class="rounded-card border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
 			>
 				Annuleren
 			</a>
 			<button
 				type="submit"
 				disabled={loading || !organizationId || !name}
-				class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
+				class="rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
 			>
 				{loading ? 'Bezig...' : 'Aanmaken en briefing starten'}
 			</button>

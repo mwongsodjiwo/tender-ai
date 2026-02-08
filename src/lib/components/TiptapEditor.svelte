@@ -293,13 +293,13 @@
 			>
 				<button on:click={() => { addColumnBefore(); showTableMenu = false; }} class="table-menu-btn" type="button">Kolom links invoegen</button>
 				<button on:click={() => { addColumnAfter(); showTableMenu = false; }} class="table-menu-btn" type="button">Kolom rechts invoegen</button>
-				<button on:click={() => { deleteColumn(); showTableMenu = false; }} class="table-menu-btn text-red-600" type="button">Kolom verwijderen</button>
+				<button on:click={() => { deleteColumn(); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button">Kolom verwijderen</button>
 				<hr class="my-1 border-gray-200">
 				<button on:click={() => { addRowBefore(); showTableMenu = false; }} class="table-menu-btn" type="button">Rij boven invoegen</button>
 				<button on:click={() => { addRowAfter(); showTableMenu = false; }} class="table-menu-btn" type="button">Rij onder invoegen</button>
-				<button on:click={() => { deleteRow(); showTableMenu = false; }} class="table-menu-btn text-red-600" type="button">Rij verwijderen</button>
+				<button on:click={() => { deleteRow(); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button">Rij verwijderen</button>
 				<hr class="my-1 border-gray-200">
-				<button on:click={() => { deleteTable(); showTableMenu = false; }} class="table-menu-btn text-red-600" type="button">Tabel verwijderen</button>
+				<button on:click={() => { deleteTable(); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button">Tabel verwijderen</button>
 			</div>
 		{/if}
 	</div>

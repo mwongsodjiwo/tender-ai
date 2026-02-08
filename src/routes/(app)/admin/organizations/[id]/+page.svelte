@@ -13,7 +13,7 @@
 
 	const ROLE_COLORS: Record<OrganizationRole, string> = {
 		owner: 'bg-yellow-100 text-yellow-800',
-		admin: 'bg-blue-100 text-blue-800',
+		admin: 'bg-primary-100 text-primary-800',
 		member: 'bg-gray-100 text-gray-800'
 	};
 
@@ -151,20 +151,20 @@
 	<!-- Edit organization -->
 	<form
 		on:submit|preventDefault={handleSaveOrg}
-		class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
+		class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover"
 	>
 		<div class="space-y-4 p-6">
 			<h3 class="text-base font-medium text-gray-900">Organisatiegegevens</h3>
 
 			{#if orgSuccess}
-				<div class="rounded-md bg-green-50 p-3" role="status">
-					<p class="text-sm text-green-700">{orgSuccess}</p>
+				<div class="rounded-badge bg-success-50 p-3" role="status">
+					<p class="text-sm text-success-700">{orgSuccess}</p>
 				</div>
 			{/if}
 
 			{#if orgError}
-				<div class="rounded-md bg-red-50 p-3" role="alert">
-					<p class="text-sm text-red-700">{orgError}</p>
+				<div class="rounded-badge bg-error-50 p-3" role="alert">
+					<p class="text-sm text-error-700">{orgError}</p>
 				</div>
 			{/if}
 
@@ -209,7 +209,7 @@
 			<button
 				type="submit"
 				disabled={savingOrg}
-				class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+				class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{#if savingOrg}
 					Opslaan...
@@ -221,7 +221,7 @@
 	</form>
 
 	<!-- Members section -->
-	<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+	<div class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover">
 		<div class="p-6">
 			<h3 class="text-base font-medium text-gray-900">Leden</h3>
 			<p class="mt-1 text-sm text-gray-500">Beheer de leden van deze organisatie.</p>
@@ -261,7 +261,7 @@
 								</select>
 								<button
 									on:click={() => handleRemoveMember(member.id, member.profile ? `${member.profile.first_name} ${member.profile.last_name}` : 'dit lid')}
-									class="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+									class="rounded-md p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-600"
 									title="Lid verwijderen"
 								>
 									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -280,14 +280,14 @@
 			<h4 class="text-sm font-medium text-gray-900">Lid toevoegen</h4>
 
 			{#if addSuccess}
-				<div class="mt-3 rounded-md bg-green-50 p-3" role="status">
-					<p class="text-sm text-green-700">{addSuccess}</p>
+				<div class="mt-3 rounded-badge bg-success-50 p-3" role="status">
+					<p class="text-sm text-success-700">{addSuccess}</p>
 				</div>
 			{/if}
 
 			{#if addError}
-				<div class="mt-3 rounded-md bg-red-50 p-3" role="alert">
-					<p class="text-sm text-red-700">{addError}</p>
+				<div class="mt-3 rounded-badge bg-error-50 p-3" role="alert">
+					<p class="text-sm text-error-700">{addError}</p>
 				</div>
 			{/if}
 
@@ -318,7 +318,7 @@
 				<button
 					type="submit"
 					disabled={addingMember}
-					class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if addingMember}
 						Toevoegen...

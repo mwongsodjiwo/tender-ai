@@ -101,7 +101,7 @@
 				</div>
 			</div>
 		{:else}
-			<div class="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+			<div class="rounded-card border-2 border-dashed border-gray-300 p-8 text-center">
 				<p class="text-sm text-gray-500">Selecteer een organisatie om documenten te bekijken.</p>
 			</div>
 		{/if}

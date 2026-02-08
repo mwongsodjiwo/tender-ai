@@ -36,8 +36,8 @@
 
 <form on:submit|preventDefault={handleLogin} class="mt-8 space-y-6">
 	{#if errorMessage}
-		<div class="rounded-md bg-red-50 p-4" role="alert">
-			<p class="text-sm text-red-700">{errorMessage}</p>
+		<div class="rounded-badge bg-error-50 p-4" role="alert">
+			<p class="text-sm text-error-700">{errorMessage}</p>
 		</div>
 	{/if}
 

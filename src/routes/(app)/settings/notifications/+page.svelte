@@ -102,23 +102,23 @@
 
 	<!-- Success message -->
 	{#if successMessage}
-		<div class="rounded-md bg-green-50 p-4" role="status">
+		<div class="rounded-badge bg-success-50 p-4" role="status">
 			<div class="flex">
-				<svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+				<svg class="h-5 w-5 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 				</svg>
-				<p class="ml-3 text-sm text-green-700">{successMessage}</p>
+				<p class="ml-3 text-sm text-success-700">{successMessage}</p>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Info banner about MVP storage -->
-	<div class="rounded-md bg-blue-50 p-4" role="note">
+	<div class="rounded-badge bg-primary-50 p-4" role="note">
 		<div class="flex">
-			<svg class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+			<svg class="h-5 w-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 			</svg>
-			<p class="ml-3 text-sm text-blue-700">
+			<p class="ml-3 text-sm text-primary-700">
 				Meldingsvoorkeuren worden lokaal opgeslagen. E-mailmeldingen worden in een toekomstige versie geactiveerd.
 			</p>
 		</div>
@@ -126,7 +126,7 @@
 
 	<form
 		on:submit|preventDefault={handleSave}
-		class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
+		class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-card-hover"
 	>
 		<div class="p-6">
 			<h3 class="text-base font-medium text-gray-900">E-mailmeldingen</h3>
@@ -174,7 +174,7 @@
 		<div class="flex justify-end border-t border-gray-200 bg-gray-50 px-6 py-3">
 			<button
 				type="submit"
-				class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+				class="inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 			>
 				Voorkeuren opslaan
 			</button>

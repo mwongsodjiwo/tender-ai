@@ -11,7 +11,7 @@
 		lg: 'h-4'
 	} as const;
 
-	$: percentage = Math.min(Math.round((value / max) * 100), 100);
+	$: percentage = max > 0 ? Math.max(0, Math.min(Math.round((value / max) * 100), 100)) : 0;
 </script>
 
 <div>

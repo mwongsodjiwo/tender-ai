@@ -18,14 +18,15 @@
 	<ul class="space-y-0.5">
 		{#each sections as section}
 			{@const isActive = section.id === activeSection}
-			{@const indent = (section.level ?? 0) > 0 ? `pl-${(section.level ?? 0) * 4}` : ''}
+			{@const indentPx = (section.level ?? 0) * 16}
 			<li>
 				<button
 					type="button"
-					class="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors {indent}
+					class="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors
 						{isActive
 							? 'bg-primary-50 text-primary-700 font-medium border-l-2 border-primary-600'
 							: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+					style={indentPx > 0 ? `padding-left: ${indentPx + 12}px` : ''}
 					aria-current={isActive ? 'true' : undefined}
 					on:click={() => handleClick(section.id)}
 				>

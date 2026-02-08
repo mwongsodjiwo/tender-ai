@@ -166,7 +166,7 @@
 
 					<div class="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
 						{#if item.procedure_type}
-							<span class="rounded bg-blue-50 px-2 py-0.5 text-blue-700">
+							<span class="rounded bg-primary-50 px-2 py-0.5 text-primary-700">
 								{PROCEDURE_TYPE_LABELS[item.procedure_type] ?? item.procedure_type}
 							</span>
 						{/if}

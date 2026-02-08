@@ -28,8 +28,8 @@
 
 	const REVIEW_STATUS_COLORS: Record<string, string> = {
 		pending: 'bg-yellow-100 text-yellow-800',
-		approved: 'bg-green-100 text-green-800',
-		rejected: 'bg-red-100 text-red-800'
+		approved: 'bg-success-100 text-success-800',
+		rejected: 'bg-error-100 text-error-800'
 	};
 
 	async function inviteReviewer() {
@@ -65,7 +65,7 @@
 	}
 </script>
 
-<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+<div class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-sm">
 	<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
 		<h3 class="text-base font-semibold text-gray-900">Kennishouders</h3>
 		<button
@@ -122,7 +122,7 @@
 				</div>
 
 				{#if errorMessage}
-					<p class="text-sm text-red-600" role="alert">{errorMessage}</p>
+					<p class="text-sm text-error-600" role="alert">{errorMessage}</p>
 				{/if}
 
 				<button

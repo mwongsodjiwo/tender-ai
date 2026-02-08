@@ -216,7 +216,7 @@
 		</div>
 		<div class="flex items-center gap-3">
 			{#if saveMessage}
-				<span class="text-sm text-green-600">{saveMessage}</span>
+				<span class="text-sm text-success-600">{saveMessage}</span>
 			{/if}
 			<StatusBadge status={artifact.status} />
 			<button
@@ -255,14 +255,14 @@
 					{#if artifact.status === 'review'}
 						<button
 							on:click={() => updateStatus('approved')}
-							class="rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
+							class="rounded border border-success-300 px-3 py-1 text-xs font-medium text-success-700 hover:bg-success-50"
 							type="button"
 						>
 							Goedkeuren
 						</button>
 						<button
 							on:click={() => updateStatus('rejected')}
-							class="rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+							class="rounded border border-error-300 px-3 py-1 text-xs font-medium text-error-700 hover:bg-error-50"
 							type="button"
 						>
 							Afwijzen

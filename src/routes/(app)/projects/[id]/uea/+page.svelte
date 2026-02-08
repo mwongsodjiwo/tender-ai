@@ -40,6 +40,7 @@
 	// Loading state
 	let initializing = false;
 	let toggling: string | null = null;
+	let errorMessage = '';
 
 	// Computed metrics
 	$: allQuestions = sections.flatMap((s) => s.questions);
@@ -69,14 +70,21 @@
 
 	async function initializeSelections(): Promise<void> {
 		initializing = true;
-		const response = await fetch(`/api/projects/${project.id}/uea/initialize`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ select_all_optional: false })
-		});
-		if (response.ok) {
-			// Reload page to reflect new selections
-			window.location.reload();
+		errorMessage = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/uea/initialize`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ select_all_optional: false })
+			});
+			if (response.ok) {
+				window.location.reload();
+			} else {
+				const result = await response.json();
+				errorMessage = result.message ?? 'Kon de UEA-selecties niet initialiseren.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden. Probeer het opnieuw.';
 		}
 		initializing = false;
 	}
@@ -85,41 +93,54 @@
 		if (question.is_mandatory) return;
 
 		toggling = question.id;
+		errorMessage = '';
 		const newSelected = !question.is_selected;
 
-		const response = await fetch(`/api/projects/${project.id}/uea/toggle`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ question_id: question.id, is_selected: newSelected })
-		});
+		try {
+			const response = await fetch(`/api/projects/${project.id}/uea/toggle`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question_id: question.id, is_selected: newSelected })
+			});
 
-		if (response.ok) {
-			// Update local state
-			sections = sections.map((s) => ({
-				...s,
-				questions: s.questions.map((q) =>
-					q.id === question.id ? { ...q, is_selected: newSelected } : q
-				)
-			}));
+			if (response.ok) {
+				sections = sections.map((s) => ({
+					...s,
+					questions: s.questions.map((q) =>
+						q.id === question.id ? { ...q, is_selected: newSelected } : q
+					)
+				}));
+			} else {
+				const result = await response.json();
+				errorMessage = result.message ?? 'Kon de selectie niet bijwerken.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden. Probeer het opnieuw.';
 		}
 		toggling = null;
 	}
 
 	async function handleExport(): Promise<void> {
-		// Find the UEA document type to get its ID for export
-		const response = await fetch(`/api/projects/${project.id}/export`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ format: 'docx', document_type: 'uea' })
-		});
-		if (response.ok) {
-			const blob = await response.blob();
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `UEA_${project.name}.docx`;
-			a.click();
-			URL.revokeObjectURL(url);
+		errorMessage = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/export`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ format: 'docx', document_type: 'uea' })
+			});
+			if (response.ok) {
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `UEA_${project.name}.docx`;
+				a.click();
+				URL.revokeObjectURL(url);
+			} else {
+				errorMessage = 'Kon het UEA-document niet exporteren.';
+			}
+		} catch {
+			errorMessage = 'Er is een netwerkfout opgetreden bij het exporteren.';
 		}
 	}
 </script>
@@ -155,6 +176,17 @@
 			UEA genereren
 		</button>
 	</div>
+
+	{#if errorMessage}
+		<div class="rounded-badge bg-error-50 p-4" role="alert">
+			<div class="flex items-center gap-2">
+				<svg class="h-5 w-5 text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+				</svg>
+				<p class="text-sm text-error-700">{errorMessage}</p>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Info block -->
 	<InfoBanner

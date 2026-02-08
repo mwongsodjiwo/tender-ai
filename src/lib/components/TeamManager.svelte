@@ -100,7 +100,7 @@
 	}
 </script>
 
-<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+<div class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-sm">
 	<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
 		<h3 class="text-base font-semibold text-gray-900">Teamleden</h3>
 		<button
@@ -150,7 +150,7 @@
 				</fieldset>
 
 				{#if errorMessage}
-					<p class="text-sm text-red-600" role="alert">{errorMessage}</p>
+					<p class="text-sm text-error-600" role="alert">{errorMessage}</p>
 				{/if}
 
 				<button
@@ -222,7 +222,7 @@
 								</button>
 								<button
 									on:click={() => removeMember(member.id)}
-									class="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
+									class="rounded px-2 py-1 text-xs font-medium text-error-500 hover:bg-error-50"
 									aria-label="Verwijder {member.profile.first_name} {member.profile.last_name}"
 								>
 									Verwijderen

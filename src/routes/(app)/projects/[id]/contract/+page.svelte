@@ -459,7 +459,7 @@
 					</div>
 					<div class="flex items-center gap-2">
 						{#if saveMessage}
-							<span class="text-sm text-green-600">{saveMessage}</span>
+							<span class="text-sm text-success-600">{saveMessage}</span>
 						{/if}
 						{#if generatingMessage}
 							<span class="text-sm text-primary-600">{generatingMessage}</span>

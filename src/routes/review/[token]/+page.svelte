@@ -124,15 +124,15 @@
 				<div class="mt-4 rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm">
 					<div class="text-center">
 							{#if reviewer.review_status === 'approved'}
-								<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-									<svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-100">
+									<svg class="h-6 w-6 text-success-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
 									</svg>
 								</div>
 								<h3 class="text-lg font-semibold text-gray-900">Review ingediend: Goedgekeurd</h3>
 							{:else}
-								<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-									<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-error-100">
+									<svg class="h-6 w-6 text-error-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
 									</svg>
 								</div>
@@ -165,21 +165,21 @@
 						</div>
 
 						{#if errorMessage}
-							<p class="mt-2 text-sm text-red-600" role="alert">{errorMessage}</p>
+							<p class="mt-2 text-sm text-error-600" role="alert">{errorMessage}</p>
 						{/if}
 
 						<div class="mt-4 flex gap-3">
 							<button
 								on:click={() => submitReview('approved')}
 								disabled={submitting}
-								class="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+								class="flex-1 rounded-md bg-success-600 px-4 py-2 text-sm font-medium text-white hover:bg-success-700 disabled:opacity-50"
 							>
 								{submitting ? 'Bezig...' : 'Goedkeuren'}
 							</button>
 							<button
 								on:click={() => submitReview('rejected')}
 								disabled={submitting}
-								class="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+								class="flex-1 rounded-md bg-error-600 px-4 py-2 text-sm font-medium text-white hover:bg-error-700 disabled:opacity-50"
 							>
 								{submitting ? 'Bezig...' : 'Afwijzen'}
 							</button>

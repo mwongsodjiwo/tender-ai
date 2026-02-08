@@ -80,7 +80,7 @@
 					type="button"
 					on:click={() => handleDelete(doc.id, doc.name)}
 					disabled={deleting === doc.id}
-					class="text-sm text-gray-400 hover:text-red-600 disabled:opacity-50"
+					class="text-sm text-gray-400 hover:text-error-600 disabled:opacity-50"
 					aria-label="Verwijder {doc.name}"
 				>
 					{#if deleting === doc.id}
