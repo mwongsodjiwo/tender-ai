@@ -1,37 +1,21 @@
-// Project detail page — load project with artifacts, members, reviewers
+// Project overview page — load artifacts, metrics, and recent activity
 
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
 
-	const { data: project, error: projectError } = await supabase
-		.from('projects')
-		.select('*')
-		.eq('id', params.id)
-		.is('deleted_at', null)
-		.single();
-
-	if (projectError || !project) {
-		throw error(404, 'Project niet gevonden');
-	}
-
 	const { data: artifacts } = await supabase
 		.from('artifacts')
-		.select('*, document_type:document_types(name, slug)')
+		.select('*, document_type:document_types(id, name, slug)')
 		.eq('project_id', params.id)
 		.order('sort_order');
 
-	const { data: members } = await supabase
-		.from('project_members')
-		.select('*, profile:profiles(first_name, last_name, email), roles:project_member_roles(role)')
-		.eq('project_id', params.id);
+	const allArtifacts = artifacts ?? [];
+	const artifactIds = allArtifacts.map((a) => a.id);
 
-	// Load reviewers for all artifacts in this project
-	const artifactIds = (artifacts ?? []).map((a) => a.id);
+	// Load reviewers for sections in review
 	let reviewers: unknown[] = [];
-
 	if (artifactIds.length > 0) {
 		const { data: reviewerData } = await supabase
 			.from('section_reviewers')
@@ -41,26 +25,87 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		reviewers = reviewerData ?? [];
 	}
 
-	// Load organization members for the add-member dropdown
-	const { data: organizationMembers } = await supabase
-		.from('organization_members')
-		.select('profile_id, profile:profiles(first_name, last_name, email)')
-		.eq('organization_id', project.organization_id);
-
-	// Load uploaded documents for this project
-	const { data: uploadedDocuments } = await supabase
-		.from('documents')
+	// Load recent audit log entries (preview — 5 most recent)
+	const { data: auditEntries } = await supabase
+		.from('audit_log')
 		.select('*')
 		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.order('created_at', { ascending: false });
+		.order('created_at', { ascending: false })
+		.limit(5);
+
+	// Calculate project metrics
+	const totalSections = allArtifacts.length;
+	const approvedSections = allArtifacts.filter((a) => a.status === 'approved').length;
+	const progressPercentage =
+		totalSections > 0 ? Math.round((approvedSections / totalSections) * 100) : 0;
+
+	// Sections currently in review
+	const sectionsInReview = allArtifacts
+		.filter((a) => a.status === 'review')
+		.map((a) => {
+			const reviewer = (
+				reviewers as {
+					artifact_id: string;
+					name: string;
+					email: string;
+					review_status: string;
+				}[]
+			).find((r) => r.artifact_id === a.id);
+			return {
+				id: a.id,
+				title: a.title,
+				reviewerName: reviewer?.name ?? '',
+				reviewerEmail: reviewer?.email ?? '',
+				reviewStatus: reviewer?.review_status ?? 'pending',
+				waitingSince: a.updated_at
+			};
+		});
+
+	// Group artifacts by document type
+	type ArtifactWithType = (typeof allArtifacts)[number];
+	const documentBlocks = allArtifacts.reduce<
+		Record<
+			string,
+			{
+				docType: { id: string; name: string; slug: string };
+				items: ArtifactWithType[];
+				total: number;
+				approved: number;
+				progress: number;
+			}
+		>
+	>((acc, artifact) => {
+		const docType = (artifact as Record<string, unknown>).document_type as {
+			id: string;
+			name: string;
+			slug: string;
+		} | null;
+		const key = docType?.id ?? 'unknown';
+		if (!acc[key]) {
+			acc[key] = {
+				docType: docType ?? { id: 'unknown', name: 'Overig', slug: 'overig' },
+				items: [],
+				total: 0,
+				approved: 0,
+				progress: 0
+			};
+		}
+		acc[key].items.push(artifact);
+		acc[key].total++;
+		if (artifact.status === 'approved') acc[key].approved++;
+		acc[key].progress = Math.round((acc[key].approved / acc[key].total) * 100);
+		return acc;
+	}, {});
 
 	return {
-		project,
-		artifacts: artifacts ?? [],
-		members: members ?? [],
-		reviewers,
-		organizationMembers: organizationMembers ?? [],
-		uploadedDocuments: uploadedDocuments ?? []
+		artifacts: allArtifacts,
+		auditEntries: auditEntries ?? [],
+		projectMetrics: {
+			totalSections,
+			approvedSections,
+			progressPercentage
+		},
+		sectionsInReview,
+		documentBlocks: Object.values(documentBlocks)
 	};
 };

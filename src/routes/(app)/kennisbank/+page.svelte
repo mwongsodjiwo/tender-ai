@@ -3,6 +3,8 @@
 	import TenderNedSearch from '$components/TenderNedSearch.svelte';
 	import DocumentList from '$components/DocumentList.svelte';
 	import DocumentUpload from '$components/DocumentUpload.svelte';
+	import MetricCard from '$lib/components/MetricCard.svelte';
+	import CardGrid from '$lib/components/CardGrid.svelte';
 	import type { Document } from '$types';
 
 	export let data: PageData;
@@ -15,7 +17,6 @@
 	let activeTab: 'documents' | 'tenderned' = 'documents';
 
 	function reloadDocuments(): void {
-		// Trigger SvelteKit invalidation to reload data
 		window.location.reload();
 	}
 </script>
@@ -53,20 +54,11 @@
 	{/if}
 
 	<!-- Stats -->
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-		<div class="rounded-lg border border-gray-200 bg-white px-6 py-4 transition hover:shadow-sm">
-			<p class="text-sm font-medium text-gray-500">Documenten</p>
-			<p class="mt-1 text-2xl font-semibold text-gray-900">{documents.length}</p>
-		</div>
-		<div class="rounded-lg border border-gray-200 bg-white px-6 py-4 transition hover:shadow-sm">
-			<p class="text-sm font-medium text-gray-500">TenderNed aanbestedingen</p>
-			<p class="mt-1 text-2xl font-semibold text-gray-900">{tenderNedCount}</p>
-		</div>
-		<div class="rounded-lg border border-gray-200 bg-white px-6 py-4 transition hover:shadow-sm">
-			<p class="text-sm font-medium text-gray-500">Organisaties</p>
-			<p class="mt-1 text-2xl font-semibold text-gray-900">{organizations.length}</p>
-		</div>
-	</div>
+	<CardGrid columns={3}>
+		<MetricCard value={documents.length} label="Documenten" />
+		<MetricCard value={tenderNedCount} label="TenderNed aanbestedingen" />
+		<MetricCard value={organizations.length} label="Organisaties" />
+	</CardGrid>
 
 	<!-- Tab navigation (scrollable on mobile) -->
 	<div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">

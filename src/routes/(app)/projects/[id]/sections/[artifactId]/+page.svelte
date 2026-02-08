@@ -2,25 +2,11 @@
 	import { tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import TiptapEditor from '$components/TiptapEditor.svelte';
+	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-
-	const STATUS_LABELS: Record<string, string> = {
-		draft: 'Concept',
-		generated: 'Gegenereerd',
-		review: 'In review',
-		approved: 'Goedgekeurd',
-		rejected: 'Afgewezen'
-	};
-
-	const STATUS_COLORS: Record<string, string> = {
-		draft: 'bg-gray-100 text-gray-700',
-		generated: 'bg-blue-100 text-blue-700',
-		review: 'bg-purple-100 text-purple-700',
-		approved: 'bg-green-100 text-green-700',
-		rejected: 'bg-red-100 text-red-700'
-	};
 
 	// Editor state
 	let editedContent = data.artifact?.content ?? '';
@@ -232,9 +218,7 @@
 			{#if saveMessage}
 				<span class="text-sm text-green-600">{saveMessage}</span>
 			{/if}
-			<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {STATUS_COLORS[artifact.status] ?? 'bg-gray-100 text-gray-700'}">
-				{STATUS_LABELS[artifact.status] ?? artifact.status}
-			</span>
+			<StatusBadge status={artifact.status} />
 			<button
 				on:click={saveContent}
 				disabled={!hasChanges || saving}
@@ -292,10 +276,8 @@
 
 			<!-- Regenerate form -->
 			{#if showRegenerateForm}
-				<div class="border-x border-gray-200 bg-amber-50 px-4 py-3">
-					<p class="mb-2 text-sm font-medium text-amber-800">
-						Hergenereer deze sectie met AI
-					</p>
+				<div class="border-x border-gray-200 px-4 py-3">
+					<InfoBanner type="warning" title="Hergenereer deze sectie met AI" message="Geef optioneel specifieke instructies mee voor de hergeneratie." />
 					<textarea
 						bind:value={regenerateInstructions}
 						rows="2"

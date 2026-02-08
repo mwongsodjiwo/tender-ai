@@ -6,7 +6,7 @@
 </script>
 
 <div class="min-h-screen bg-[#F5F5F5]">
-	<Navigation supabase={data.supabase} profile={data.profile} isSuperadmin={data.isSuperadmin} />
+	<Navigation supabase={data.supabase} profile={data.profile} isSuperadmin={data.isSuperadmin} projects={data.projects} />
 
 	<!-- Main content area offset by sidebar width -->
 	<main class="pt-14 lg:pl-60 lg:pt-0">

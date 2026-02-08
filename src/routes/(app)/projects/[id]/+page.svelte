@@ -3,20 +3,47 @@
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import { PROCEDURE_TYPE_LABELS } from '$types';
-	import type { Document } from '$types';
-	import TeamManager from '$components/TeamManager.svelte';
-	import ReviewerInvite from '$components/ReviewerInvite.svelte';
 	import RoleSwitcher from '$components/RoleSwitcher.svelte';
-	import AuditLog from '$components/AuditLog.svelte';
-	import DocumentUpload from '$components/DocumentUpload.svelte';
-	import DocumentList from '$components/DocumentList.svelte';
+	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import CardGrid from '$lib/components/CardGrid.svelte';
+	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import InfoBanner from '$lib/components/InfoBanner.svelte';
 
 	export let data: PageData;
 
 	$: project = data.project;
 	$: artifacts = data.artifacts;
+	$: members = data.members as { id: string; profile: { first_name: string; last_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
+	$: projectMetrics = data.projectMetrics as {
+		totalSections: number;
+		approvedSections: number;
+		progressPercentage: number;
+	};
+	$: sectionsInReview = data.sectionsInReview as {
+		id: string;
+		title: string;
+		reviewerName: string;
+		reviewerEmail: string;
+		reviewStatus: string;
+		waitingSince: string;
+	}[];
+	$: documentBlocks = data.documentBlocks as {
+		docType: { id: string; name: string; slug: string };
+		items: typeof artifacts;
+		total: number;
+		approved: number;
+		progress: number;
+	}[];
+	$: auditEntries = (data.auditEntries ?? []) as {
+		id: string;
+		action: string;
+		entity_type: string;
+		actor_email: string | null;
+		changes: Record<string, unknown>;
+		created_at: string;
+	}[];
 
-	// Auto-poll when project is generating artifacts in the background
+	// Auto-poll when project is generating artifacts
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 	$: if (project.status === 'generating') {
@@ -35,12 +62,8 @@
 	onDestroy(() => {
 		if (pollTimer) clearInterval(pollTimer);
 	});
-	$: members = data.members as { id: string; profile: { first_name: string; last_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
-	$: reviewers = data.reviewers as { id: string; email: string; name: string; review_status: string; token: string; artifact: { id: string; title: string } | null }[];
-	$: organizationMembers = data.organizationMembers as { profile_id: string; profile: { first_name: string; last_name: string; email: string } }[];
-	$: uploadedDocuments = (data.uploadedDocuments ?? []) as Document[];
 
-	// Determine current user's roles in this project
+	// Current user's roles
 	$: currentUserRoles = (() => {
 		const currentMember = members.find(
 			(m) => m.profile?.email === data.profile?.email
@@ -52,84 +75,56 @@
 		activeRole = currentUserRoles[0];
 	}
 
-	let activeTab: 'documents' | 'uploads' | 'team' | 'reviewers' | 'audit' = 'documents';
+	// Deadline calculation (from layout project data)
+	$: deadlineDays = project.deadline_date
+		? Math.ceil((new Date(project.deadline_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+		: null;
 
-	function reloadUploads(): void {
-		window.location.reload();
-	}
-
-	const STATUS_LABELS: Record<string, string> = {
+	const PHASE_LABELS: Record<string, string> = {
 		draft: 'Concept',
 		briefing: 'Briefing',
-		generating: 'Genereren',
+		generating: 'Generatie',
 		review: 'Review',
 		approved: 'Goedgekeurd',
 		published: 'Gepubliceerd',
 		archived: 'Gearchiveerd'
 	};
 
-	const STATUS_COLORS: Record<string, string> = {
-		draft: 'bg-gray-100 text-gray-800',
-		briefing: 'bg-blue-100 text-blue-800',
-		generating: 'bg-yellow-100 text-yellow-800',
-		review: 'bg-purple-100 text-purple-800',
-		approved: 'bg-green-100 text-green-800',
-		published: 'bg-green-200 text-green-900',
-		archived: 'bg-gray-200 text-gray-600'
+	const ROLE_LABELS: Record<string, string> = {
+		project_leader: 'Projectleider',
+		procurement_advisor: 'Inkoopadviseur',
+		legal_advisor: 'Jurist',
+		budget_holder: 'Budgethouder',
+		subject_expert: 'Vakinhoudelijk expert',
+		viewer: 'Bekijker'
 	};
 
-	const ARTIFACT_STATUS_COLORS: Record<string, string> = {
-		draft: 'bg-gray-100 text-gray-700',
-		generated: 'bg-blue-100 text-blue-700',
-		review: 'bg-purple-100 text-purple-700',
-		approved: 'bg-green-100 text-green-700',
-		rejected: 'bg-red-100 text-red-700'
+	const AUDIT_ACTION_LABELS: Record<string, string> = {
+		create: 'Aangemaakt',
+		update: 'Bijgewerkt',
+		delete: 'Verwijderd',
+		generate: 'Gegenereerd',
+		approve: 'Goedgekeurd',
+		reject: 'Afgewezen',
+		invite: 'Uitgenodigd',
+		export: 'Geëxporteerd',
+		upload: 'Geüpload'
 	};
 
-	const ARTIFACT_STATUS_LABELS: Record<string, string> = {
-		draft: 'Concept',
-		generated: 'Gegenereerd',
-		review: 'In review',
-		approved: 'Goedgekeurd',
-		rejected: 'Afgewezen'
-	};
+	function timeAgo(dateStr: string): string {
+		const diff = Date.now() - new Date(dateStr).getTime();
+		const minutes = Math.floor(diff / 60000);
+		if (minutes < 1) return 'Zojuist';
+		if (minutes < 60) return `${minutes} min geleden`;
+		const hours = Math.floor(minutes / 60);
+		if (hours < 24) return `${hours} uur geleden`;
+		const days = Math.floor(hours / 24);
+		if (days === 1) return 'Gisteren';
+		return `${days} dagen geleden`;
+	}
 
-	// Group artifacts by document type
-	type ArtifactWithType = (typeof artifacts)[number];
-	$: groupedArtifacts = artifacts.reduce<Record<string, { docType: { id: string; name: string; slug: string }; items: ArtifactWithType[] }>>((acc, artifact) => {
-		const docType = (artifact as Record<string, unknown>).document_type as { id: string; name: string; slug: string } | null;
-		const key = docType?.id ?? 'unknown';
-		if (!acc[key]) acc[key] = { docType: docType ?? { id: 'unknown', name: 'Overig', slug: 'overig' }, items: [] };
-		acc[key].items.push(artifact);
-		return acc;
-	}, {});
-
-	let exporting = '';
-
-	async function handleExport(docTypeId: string, format: 'docx' | 'pdf') {
-		exporting = `${docTypeId}-${format}`;
-
-		const response = await fetch(`/api/projects/${project.id}/export`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ document_type_id: docTypeId, format })
-		});
-
-		if (response.ok) {
-			const blob = await response.blob();
-			const url = URL.createObjectURL(blob);
-			const disposition = response.headers.get('Content-Disposition') ?? '';
-			const filenameMatch = disposition.match(/filename="(.+)"/);
-			const filename = filenameMatch?.[1] ?? `document.${format}`;
-
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = filename;
-			a.click();
-			URL.revokeObjectURL(url);
-		}
-
-		exporting = '';
+	function getInitials(firstName: string, lastName: string): string {
+		return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 	}
 </script>
 
@@ -138,12 +133,8 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="mb-4">
-		<a href="/dashboard" class="text-sm text-gray-500 hover:text-gray-700">&larr; Terug naar dashboard</a>
-	</div>
-
 	<!-- Project header -->
-	<div class="rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm">
+	<div class="rounded-card bg-white p-6 shadow-card">
 		<div class="flex items-start justify-between">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900">{project.name}</h1>
@@ -151,9 +142,7 @@
 					<p class="mt-1 text-gray-600">{project.description}</p>
 				{/if}
 			</div>
-			<span class="rounded-full px-3 py-1 text-sm font-medium {STATUS_COLORS[project.status] ?? 'bg-gray-100 text-gray-800'}">
-				{STATUS_LABELS[project.status] ?? project.status}
-			</span>
+			<StatusBadge status={project.status} />
 		</div>
 
 		<div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
@@ -169,150 +158,192 @@
 			{#if project.status === 'draft' || project.status === 'briefing'}
 				<a
 					href="/projects/{project.id}/briefing"
-					class="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 sm:justify-start"
+					class="inline-flex items-center justify-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 sm:justify-start"
 				>
 					{project.status === 'draft' ? 'Briefing starten' : 'Briefing voortzetten'}
 				</a>
 			{:else}
 				<div></div>
 			{/if}
-
 			<RoleSwitcher roles={currentUserRoles} bind:activeRole />
 		</div>
 	</div>
 
-	<!-- Tab navigation (scrollable on mobile) -->
-	<div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-		<div class="inline-flex items-center gap-1 border-b border-gray-200 pb-3" role="tablist" aria-label="Projectonderdelen">
-			{#each [
-				{ id: 'documents', label: 'Documenten' },
-				{ id: 'uploads', label: 'Uploads' },
-				{ id: 'team', label: 'Team' },
-				{ id: 'reviewers', label: 'Kennishouders' },
-				{ id: 'audit', label: 'Audit log' }
-			] as tab}
-				<button
-					role="tab"
-					aria-selected={activeTab === tab.id}
-					on:click={() => (activeTab = tab.id)}
-					class="shrink-0 px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors {activeTab === tab.id
-						? 'rounded-full bg-gray-800 text-white'
-						: 'text-gray-400 hover:text-gray-600'}"
-				>
-					{tab.label}
-				</button>
-			{/each}
+	<!-- Top row: 3 metric cards -->
+	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+		<div class="rounded-card bg-white p-6 shadow-card">
+			<p class="text-sm font-medium text-gray-500">Voortgang</p>
+			<p class="mt-2 text-3xl font-bold text-gray-900">{projectMetrics.progressPercentage}%</p>
+			<p class="mt-1 text-sm text-gray-500">{projectMetrics.approvedSections} van {projectMetrics.totalSections} secties afgerond</p>
+			<div class="mt-3">
+				<ProgressBar value={projectMetrics.approvedSections} max={projectMetrics.totalSections || 1} showPercentage={false} size="sm" />
+			</div>
+		</div>
+
+		<div class="rounded-card bg-white p-6 shadow-card">
+			<p class="text-sm font-medium text-gray-500">Fase</p>
+			<div class="mt-2 flex items-center gap-2">
+				<StatusBadge status={project.status} />
+				<span class="text-lg font-semibold text-gray-900">{PHASE_LABELS[project.status] ?? project.status}</span>
+			</div>
+			{#if project.status === 'generating'}
+				<p class="mt-2 text-sm text-warning-600">Documenten worden gegenereerd...</p>
+			{/if}
+		</div>
+
+		<div class="rounded-card bg-white p-6 shadow-card">
+			<p class="text-sm font-medium text-gray-500">Deadline</p>
+			{#if project.deadline_date}
+				{@const days = deadlineDays ?? 0}
+				<p class="mt-2 text-3xl font-bold {days <= 3 ? 'text-error-600' : days <= 7 ? 'text-warning-600' : 'text-gray-900'}">
+					{new Date(project.deadline_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+				</p>
+				<p class="mt-1 text-sm {days <= 3 ? 'text-error-600 font-medium' : 'text-gray-500'}">
+					{#if days < 0}
+						{Math.abs(days)} dagen verlopen
+					{:else if days === 0}
+						Vandaag
+					{:else if days === 1}
+						Nog 1 dag
+					{:else}
+						Nog {days} dagen
+					{/if}
+				</p>
+			{:else}
+				<p class="mt-2 text-lg text-gray-300">Niet ingesteld</p>
+			{/if}
 		</div>
 	</div>
 
-	<!-- Documents tab -->
-	{#if activeTab !== 'documents'}
-		<!-- Hidden when not active -->
-	{:else if artifacts.length === 0}
-		<div class="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-			{#if project.status === 'generating'}
-				<svg class="mx-auto h-10 w-10 animate-spin text-primary-600" fill="none" viewBox="0 0 24 24">
-					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-				</svg>
-				<h3 class="mt-3 text-sm font-semibold text-gray-900">Documenten worden gegenereerd...</h3>
-				<p class="mt-1 text-sm text-gray-500">
-					Dit kan enkele minuten duren. De pagina ververst automatisch.
-				</p>
+	<!-- Document blocks + Sections in review -->
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+		<!-- Document blocks (spans 2 cols) -->
+		<div class="space-y-4 lg:col-span-2">
+			<div class="flex items-center justify-between">
+				<h2 class="text-base font-semibold text-gray-900">Documenten</h2>
+				<a href="/projects/{project.id}/documents" class="text-sm font-medium text-primary-600 hover:text-primary-700">
+					Alle documenten &rarr;
+				</a>
+			</div>
+			{#if documentBlocks.length === 0}
+				{#if project.status === 'generating'}
+					<InfoBanner type="warning" title="Documenten worden gegenereerd" message="Dit kan enkele minuten duren. De pagina ververst automatisch." />
+				{:else}
+					<InfoBanner type="info" message="Voltooi eerst de briefing om documenten te laten genereren." />
+				{/if}
 			{:else}
-				<h3 class="text-sm font-semibold text-gray-900">Nog geen documentsecties</h3>
-				<p class="mt-1 text-sm text-gray-500">
-					Voltooi eerst de briefing om documenten te laten genereren.
-				</p>
+				<CardGrid columns={2}>
+					{#each documentBlocks as block}
+						<a
+							href="/projects/{project.id}/documents"
+							class="block rounded-card bg-white p-5 shadow-card transition-all hover:shadow-card-hover"
+						>
+							<div class="flex items-start justify-between">
+								<h3 class="font-medium text-gray-900">{block.docType.name}</h3>
+								<span class="text-xs text-gray-400">{block.total} secties</span>
+							</div>
+							<div class="mt-3">
+								<ProgressBar value={block.approved} max={block.total || 1} size="sm" label="" />
+							</div>
+							<div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+								<span>{block.approved} van {block.total} goedgekeurd</span>
+								<span class="font-medium text-primary-600">{block.progress}%</span>
+							</div>
+						</a>
+					{/each}
+				</CardGrid>
 			{/if}
 		</div>
-	{:else}
-		<h2 class="text-lg font-semibold text-gray-900">Documenten</h2>
-		{#each Object.entries(groupedArtifacts) as [docTypeId, { docType, items }]}
-		<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
-			<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-				<h3 class="text-base font-semibold text-gray-900">{docType.name}</h3>
-					<div class="flex gap-2">
-						<button
-							on:click={() => handleExport(docType.id, 'docx')}
-							disabled={exporting === `${docType.id}-docx`}
-							class="rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-						>
-							{exporting === `${docType.id}-docx` ? 'Bezig...' : 'Word'}
-						</button>
-						<button
-							on:click={() => handleExport(docType.id, 'pdf')}
-							disabled={exporting === `${docType.id}-pdf`}
-							class="rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-						>
-							{exporting === `${docType.id}-pdf` ? 'Bezig...' : 'PDF'}
-						</button>
-					</div>
-				</div>
-				<ul class="divide-y divide-gray-200">
-					{#each items as artifact}
-						<li>
-							<a
-								href="/projects/{project.id}/sections/{artifact.id}"
-								class="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-							>
-								<div>
-									<p class="font-medium text-gray-900">{artifact.title}</p>
-									<p class="mt-0.5 text-xs text-gray-400">Versie {artifact.version}</p>
-								</div>
-								<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {ARTIFACT_STATUS_COLORS[artifact.status] ?? 'bg-gray-100 text-gray-700'}">
-									{ARTIFACT_STATUS_LABELS[artifact.status] ?? artifact.status}
-								</span>
-							</a>
-						</li>
+
+		<!-- Sections in review -->
+		<div class="rounded-card bg-white p-6 shadow-card">
+			<h2 class="text-base font-semibold text-gray-900">Secties in review</h2>
+			{#if sectionsInReview.length === 0}
+				<p class="mt-4 text-sm text-gray-500">Geen secties in review.</p>
+			{:else}
+				<div class="mt-4 space-y-3">
+					{#each sectionsInReview as section}
+						<div class="rounded-lg border border-gray-100 p-3">
+							<p class="text-sm font-medium text-gray-900">{section.title}</p>
+							{#if section.reviewerName}
+								<p class="mt-1 text-xs text-gray-500">Reviewer: {section.reviewerName}</p>
+							{/if}
+							<p class="mt-1 text-xs text-gray-400">{timeAgo(section.waitingSince)}</p>
+						</div>
 					{/each}
-				</ul>
-			</div>
-		{/each}
-	{/if}
-
-	<!-- Uploads tab -->
-	{#if activeTab === 'uploads'}
-		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-			<div class="lg:col-span-2">
-				<h2 class="mb-4 text-lg font-semibold text-gray-900">Geüploade documenten</h2>
-				<DocumentList
-					documents={uploadedDocuments}
-					projectId={project.id}
-					onDelete={reloadUploads}
-				/>
-			</div>
-			<div>
-				<DocumentUpload
-					projectId={project.id}
-					organizationId={project.organization_id}
-					onUploadComplete={reloadUploads}
-				/>
-			</div>
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
 
-	<!-- Team tab -->
-	{#if activeTab === 'team'}
-		<TeamManager
-			projectId={project.id}
-			{members}
-			{organizationMembers}
-		/>
-	{/if}
+	<!-- Bottom row: Team preview + Recente activiteit -->
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+		<!-- Team preview -->
+		<div class="rounded-card bg-white p-6 shadow-card">
+			<div class="flex items-center justify-between">
+				<h2 class="text-base font-semibold text-gray-900">Team</h2>
+				<a href="/projects/{project.id}/team" class="text-sm font-medium text-primary-600 hover:text-primary-700">
+					Bekijk team &rarr;
+				</a>
+			</div>
+			{#if members.length === 0}
+				<p class="mt-4 text-sm text-gray-500">Nog geen teamleden.</p>
+			{:else}
+				<div class="mt-4 space-y-3">
+					{#each members.slice(0, 5) as member}
+						<div class="flex items-center gap-3">
+							<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+								{getInitials(member.profile?.first_name ?? '', member.profile?.last_name ?? '')}
+							</div>
+							<div class="min-w-0">
+								<p class="text-sm font-medium text-gray-900 truncate">
+									{member.profile?.first_name ?? ''} {member.profile?.last_name ?? ''}
+								</p>
+								<div class="flex flex-wrap gap-1 mt-0.5">
+									{#each member.roles ?? [] as r}
+										<span class="text-xs text-gray-500">{ROLE_LABELS[r.role] ?? r.role}</span>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/each}
+					{#if members.length > 5}
+						<p class="text-xs text-gray-400">+{members.length - 5} meer</p>
+					{/if}
+				</div>
+			{/if}
+		</div>
 
-	<!-- Reviewers tab -->
-	{#if activeTab === 'reviewers'}
-		<ReviewerInvite
-			projectId={project.id}
-			artifacts={artifacts.map((a) => ({ id: a.id, title: a.title, section_key: a.section_key }))}
-			{reviewers}
-		/>
-	{/if}
-
-	<!-- Audit tab -->
-	{#if activeTab === 'audit'}
-		{@const auditUrl = `/api/projects/${project.id}/audit`}
-		<AuditLog url={auditUrl} />
-	{/if}
+		<!-- Recente activiteit -->
+		<div class="rounded-card bg-white p-6 shadow-card">
+			<div class="flex items-center justify-between">
+				<h2 class="text-base font-semibold text-gray-900">Recente activiteit</h2>
+				<a href="/projects/{project.id}/audit" class="text-sm font-medium text-primary-600 hover:text-primary-700">
+					Bekijk audit log &rarr;
+				</a>
+			</div>
+			{#if auditEntries.length === 0}
+				<p class="mt-4 text-sm text-gray-500">Nog geen activiteit.</p>
+			{:else}
+				<div class="mt-4 space-y-3">
+					{#each auditEntries as entry}
+						<div class="flex gap-3">
+							<div class="mt-1 h-2 w-2 shrink-0 rounded-full bg-gray-300"></div>
+							<div class="min-w-0">
+								<p class="text-sm text-gray-700">
+									<span class="font-medium">{AUDIT_ACTION_LABELS[entry.action] ?? entry.action}</span>
+									{#if entry.entity_type}
+										<span class="text-gray-500"> — {entry.entity_type}</span>
+									{/if}
+								</p>
+								<p class="text-xs text-gray-400">
+									{entry.actor_email ? `${entry.actor_email} · ` : ''}{timeAgo(entry.created_at)}
+								</p>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</div>
 </div>

@@ -2,7 +2,7 @@
 
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import type { Organization } from '$types';
+import type { Organization, Project } from '$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const { session, user } = await locals.safeGetSession();
@@ -28,9 +28,17 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		.filter((org): org is Organization => org != null && org.deleted_at == null)
 		.sort((a, b) => a.name.localeCompare(b.name));
 
+	// Load projects for sidebar navigation (all non-deleted projects the user can see)
+	const { data: projects } = await locals.supabase
+		.from('projects')
+		.select('id, name, status, updated_at')
+		.is('deleted_at', null)
+		.order('updated_at', { ascending: false });
+
 	return {
 		profile,
 		organizations,
+		projects: (projects ?? []) as Pick<Project, 'id' | 'name' | 'status' | 'updated_at'>[],
 		isSuperadmin: profile?.is_superadmin ?? false,
 		hasOrganization: organizations.length > 0
 	};
