@@ -73,12 +73,12 @@
 					U bent nog geen lid van een organisatie. Maak eerst een organisatie aan.
 				</p>
 			{:else}
-				<select
-					id="organization"
-					bind:value={organizationId}
-					required
-					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-				>
+			<select
+				id="organization"
+				bind:value={organizationId}
+				required
+				class="mt-1 block w-full rounded-md border-gray-300 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+			>
 					{#each data.organizations as org}
 						<option value={org.id}>{org.name}</option>
 					{/each}
@@ -88,14 +88,14 @@
 
 		<div>
 			<label for="name" class="block text-sm font-medium text-gray-700">Projectnaam</label>
-			<input
-				id="name"
-				type="text"
-				required
-				bind:value={name}
-				placeholder="Bijv. Aanbesteding ICT-dienstverlening 2026"
-				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-			/>
+		<input
+			id="name"
+			type="text"
+			required
+			bind:value={name}
+			placeholder="Bijv. Aanbesteding ICT-dienstverlening 2026"
+			class="mt-1 block w-full rounded-md border-gray-300 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+		/>
 		</div>
 
 		<div>
@@ -117,11 +117,11 @@
 				Aanbestedingsprocedure
 				<span class="font-normal text-gray-400">(optioneel, kan later worden gekozen)</span>
 			</label>
-			<select
-				id="procedure"
-				bind:value={procedureType}
-				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-			>
+		<select
+			id="procedure"
+			bind:value={procedureType}
+			class="mt-1 block w-full rounded-md border-gray-300 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+		>
 				<option value="">Nog niet gekozen</option>
 				{#each procedureOptions as [value, label]}
 					<option {value}>{label}</option>

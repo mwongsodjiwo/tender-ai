@@ -90,7 +90,7 @@
 	}
 </script>
 
-<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+<div class="rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm">
 	<h3 class="text-base font-semibold text-gray-900">Document uploaden</h3>
 	<p class="mt-1 text-sm text-gray-500">
 		Upload beleidsdocumenten, bestekken of referenties. De AI gebruikt deze als context bij het genereren.

@@ -192,10 +192,10 @@
 		<!-- Organization details form -->
 		<form
 			on:submit|preventDefault={handleSaveOrg}
-			class="rounded-lg border border-gray-200 bg-white shadow-sm"
-		>
-			<div class="space-y-6 p-6">
-				<h3 class="text-base font-medium text-gray-900">Organisatiegegevens</h3>
+		class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
+	>
+		<div class="space-y-6 p-6">
+			<h3 class="text-base font-medium text-gray-900">Organisatiegegevens</h3>
 
 				<!-- Organization name -->
 				<div>
@@ -286,7 +286,7 @@
 		</form>
 
 		<!-- Members section -->
-		<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+		<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
 			<div class="p-6">
 				<h3 class="text-base font-medium text-gray-900">Teamleden</h3>
 				<p class="mt-1 text-sm text-gray-500">

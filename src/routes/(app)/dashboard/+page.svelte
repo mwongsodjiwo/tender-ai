@@ -48,7 +48,7 @@
 		<h1 class="text-2xl font-bold text-gray-900">Projecten</h1>
 		<a
 			href="/projects/new"
-			class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+			class="rounded-full border border-[#7A83FF] bg-[#3362E6] px-[17px] py-2.5 text-sm font-normal text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 		>
 			Nieuw project
 		</a>
@@ -86,7 +86,7 @@
 			{#each projects as project (project.id)}
 				<a
 					href="/projects/{project.id}"
-					class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+					class="block rounded-2xl bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
 				>
 					<div class="flex items-start justify-between">
 						<h3 class="text-lg font-medium text-gray-900">{project.name}</h3>

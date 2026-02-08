@@ -214,7 +214,7 @@
 {@const artifact = data.artifact}
 {@const project = data.project}
 {@const versions = data.versions ?? []}
-<div class="flex h-[calc(100vh-8rem)] flex-col">
+<div class="flex h-[calc(100vh-10rem)] lg:h-[calc(100vh-6rem)] flex-col">
 	<!-- Header -->
 	<div class="mb-4 flex items-center justify-between">
 		<div>

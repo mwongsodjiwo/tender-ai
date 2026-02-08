@@ -88,7 +88,7 @@
 	{#if showForm}
 		<form
 			on:submit|preventDefault={handleCreateOrg}
-			class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+			class="rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm"
 		>
 			<h3 class="text-base font-medium text-gray-900">Nieuwe organisatie</h3>
 
@@ -161,7 +161,7 @@
 			<p class="mt-1 text-sm text-gray-500">Er zijn nog geen organisaties aangemaakt.</p>
 		</div>
 	{:else}
-		<div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+		<div class="overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
 			<table class="min-w-full divide-y divide-gray-200">
 				<thead class="bg-gray-50">
 					<tr>

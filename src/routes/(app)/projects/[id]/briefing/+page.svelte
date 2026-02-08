@@ -129,7 +129,7 @@
 	<title>Briefing — {data.project.name} — Tendermanager</title>
 </svelte:head>
 
-<div class="flex h-[calc(100vh-8rem)] flex-col">
+<div class="flex h-[calc(100vh-10rem)] lg:h-[calc(100vh-6rem)] flex-col">
 	<!-- Header -->
 	<div class="mb-4 flex items-center justify-between">
 		<div>

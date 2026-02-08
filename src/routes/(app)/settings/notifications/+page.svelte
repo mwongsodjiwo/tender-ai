@@ -126,7 +126,7 @@
 
 	<form
 		on:submit|preventDefault={handleSave}
-		class="rounded-lg border border-gray-200 bg-white shadow-sm"
+		class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
 	>
 		<div class="p-6">
 			<h3 class="text-base font-medium text-gray-900">E-mailmeldingen</h3>

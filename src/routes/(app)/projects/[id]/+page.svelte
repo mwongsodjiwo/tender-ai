@@ -143,7 +143,7 @@
 	</div>
 
 	<!-- Project header -->
-	<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+	<div class="rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm">
 		<div class="flex items-start justify-between">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900">{project.name}</h1>
@@ -183,7 +183,7 @@
 
 	<!-- Tab navigation (scrollable on mobile) -->
 	<div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-		<div class="inline-flex min-w-full border-b border-gray-200" role="tablist" aria-label="Projectonderdelen">
+		<div class="inline-flex items-center gap-1 border-b border-gray-200 pb-3" role="tablist" aria-label="Projectonderdelen">
 			{#each [
 				{ id: 'documents', label: 'Documenten' },
 				{ id: 'uploads', label: 'Uploads' },
@@ -195,9 +195,9 @@
 					role="tab"
 					aria-selected={activeTab === tab.id}
 					on:click={() => (activeTab = tab.id)}
-					class="inline-flex shrink-0 items-center border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap {activeTab === tab.id
-						? 'border-primary-500 text-primary-600'
-						: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+					class="shrink-0 px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors {activeTab === tab.id
+						? 'rounded-full bg-gray-800 text-white'
+						: 'text-gray-400 hover:text-gray-600'}"
 				>
 					{tab.label}
 				</button>
@@ -229,9 +229,9 @@
 	{:else}
 		<h2 class="text-lg font-semibold text-gray-900">Documenten</h2>
 		{#each Object.entries(groupedArtifacts) as [docTypeId, { docType, items }]}
-			<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
-				<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-					<h3 class="text-base font-semibold text-gray-900">{docType.name}</h3>
+		<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+			<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+				<h3 class="text-base font-semibold text-gray-900">{docType.name}</h3>
 					<div class="flex gap-2">
 						<button
 							on:click={() => handleExport(docType.id, 'docx')}

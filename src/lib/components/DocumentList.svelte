@@ -59,7 +59,7 @@
 		<p class="mt-1 text-sm text-gray-500">Upload documenten om de AI context te geven.</p>
 	</div>
 {:else}
-	<ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
+	<ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
 		{#each documents as doc}
 			<li class="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
 				<div class="flex items-center gap-4">

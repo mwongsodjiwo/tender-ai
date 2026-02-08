@@ -137,7 +137,7 @@
 
 		<form
 			on:submit|preventDefault={handleSubmit}
-			class="rounded-lg border border-gray-200 bg-white shadow-sm"
+			class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm"
 		>
 			<div class="space-y-6 p-6">
 				<!-- First name -->

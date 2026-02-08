@@ -138,7 +138,7 @@
 			{totalCount} resultaten gevonden
 		</div>
 
-		<ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-sm">
+		<ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
 			{#each results as item}
 				<li class="px-6 py-4">
 					<div class="flex items-start justify-between">

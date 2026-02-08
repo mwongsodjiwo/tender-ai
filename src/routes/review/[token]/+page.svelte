@@ -88,7 +88,7 @@
 	<title>Review: {artifact.title} — Tendermanager</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-[#F5F5F5]">
 	<!-- Header -->
 	<header class="border-b border-gray-200 bg-white">
 		<div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
@@ -109,9 +109,9 @@
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<!-- Main content: section to review -->
 			<div class="lg:col-span-2">
-				<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
-					<div class="border-b border-gray-200 px-6 py-4">
-						<h2 class="text-lg font-semibold text-gray-900">{artifact.title}</h2>
+			<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
+				<div class="border-b border-gray-200 px-6 py-4">
+					<h2 class="text-lg font-semibold text-gray-900">{artifact.title}</h2>
 						<p class="mt-1 text-sm text-gray-500">Versie {artifact.version}</p>
 					</div>
 					<div class="prose max-w-none px-6 py-6">
@@ -121,8 +121,8 @@
 
 				<!-- Review form -->
 				{#if submitted}
-					<div class="mt-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-						<div class="text-center">
+				<div class="mt-4 rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm">
+					<div class="text-center">
 							{#if reviewer.review_status === 'approved'}
 								<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
 									<svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -145,8 +145,8 @@
 						</div>
 					</div>
 				{:else}
-					<div class="mt-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-						<h3 class="text-base font-semibold text-gray-900">Uw beoordeling</h3>
+				<div class="mt-4 rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-sm">
+					<h3 class="text-base font-semibold text-gray-900">Uw beoordeling</h3>
 						<p class="mt-1 text-sm text-gray-500">
 							Geef uw feedback op de bovenstaande sectie.
 						</p>
@@ -190,7 +190,7 @@
 
 			<!-- Sidebar: AI chat -->
 			<div class="lg:col-span-1">
-				<div class="sticky top-6 rounded-lg border border-gray-200 bg-white shadow-sm">
+				<div class="sticky top-6 rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
 					<button
 						on:click={() => (showChat = !showChat)}
 						class="flex w-full items-center justify-between border-b border-gray-200 px-4 py-3 text-left"

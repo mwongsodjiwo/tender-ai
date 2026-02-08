@@ -100,7 +100,7 @@
 	}
 </script>
 
-<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+<div class="rounded-lg border border-gray-200 bg-white transition hover:shadow-sm">
 	<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
 		<h3 class="text-base font-semibold text-gray-900">Teamleden</h3>
 		<button
