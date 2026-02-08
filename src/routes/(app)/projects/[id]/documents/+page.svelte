@@ -78,10 +78,14 @@
 			{#each documentBlocks as block}
 				<section aria-labelledby="doctype-{block.docType.id}" class="space-y-4">
 					<header class="flex items-center justify-between">
-						<h3 id="doctype-{block.docType.id}" class="text-base font-semibold text-gray-900">
+						<a
+							href="/projects/{project.id}/documents/{block.docType.id}"
+							id="doctype-{block.docType.id}"
+							class="text-base font-semibold text-gray-900 hover:text-primary-600 transition-colors"
+						>
 							{block.docType.name}
 							<span class="ml-2 text-sm font-normal text-gray-400">{block.approved}/{block.total} goedgekeurd</span>
-						</h3>
+						</a>
 						<div class="flex gap-2">
 							<button
 								on:click={() => handleExport(block.docType.id, 'docx')}

@@ -11,7 +11,7 @@
 </script>
 
 <a
-	href="/projects/{projectId}/sections/{artifact.id}"
+	href="/projects/{projectId}/documents/{artifact.document_type_id}?section={artifact.id}"
 	class="block rounded-lg border border-gray-200 bg-white p-4 hover:border-primary-500 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 	aria-label="Bewerk {artifact.title}"
 >

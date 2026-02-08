@@ -235,7 +235,7 @@
 				<CardGrid columns={2}>
 					{#each documentBlocks as block}
 						<a
-							href="/projects/{project.id}/documents"
+							href="/projects/{project.id}/documents/{block.docType.id}"
 							class="block rounded-card bg-white p-5 shadow-card transition-all hover:shadow-card-hover"
 						>
 							<div class="flex items-start justify-between">
