@@ -80,71 +80,105 @@
 
 	$: computedWeekTotal = days.reduce((s, d) => s + dayTotal(d.rows), 0);
 
-	// ── Row mutations (trigger Svelte reactivity via reassignment) ────────
+	// ── Row mutations (fully immutable — always reassign `days`) ──────────
 
 	function addRow(dayIndex: number): void {
-		days[dayIndex].rows = [
-			...days[dayIndex].rows,
-			{
-				id: null,
-				project_id: data.projects[0]?.id ?? '',
-				activity_type: 'specifying',
-				hours: 1,
-				notes: '',
-				isNew: true,
-				isDirty: true,
-				isDeleted: false
-			}
-		];
-		days = days;
+		days = days.map((d, i) =>
+			i === dayIndex
+				? {
+						...d,
+						rows: [
+							...d.rows,
+							{
+								id: null,
+								project_id: data.projects[0]?.id ?? '',
+								activity_type: 'specifying' as TimeEntryActivityType,
+								hours: 1,
+								notes: '',
+								isNew: true,
+								isDirty: true,
+								isDeleted: false
+							}
+						]
+					}
+				: d
+		);
 	}
 
 	async function removeRow(dayIndex: number, rowIndex: number): Promise<void> {
 		const row = days[dayIndex].rows[rowIndex];
 
 		if (row.isNew) {
-			// New row — just remove from local state
-			days[dayIndex].rows = days[dayIndex].rows.filter((_, i) => i !== rowIndex);
-			days = days;
+			days = days.map((d, i) =>
+				i === dayIndex
+					? { ...d, rows: d.rows.filter((_, ri) => ri !== rowIndex) }
+					: d
+			);
 			return;
 		}
 
-		// Existing row — delete immediately via API
 		if (!row.id) return;
 
-		// Optimistic: hide row immediately
-		days[dayIndex].rows[rowIndex] = { ...row, isDeleted: true };
-		days[dayIndex].rows = [...days[dayIndex].rows];
-		days = days;
+		const removedRow = { ...row };
+		// Optimistic: remove from UI immediately
+		days = days.map((d, i) =>
+			i === dayIndex
+				? { ...d, rows: d.rows.filter((_, ri) => ri !== rowIndex) }
+				: d
+		);
 
 		try {
-			const response = await fetch(`/api/time-entries/${row.id}`, { method: 'DELETE' });
+			const response = await fetch(`/api/time-entries/${removedRow.id}`, { method: 'DELETE' });
 
 			if (!response.ok) {
 				const body = await response.json().catch(() => ({ message: 'Onbekende fout' }));
 				error = `Verwijderen mislukt: ${body.message ?? 'Onbekende fout'}`;
-				// Rollback: un-hide the row
-				days[dayIndex].rows[rowIndex] = { ...row, isDeleted: false };
-				days[dayIndex].rows = [...days[dayIndex].rows];
-				days = days;
-				return;
+				// Rollback
+				days = days.map((d, i) =>
+					i === dayIndex
+						? {
+								...d,
+								rows: [
+									...d.rows.slice(0, rowIndex),
+									removedRow,
+									...d.rows.slice(rowIndex)
+								]
+							}
+						: d
+				);
+			} else {
+				// Sync local state with server after successful deletion
+				await invalidateAll();
 			}
-
-			// Success — remove from local array entirely
-			days[dayIndex].rows = days[dayIndex].rows.filter((_, i) => i !== rowIndex);
-			days = days;
 		} catch {
 			error = 'Verwijderen mislukt. Controleer je internetverbinding.';
-			// Rollback
-			days[dayIndex].rows[rowIndex] = { ...row, isDeleted: false };
-			days[dayIndex].rows = [...days[dayIndex].rows];
-			days = days;
+			days = days.map((d, i) =>
+				i === dayIndex
+					? {
+							...d,
+							rows: [
+								...d.rows.slice(0, rowIndex),
+								removedRow,
+								...d.rows.slice(rowIndex)
+							]
+						}
+					: d
+			);
 		}
 	}
 
-	function markDirty(dayIndex: number, rowIndex: number): void {
-		days[dayIndex].rows[rowIndex].isDirty = true;
-		days = days;
+	/** Immutably update a single field on a row and mark it dirty */
+	function updateRow(dayIndex: number, rowIndex: number, field: keyof EntryRow, value: unknown): void {
+		days = days.map((d, i) =>
+			i === dayIndex
+				? {
+						...d,
+						rows: d.rows.map((r, ri) =>
+							ri === rowIndex ? { ...r, [field]: value, isDirty: true } : r
+						)
+					}
+				: d
+		);
 	}
 
 	// ── Save ──────────────────────────────────────────────────────────────
@@ -351,8 +385,8 @@
 											<label for="project-{day.dateStr}-{rowIndex}" class="sr-only">Project</label>
 											<select
 												id="project-{day.dateStr}-{rowIndex}"
-												bind:value={row.project_id}
-												on:change={() => markDirty(dayIndex, rowIndex)}
+												value={row.project_id}
+												on:change={(e) => updateRow(dayIndex, rowIndex, 'project_id', e.currentTarget.value)}
 												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 											>
 												{#each data.projects as project (project.id)}
@@ -366,8 +400,8 @@
 											<label for="activity-{day.dateStr}-{rowIndex}" class="sr-only">Activiteit</label>
 											<select
 												id="activity-{day.dateStr}-{rowIndex}"
-												bind:value={row.activity_type}
-												on:change={() => markDirty(dayIndex, rowIndex)}
+												value={row.activity_type}
+												on:change={(e) => updateRow(dayIndex, rowIndex, 'activity_type', e.currentTarget.value)}
 												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 											>
 												{#each TIME_ENTRY_ACTIVITY_TYPES as actType (actType)}
@@ -385,8 +419,8 @@
 												min="0.25"
 												max="24"
 												step="0.25"
-												bind:value={row.hours}
-												on:input={() => markDirty(dayIndex, rowIndex)}
+												value={row.hours}
+												on:input={(e) => updateRow(dayIndex, rowIndex, 'hours', Number(e.currentTarget.value) || 0)}
 												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-center text-sm text-gray-900 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 											/>
 										</div>
@@ -398,9 +432,9 @@
 												id="notes-{day.dateStr}-{rowIndex}"
 												type="text"
 												placeholder="Notitie"
-												bind:value={row.notes}
-												on:input={() => markDirty(dayIndex, rowIndex)}
-												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-500 placeholder:text-gray-400 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+												value={row.notes}
+												on:input={(e) => updateRow(dayIndex, rowIndex, 'notes', e.currentTarget.value)}
+												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 											/>
 										</div>
 
@@ -458,8 +492,8 @@
 												<label for="project-{day.dateStr}-{rowIndex}" class="sr-only">Project</label>
 												<select
 													id="project-{day.dateStr}-{rowIndex}"
-													bind:value={row.project_id}
-													on:change={() => markDirty(dayIndex, rowIndex)}
+													value={row.project_id}
+													on:change={(e) => updateRow(dayIndex, rowIndex, 'project_id', e.currentTarget.value)}
 													class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
 												>
 													{#each data.projects as project (project.id)}
@@ -471,8 +505,8 @@
 												<label for="activity-{day.dateStr}-{rowIndex}" class="sr-only">Activiteit</label>
 												<select
 													id="activity-{day.dateStr}-{rowIndex}"
-													bind:value={row.activity_type}
-													on:change={() => markDirty(dayIndex, rowIndex)}
+													value={row.activity_type}
+													on:change={(e) => updateRow(dayIndex, rowIndex, 'activity_type', e.currentTarget.value)}
 													class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
 												>
 													{#each TIME_ENTRY_ACTIVITY_TYPES as actType (actType)}
@@ -488,8 +522,8 @@
 													min="0.25"
 													max="24"
 													step="0.25"
-													bind:value={row.hours}
-													on:input={() => markDirty(dayIndex, rowIndex)}
+													value={row.hours}
+													on:input={(e) => updateRow(dayIndex, rowIndex, 'hours', Number(e.currentTarget.value) || 0)}
 													class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-center text-sm"
 												/>
 											</div>
@@ -499,8 +533,8 @@
 													id="notes-{day.dateStr}-{rowIndex}"
 													type="text"
 													placeholder="Notitie"
-													bind:value={row.notes}
-													on:input={() => markDirty(dayIndex, rowIndex)}
+													value={row.notes}
+													on:input={(e) => updateRow(dayIndex, rowIndex, 'notes', e.currentTarget.value)}
 													class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400"
 												/>
 											</div>

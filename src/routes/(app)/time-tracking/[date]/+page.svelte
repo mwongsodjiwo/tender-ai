@@ -75,33 +75,41 @@
 
 		if (!row.id) return;
 
-		// Optimistic: hide row immediately
-		rows[index] = { ...row, isDeleted: true };
-		rows = [...rows];
+		// Optimistic: remove from UI immediately
+		const removedRow = { ...row };
+		rows = rows.filter((_, i) => i !== index);
 
 		try {
-			const response = await fetch(`/api/time-entries/${row.id}`, { method: 'DELETE' });
+			const response = await fetch(`/api/time-entries/${removedRow.id}`, { method: 'DELETE' });
 
 			if (!response.ok) {
 				const body = await response.json().catch(() => ({ message: 'Onbekende fout' }));
 				error = `Verwijderen mislukt: ${body.message ?? 'Onbekende fout'}`;
-				rows[index] = { ...row, isDeleted: false };
-				rows = [...rows];
-				return;
+				// Rollback: put the row back
+				rows = [
+					...rows.slice(0, index),
+					removedRow,
+					...rows.slice(index)
+				];
+			} else {
+				// Sync local state with server after successful deletion
+				await invalidateAll();
 			}
-
-			// Remove from array entirely
-			rows = rows.filter((_, i) => i !== index);
 		} catch {
 			error = 'Verwijderen mislukt. Controleer je internetverbinding.';
-			rows[index] = { ...row, isDeleted: false };
-			rows = [...rows];
+			rows = [
+				...rows.slice(0, index),
+				removedRow,
+				...rows.slice(index)
+			];
 		}
 	}
 
-	function markDirty(index: number): void {
-		rows[index] = { ...rows[index], isDirty: true };
-		rows = [...rows];
+	/** Immutably update a single field on a row and mark it dirty */
+	function updateRow(index: number, field: keyof EntryRow, value: unknown): void {
+		rows = rows.map((r, i) =>
+			i === index ? { ...r, [field]: value, isDirty: true } : r
+		);
 	}
 
 	async function saveAll(): Promise<void> {
@@ -230,76 +238,76 @@
 				{#if !row.isDeleted}
 					<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
 						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-							<!-- Project -->
-							<div>
-								<label for="day-project-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Project</label>
-								<select
-									id="day-project-{index}"
-									bind:value={row.project_id}
-									on:change={() => markDirty(index)}
-									class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-								>
-									{#each data.projects as project (project.id)}
-										<option value={project.id}>{project.name}</option>
-									{/each}
-								</select>
-							</div>
-
-							<!-- Activity -->
-							<div>
-								<label for="day-activity-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Activiteit</label>
-								<select
-									id="day-activity-{index}"
-									bind:value={row.activity_type}
-									on:change={() => markDirty(index)}
-									class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-								>
-									{#each TIME_ENTRY_ACTIVITY_TYPES as actType (actType)}
-										<option value={actType}>{TIME_ENTRY_ACTIVITY_TYPE_LABELS[actType]}</option>
-									{/each}
-								</select>
-							</div>
-
-							<!-- Hours -->
-							<div>
-								<label for="day-hours-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Uren</label>
-								<input
-									id="day-hours-{index}"
-									type="number"
-									min="0.25"
-									max="24"
-									step="0.25"
-									bind:value={row.hours}
-									on:input={() => markDirty(index)}
-									class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-								/>
-							</div>
-
-							<!-- Delete -->
-							<div class="flex items-end">
-								<button
-									on:click={() => removeRow(index)}
-									class="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-									aria-label="Verwijder urenregistratie"
-								>
-									<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-									</svg>
-								</button>
-							</div>
+						<!-- Project -->
+						<div>
+							<label for="day-project-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Project</label>
+							<select
+								id="day-project-{index}"
+								value={row.project_id}
+								on:change={(e) => updateRow(index, 'project_id', e.currentTarget.value)}
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+							>
+								{#each data.projects as project (project.id)}
+									<option value={project.id}>{project.name}</option>
+								{/each}
+							</select>
 						</div>
 
-						<!-- Notes (full width below) -->
-						<div class="mt-3">
-							<label for="day-notes-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Notitie</label>
-							<textarea
-								id="day-notes-{index}"
-								placeholder="Optionele notitie over de werkzaamheden..."
-								bind:value={row.notes}
-								on:input={() => markDirty(index)}
-								rows="2"
-								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-							></textarea>
+						<!-- Activity -->
+						<div>
+							<label for="day-activity-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Activiteit</label>
+							<select
+								id="day-activity-{index}"
+								value={row.activity_type}
+								on:change={(e) => updateRow(index, 'activity_type', e.currentTarget.value)}
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+							>
+								{#each TIME_ENTRY_ACTIVITY_TYPES as actType (actType)}
+									<option value={actType}>{TIME_ENTRY_ACTIVITY_TYPE_LABELS[actType]}</option>
+								{/each}
+							</select>
+						</div>
+
+						<!-- Hours -->
+						<div>
+							<label for="day-hours-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Uren</label>
+							<input
+								id="day-hours-{index}"
+								type="number"
+								min="0.25"
+								max="24"
+								step="0.25"
+								value={row.hours}
+								on:input={(e) => updateRow(index, 'hours', Number(e.currentTarget.value) || 0)}
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+							/>
+						</div>
+
+						<!-- Delete -->
+						<div class="flex items-end">
+							<button
+								on:click={() => removeRow(index)}
+								class="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+								aria-label="Verwijder urenregistratie"
+							>
+								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+								</svg>
+							</button>
+						</div>
+					</div>
+
+					<!-- Notes (full width below) -->
+					<div class="mt-3">
+						<label for="day-notes-{index}" class="mb-1.5 block text-xs font-medium text-gray-500">Notitie</label>
+						<textarea
+							id="day-notes-{index}"
+							placeholder="Optionele notitie over de werkzaamheden..."
+							value={row.notes}
+							on:input={(e) => updateRow(index, 'notes', e.currentTarget.value)}
+							rows="2"
+							class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+						></textarea>
 						</div>
 					</div>
 				{/if}
