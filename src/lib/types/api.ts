@@ -537,6 +537,38 @@ export interface KnowledgeBaseSearchResponse {
 }
 
 // =============================================================================
+// PROJECT OVERVIEW — Sprint R4 (Project-overzicht & projectprofiel)
+// =============================================================================
+
+export interface ProjectOverviewMetrics {
+	total_sections: number;
+	approved_sections: number;
+	progress_percentage: number;
+}
+
+export interface ProjectOverviewDocumentBlock {
+	doc_type_id: string;
+	doc_type_name: string;
+	doc_type_slug: string;
+	total: number;
+	approved: number;
+	progress: number;
+}
+
+export interface ProjectOverviewActivity {
+	id: string;
+	phase: ProjectPhase;
+	title: string;
+	status: ActivityStatus;
+	href: string | null;
+}
+
+export interface ConfirmProjectProfileResponse {
+	profile_confirmed: boolean;
+	profile_confirmed_at: string;
+}
+
+// =============================================================================
 // DASHBOARD — Sprint R3 (Organisatie-dashboard)
 // =============================================================================
 

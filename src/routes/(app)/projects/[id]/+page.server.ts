@@ -1,10 +1,12 @@
-// Project overview page — load artifacts, metrics, and recent activity
+// Project overview page — load artifacts, activities, metrics, and recent activity
 
 import type { PageServerLoad } from './$types';
+import type { PhaseActivity } from '$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
 
+	// Load artifacts with document types
 	const { data: artifacts } = await supabase
 		.from('artifacts')
 		.select('*, document_type:document_types(id, name, slug)')
@@ -13,6 +15,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const allArtifacts = artifacts ?? [];
 	const artifactIds = allArtifacts.map((a) => a.id);
+
+	// Load phase activities from database
+	const { data: phaseActivitiesData } = await supabase
+		.from('phase_activities')
+		.select('*')
+		.eq('project_id', params.id)
+		.is('deleted_at', null)
+		.order('sort_order');
+
+	const phaseActivities: PhaseActivity[] = (phaseActivitiesData ?? []) as PhaseActivity[];
+
+	// Load project profile for confirmation status
+	const { data: profileData } = await supabase
+		.from('project_profiles')
+		.select('id, contracting_authority, project_goal')
+		.eq('project_id', params.id)
+		.is('deleted_at', null)
+		.single();
 
 	// Load reviewers for sections in review
 	let reviewers: unknown[] = [];
@@ -99,6 +119,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		artifacts: allArtifacts,
+		phaseActivities,
+		profileSummary: profileData
+			? { id: profileData.id, contracting_authority: profileData.contracting_authority, project_goal: profileData.project_goal }
+			: null,
 		auditEntries: auditEntries ?? [],
 		projectMetrics: {
 			totalSections,

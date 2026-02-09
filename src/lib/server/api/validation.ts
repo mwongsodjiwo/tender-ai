@@ -428,6 +428,16 @@ export const updateProjectProfileSchema = z.object({
 });
 
 // =============================================================================
+// CONFIRM PROJECT PROFILE — Sprint R4 (Projectprofiel bevestigen)
+// =============================================================================
+
+export const confirmProjectProfileSchema = z.object({
+	confirmed: z.literal(true, {
+		errorMap: () => ({ message: 'Bevestiging moet true zijn' })
+	})
+});
+
+// =============================================================================
 // PHASE ACTIVITIES — Sprint R2 (Fase-activiteiten)
 // =============================================================================
 

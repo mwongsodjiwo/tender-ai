@@ -63,9 +63,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		}
 	}
 
-	// Set completed_at when status changes to completed
+	// Set completed_at when status changes to completed, clear when changing away
 	if (updateData.status === 'completed') {
 		updateData.completed_at = new Date().toISOString();
+	} else if (updateData.status && updateData.status !== 'completed') {
+		updateData.completed_at = null;
 	}
 
 	const { data: activity, error: dbError } = await supabase

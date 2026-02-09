@@ -3,9 +3,12 @@
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import {
-		PROCEDURE_TYPE_LABELS,
+		PROJECT_PHASES,
 		PROJECT_PHASE_LABELS,
-		type ProjectPhase
+		PROJECT_PHASE_DESCRIPTIONS,
+		PROCEDURE_TYPE_LABELS,
+		type ProjectPhase,
+		type PhaseActivity
 	} from '$types';
 	import RoleSwitcher from '$components/RoleSwitcher.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
@@ -47,9 +50,12 @@
 		changes: Record<string, unknown>;
 		created_at: string;
 	}[];
+	$: dbActivities = (data.phaseActivities ?? []) as PhaseActivity[];
+	$: profileSummary = data.profileSummary as { id: string; contracting_authority: string; project_goal: string } | null;
 
 	// Current phase from project data
 	$: currentPhase = (project.current_phase ?? 'preparing') as ProjectPhase;
+	$: currentPhaseIndex = PROJECT_PHASES.indexOf(currentPhase);
 
 	// Auto-poll when project is generating artifacts
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -125,14 +131,14 @@
 		return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 	}
 
-	// Phase-specific activities
+	// Phase-specific fallback activities (used when no DB activities exist for a phase)
 	type ActivityItem = {
 		label: string;
 		status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
 		href: string | null;
 	};
 
-	const PHASE_ACTIVITIES: Record<ProjectPhase, (projectId: string) => ActivityItem[]> = {
+	const FALLBACK_PHASE_ACTIVITIES: Record<ProjectPhase, (projectId: string) => ActivityItem[]> = {
 		preparing: (pid) => [
 			{
 				label: 'Briefing starten',
@@ -141,12 +147,12 @@
 			},
 			{
 				label: 'Projectprofiel invullen',
-				status: project.status === 'draft' ? 'not_started' : project.briefing_data && Object.keys(project.briefing_data).length > 0 ? 'completed' : 'in_progress',
+				status: profileSummary ? 'completed' : project.status === 'draft' ? 'not_started' : 'in_progress',
 				href: `/projects/${pid}/profile`
 			},
 			{
 				label: 'Projectprofiel bevestigen',
-				status: 'not_started',
+				status: project.profile_confirmed ? 'completed' : 'not_started',
 				href: `/projects/${pid}/profile`
 			},
 			{
@@ -156,26 +162,10 @@
 			}
 		],
 		exploring: (pid) => [
-			{
-				label: 'Deskresearch uitvoeren',
-				status: 'not_started',
-				href: null
-			},
-			{
-				label: 'Request for Information (RFI)',
-				status: 'not_started',
-				href: null
-			},
-			{
-				label: 'Marktconsultatie',
-				status: 'not_started',
-				href: null
-			},
-			{
-				label: 'Marktverkenningsrapport opstellen',
-				status: 'not_started',
-				href: null
-			}
+			{ label: 'Deskresearch uitvoeren', status: 'not_started', href: null },
+			{ label: 'Request for Information (RFI)', status: 'not_started', href: null },
+			{ label: 'Marktconsultatie', status: 'not_started', href: null },
+			{ label: 'Marktverkenningsrapport opstellen', status: 'not_started', href: null }
 		],
 		specifying: (pid) => [
 			{
@@ -188,70 +178,66 @@
 				status: documentBlocks.find((b) => b.docType.slug === 'aanbestedingsleidraad') ? 'in_progress' : 'not_started',
 				href: `/projects/${pid}/documents`
 			},
-			{
-				label: 'Gunningscriteria (EMVI)',
-				status: 'not_started',
-				href: `/projects/${pid}/emvi`
-			},
-			{
-				label: 'UEA configureren',
-				status: 'not_started',
-				href: `/projects/${pid}/uea`
-			},
-			{
-				label: 'Conceptovereenkomst',
-				status: 'not_started',
-				href: `/projects/${pid}/contract`
-			}
+			{ label: 'Gunningscriteria (EMVI)', status: 'not_started', href: `/projects/${pid}/emvi` },
+			{ label: 'UEA configureren', status: 'not_started', href: `/projects/${pid}/uea` },
+			{ label: 'Conceptovereenkomst', status: 'not_started', href: `/projects/${pid}/contract` }
 		],
 		tendering: (pid) => [
-			{
-				label: 'Publicatie op TenderNed',
-				status: 'not_started',
-				href: null
-			},
-			{
-				label: 'Nota van Inlichtingen beantwoorden',
-				status: 'not_started',
-				href: `/projects/${pid}/correspondence`
-			},
-			{
-				label: 'Inschrijvingen beoordelen',
-				status: 'not_started',
-				href: null
-			},
-			{
-				label: 'Gunningsbeslissing',
-				status: 'not_started',
-				href: null
-			},
-			{
-				label: 'Afwijzingsbrieven versturen',
-				status: 'not_started',
-				href: `/projects/${pid}/correspondence`
-			}
+			{ label: 'Publicatie op TenderNed', status: 'not_started', href: null },
+			{ label: 'Nota van Inlichtingen beantwoorden', status: 'not_started', href: `/projects/${pid}/correspondence` },
+			{ label: 'Inschrijvingen beoordelen', status: 'not_started', href: null },
+			{ label: 'Gunningsbeslissing', status: 'not_started', href: null },
+			{ label: 'Afwijzingsbrieven versturen', status: 'not_started', href: `/projects/${pid}/correspondence` }
 		],
 		contracting: (pid) => [
-			{
-				label: 'Definitieve overeenkomst opstellen',
-				status: 'not_started',
-				href: `/projects/${pid}/contract`
-			},
-			{
-				label: 'Uitnodiging tot ondertekening',
-				status: 'not_started',
-				href: `/projects/${pid}/correspondence`
-			},
-			{
-				label: 'Contract ondertekend',
-				status: 'not_started',
-				href: null
-			}
+			{ label: 'Definitieve overeenkomst opstellen', status: 'not_started', href: `/projects/${pid}/contract` },
+			{ label: 'Uitnodiging tot ondertekening', status: 'not_started', href: `/projects/${pid}/correspondence` },
+			{ label: 'Contract ondertekend', status: 'not_started', href: null }
 		]
 	};
 
-	$: phaseActivities = PHASE_ACTIVITIES[currentPhase](project.id);
-	$: completedActivities = phaseActivities.filter((a) => a.status === 'completed').length;
+	// Build activities per phase: use DB activities if available, else fallback
+	function getActivitiesForPhase(phase: ProjectPhase): ActivityItem[] {
+		const dbForPhase = dbActivities.filter((a) => a.phase === phase);
+		if (dbForPhase.length > 0) {
+			return dbForPhase.map((a) => ({
+				label: a.title,
+				status: a.status,
+				href: null
+			}));
+		}
+		return FALLBACK_PHASE_ACTIVITIES[phase](project.id);
+	}
+
+	// Expanded phases tracking (current phase is always expanded)
+	let expandedPhases: Set<ProjectPhase> = new Set([currentPhase]);
+	$: {
+		if (!expandedPhases.has(currentPhase)) {
+			expandedPhases = new Set([...expandedPhases, currentPhase]);
+		}
+	}
+
+	function togglePhase(phase: ProjectPhase) {
+		if (expandedPhases.has(phase)) {
+			expandedPhases = new Set([...expandedPhases].filter(p => p !== phase));
+		} else {
+			expandedPhases = new Set([...expandedPhases, phase]);
+		}
+	}
+
+	function phaseCompletionCount(phase: ProjectPhase): { completed: number; total: number } {
+		const activities = getActivitiesForPhase(phase);
+		return {
+			completed: activities.filter((a) => a.status === 'completed').length,
+			total: activities.length
+		};
+	}
+
+	function phaseStatus(phaseIndex: number): 'completed' | 'current' | 'upcoming' {
+		if (phaseIndex < currentPhaseIndex) return 'completed';
+		if (phaseIndex === currentPhaseIndex) return 'current';
+		return 'upcoming';
+	}
 </script>
 
 <svelte:head>
@@ -263,12 +249,24 @@
 	<div class="rounded-card bg-white p-6 shadow-card">
 		<div class="flex items-start justify-between">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900">{project.name}</h1>
+				<div class="flex items-center gap-3">
+					<h1 class="text-2xl font-bold text-gray-900">{project.name}</h1>
+					<StatusBadge status={project.status} />
+					{#if project.profile_confirmed}
+						<span class="rounded-badge bg-success-100 px-2.5 py-0.5 text-xs font-medium text-success-700">
+							Profiel bevestigd
+						</span>
+					{:else}
+						<span class="rounded-badge bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+							Profiel concept
+						</span>
+					{/if}
+				</div>
 				{#if project.description}
 					<p class="mt-1 text-gray-600">{project.description}</p>
 				{/if}
 			</div>
-			<StatusBadge status={project.status} />
+			<RoleSwitcher roles={currentUserRoles} bind:activeRole />
 		</div>
 
 		<div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
@@ -280,20 +278,34 @@
 			{/if}
 		</div>
 
-		<div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			{#if currentPhase === 'preparing' && (project.status === 'draft' || project.status === 'briefing')}
+		{#if currentPhase === 'preparing' && !project.profile_confirmed}
+			<div class="mt-4 flex gap-3">
+				{#if project.status === 'draft' || project.status === 'briefing'}
+					<a
+						href="/projects/{project.id}/briefing"
+						class="inline-flex items-center justify-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+					>
+						{project.status === 'draft' ? 'Briefing starten' : 'Briefing voortzetten'}
+					</a>
+				{/if}
 				<a
-					href="/projects/{project.id}/briefing"
-					class="inline-flex items-center justify-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 sm:justify-start"
+					href="/projects/{project.id}/profile"
+					class="inline-flex items-center justify-center rounded-card border border-primary-300 px-4 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50"
 				>
-					{project.status === 'draft' ? 'Briefing starten' : 'Briefing voortzetten'}
+					Projectprofiel invullen
 				</a>
-			{:else}
-				<div></div>
-			{/if}
-			<RoleSwitcher roles={currentUserRoles} bind:activeRole />
-		</div>
+			</div>
+		{/if}
 	</div>
+
+	<!-- Profile confirmation banner -->
+	{#if currentPhase === 'preparing' && !project.profile_confirmed && profileSummary}
+		<InfoBanner
+			type="warning"
+			title="Projectprofiel nog niet bevestigd"
+			message="Het projectprofiel is ingevuld maar nog niet bevestigd. Bevestig het profiel om door te gaan naar de volgende fase."
+		/>
+	{/if}
 
 	<!-- Top row: 3 metric cards -->
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -309,8 +321,9 @@
 		<div class="rounded-card bg-white p-6 shadow-card">
 			<p class="text-sm font-medium text-gray-500">Huidige fase</p>
 			<p class="mt-2 text-2xl font-bold text-gray-900">{PROJECT_PHASE_LABELS[currentPhase]}</p>
+			{@const cc = phaseCompletionCount(currentPhase)}
 			<p class="mt-1 text-sm text-gray-500">
-				{completedActivities} van {phaseActivities.length} activiteiten afgerond
+				{cc.completed} van {cc.total} activiteiten afgerond
 			</p>
 		</div>
 
@@ -340,22 +353,72 @@
 
 	<!-- Phase activities + sidebar -->
 	<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-		<!-- Activities checklist (spans 2 cols) -->
+		<!-- Phase checklists (spans 2 cols) -->
 		<div class="space-y-4 lg:col-span-2">
-			<div class="rounded-card bg-white p-6 shadow-card">
-				<div class="flex items-center justify-between">
-					<h2 class="text-base font-semibold text-gray-900">
-						Activiteiten — {PROJECT_PHASE_LABELS[currentPhase]}
-					</h2>
-					<span class="text-sm text-gray-500">
-						{completedActivities}/{phaseActivities.length}
-					</span>
+			<!-- All phases as collapsible sections -->
+			{#each PROJECT_PHASES as phase, index (phase)}
+				{@const status = phaseStatus(index)}
+				{@const cc = phaseCompletionCount(phase)}
+				{@const isExpanded = expandedPhases.has(phase)}
+				<div class="rounded-card bg-white shadow-card overflow-hidden">
+					<button
+						class="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-gray-50"
+						on:click={() => togglePhase(phase)}
+						aria-expanded={isExpanded}
+					>
+						<!-- Phase status icon -->
+						<div
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold
+								{status === 'completed'
+									? 'bg-success-100 text-success-600'
+									: status === 'current'
+										? 'bg-primary-600 text-white ring-4 ring-primary-100'
+										: 'bg-gray-100 text-gray-400'}"
+						>
+							{#if status === 'completed'}
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+								</svg>
+							{:else}
+								{index + 1}
+							{/if}
+						</div>
+
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2">
+								<h2 class="text-base font-semibold {status === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}">
+									{PROJECT_PHASE_LABELS[phase]}
+								</h2>
+								{#if status === 'current'}
+									<span class="rounded-badge bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">Huidige fase</span>
+								{/if}
+							</div>
+							<p class="mt-0.5 text-sm text-gray-500">{PROJECT_PHASE_DESCRIPTIONS[phase]}</p>
+						</div>
+
+						<div class="flex items-center gap-3">
+							<span class="text-sm text-gray-500">{cc.completed}/{cc.total}</span>
+							<svg
+								class="h-5 w-5 text-gray-400 transition-transform {isExpanded ? 'rotate-180' : ''}"
+								fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"
+							>
+								<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+							</svg>
+						</div>
+					</button>
+
+					{#if isExpanded}
+						<div class="border-t border-gray-100 px-5 pb-5 pt-3">
+							{#if cc.total > 0}
+								<div class="mb-3">
+									<ProgressBar value={cc.completed} max={cc.total || 1} showPercentage={false} size="sm" />
+								</div>
+							{/if}
+							<ActivityChecklist activities={getActivitiesForPhase(phase)} />
+						</div>
+					{/if}
 				</div>
-				<div class="mt-1 mb-4">
-					<ProgressBar value={completedActivities} max={phaseActivities.length || 1} showPercentage={false} size="sm" />
-				</div>
-				<ActivityChecklist activities={phaseActivities} />
-			</div>
+			{/each}
 
 			<!-- Document blocks (show in specifying phase and beyond) -->
 			{#if currentPhase === 'specifying' || currentPhase === 'tendering' || currentPhase === 'contracting'}
@@ -405,7 +468,6 @@
 							>
 								<div class="flex items-start justify-between">
 									<h3 class="font-medium text-gray-900">Gunningscriteria (EMVI)</h3>
-									<!-- Lucide: Scale -->
 									<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
 									</svg>
