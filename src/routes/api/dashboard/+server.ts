@@ -1,9 +1,11 @@
-// Dashboard page — load dashboard metrics via API or directly
+// GET /api/dashboard — Dashboard metrics and data
 
-import type { PageServerLoad } from './$types';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import type {
-	DashboardMetrics,
+	DashboardResponse,
 	DashboardRecentProject,
+	DashboardMetrics,
 	MonthlyProjectData
 } from '$types';
 
@@ -13,31 +15,46 @@ const RECENT_PROJECTS_LIMIT = 5;
 const DEADLINE_DAYS_AHEAD = 7;
 const MONTHLY_DATA_MONTHS = 6;
 
-export const load: PageServerLoad = async ({ parent, locals }) => {
-	const { hasOrganization } = await parent();
-	const { supabase } = locals;
+export const GET: RequestHandler = async ({ locals }) => {
+	const { supabase, user } = locals;
+
+	if (!user) {
+		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+	}
 
 	// Load all projects (non-deleted)
-	const { data: projects } = await supabase
+	const { data: projects, error: projectsError } = await supabase
 		.from('projects')
 		.select('id, name, status, current_phase, deadline_date, created_at, updated_at')
 		.is('deleted_at', null)
 		.order('updated_at', { ascending: false });
 
+	if (projectsError) {
+		return json({ message: projectsError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+	}
+
 	const allProjects = projects ?? [];
 
 	// Load all artifacts for status aggregation
-	const { data: artifacts } = await supabase
+	const { data: artifacts, error: artifactsError } = await supabase
 		.from('artifacts')
 		.select('id, status, project_id, updated_at');
+
+	if (artifactsError) {
+		return json({ message: artifactsError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+	}
 
 	const allArtifacts = artifacts ?? [];
 
 	// Load phase activities for progress calculation
-	const { data: activities } = await supabase
+	const { data: activities, error: activitiesError } = await supabase
 		.from('phase_activities')
 		.select('id, project_id, status')
 		.is('deleted_at', null);
+
+	if (activitiesError) {
+		return json({ message: activitiesError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+	}
 
 	const allActivities = activities ?? [];
 
@@ -46,7 +63,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 	const completedProjects = allProjects.filter(p => COMPLETED_STATUSES.includes(p.status));
 	const inReviewCount = allArtifacts.filter(a => a.status === 'review').length;
 
-	// Week-over-week trend
+	// Week-over-week trend for review count
 	const oneWeekAgo = new Date();
 	oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 	const inReviewTrend = allArtifacts.filter(
@@ -62,7 +79,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		rejected: allArtifacts.filter(a => a.status === 'rejected').length
 	};
 
-	// Average progress (artifacts + activities)
+	// Average progress — combine artifact + activity progress
 	const progressPerProject = activeProjects.map(p => {
 		const projectArtifacts = allArtifacts.filter(a => a.project_id === p.id);
 		const projectActivities = allActivities.filter(a => a.project_id === p.id);
@@ -81,7 +98,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		? Math.round(progressPerProject.reduce((sum, p) => sum + p, 0) / progressPerProject.length)
 		: 0;
 
-	// Recent projects with phase and progress
+	// Recent projects with progress
 	const recentProjects: DashboardRecentProject[] = allProjects.slice(0, RECENT_PROJECTS_LIMIT).map(p => {
 		const projectArtifacts = allArtifacts.filter(a => a.project_id === p.id);
 		const projectActivities = allActivities.filter(a => a.project_id === p.id);
@@ -154,11 +171,12 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		total_sections: allArtifacts.length
 	};
 
-	return {
-		hasOrganization,
+	const response: DashboardResponse = {
 		metrics,
-		recentProjects,
-		upcomingDeadlines,
-		monthlyData
+		recent_projects: recentProjects,
+		upcoming_deadlines: upcomingDeadlines,
+		monthly_data: monthlyData
 	};
+
+	return json({ data: response });
 };
