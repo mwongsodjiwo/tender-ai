@@ -1,7 +1,7 @@
 // Zod validation schemas for API endpoints
 
 import { z } from 'zod';
-import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS } from '$types';
+import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES } from '$types';
 
 // =============================================================================
 // AUTH
@@ -307,12 +307,11 @@ export const createRequirementSchema = z.object({
 	title: z.string().min(1, 'Titel is verplicht').max(500),
 	description: z.string().max(5000).optional().default(''),
 	requirement_type: z.enum(REQUIREMENT_TYPES, {
-		errorMap: () => ({ message: 'Type moet knock-out, gunningscriterium of wens zijn' })
+		errorMap: () => ({ message: 'Type moet eis of wens zijn' })
 	}),
 	category: z.enum(REQUIREMENT_CATEGORIES, {
 		errorMap: () => ({ message: 'Ongeldige categorie' })
 	}),
-	weight_percentage: z.number().min(0).max(100).optional().default(0),
 	priority: z.number().int().min(1).max(5).optional().default(3),
 	sort_order: z.number().int().min(0).optional()
 });
@@ -322,7 +321,6 @@ export const updateRequirementSchema = z.object({
 	description: z.string().max(5000).optional(),
 	requirement_type: z.enum(REQUIREMENT_TYPES).optional(),
 	category: z.enum(REQUIREMENT_CATEGORIES).optional(),
-	weight_percentage: z.number().min(0).max(100).optional(),
 	priority: z.number().int().min(1).max(5).optional(),
 	sort_order: z.number().int().min(0).optional()
 });
@@ -391,4 +389,134 @@ export const toggleUeaQuestionSchema = z.object({
 
 export const initializeUeaSelectionsSchema = z.object({
 	select_all_optional: z.boolean().optional().default(false)
+});
+
+// =============================================================================
+// PROJECT PROFILE — Sprint R2 (Projectprofiel)
+// =============================================================================
+
+export const createProjectProfileSchema = z.object({
+	contracting_authority: z.string().max(500).optional().default(''),
+	department: z.string().max(300).optional().default(''),
+	contact_name: z.string().max(200).optional().default(''),
+	contact_email: z.string().email('Ongeldig e-mailadres').optional().or(z.literal('')).default(''),
+	contact_phone: z.string().max(20).optional().default(''),
+	project_goal: z.string().max(5000).optional().default(''),
+	scope_description: z.string().max(10000).optional().default(''),
+	estimated_value: z.number().positive('Waarde moet positief zijn').optional(),
+	currency: z.string().max(3).optional().default('EUR'),
+	cpv_codes: z.array(z.string().max(20)).optional().default([]),
+	nuts_codes: z.array(z.string().max(20)).optional().default([]),
+	timeline_start: z.string().optional(),
+	timeline_end: z.string().optional()
+});
+
+export const updateProjectProfileSchema = z.object({
+	contracting_authority: z.string().max(500).optional(),
+	department: z.string().max(300).optional(),
+	contact_name: z.string().max(200).optional(),
+	contact_email: z.string().email('Ongeldig e-mailadres').optional().or(z.literal('')),
+	contact_phone: z.string().max(20).optional(),
+	project_goal: z.string().max(5000).optional(),
+	scope_description: z.string().max(10000).optional(),
+	estimated_value: z.number().positive('Waarde moet positief zijn').optional(),
+	currency: z.string().max(3).optional(),
+	cpv_codes: z.array(z.string().max(20)).optional(),
+	nuts_codes: z.array(z.string().max(20)).optional(),
+	timeline_start: z.string().optional(),
+	timeline_end: z.string().optional()
+});
+
+// =============================================================================
+// PHASE ACTIVITIES — Sprint R2 (Fase-activiteiten)
+// =============================================================================
+
+export const createPhaseActivitySchema = z.object({
+	phase: z.enum(PROJECT_PHASES, {
+		errorMap: () => ({ message: 'Ongeldige projectfase' })
+	}),
+	activity_type: z.string().min(1, 'Activiteittype is verplicht').max(100),
+	title: z.string().min(1, 'Titel is verplicht').max(300),
+	description: z.string().max(5000).optional().default(''),
+	status: z.enum(ACTIVITY_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional().default('not_started'),
+	sort_order: z.number().int().min(0).optional().default(0),
+	assigned_to: z.string().uuid('Ongeldig profiel-ID').optional(),
+	due_date: z.string().optional()
+});
+
+export const updatePhaseActivitySchema = z.object({
+	title: z.string().min(1).max(300).optional(),
+	description: z.string().max(5000).optional(),
+	status: z.enum(ACTIVITY_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional(),
+	sort_order: z.number().int().min(0).optional(),
+	assigned_to: z.string().uuid('Ongeldig profiel-ID').nullable().optional(),
+	due_date: z.string().nullable().optional()
+});
+
+// =============================================================================
+// CORRESPONDENCE — Sprint R2 (Brieven)
+// =============================================================================
+
+export const createCorrespondenceSchema = z.object({
+	phase: z.enum(PROJECT_PHASES, {
+		errorMap: () => ({ message: 'Ongeldige projectfase' })
+	}),
+	letter_type: z.string().min(1, 'Brieftype is verplicht').max(100),
+	recipient: z.string().max(500).optional().default(''),
+	subject: z.string().max(500).optional().default(''),
+	body: z.string().max(50000).optional().default(''),
+	status: z.enum(CORRESPONDENCE_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional().default('draft')
+});
+
+export const updateCorrespondenceSchema = z.object({
+	letter_type: z.string().min(1).max(100).optional(),
+	recipient: z.string().max(500).optional(),
+	subject: z.string().max(500).optional(),
+	body: z.string().max(50000).optional(),
+	status: z.enum(CORRESPONDENCE_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional(),
+	sent_at: z.string().optional()
+});
+
+// =============================================================================
+// EVALUATIONS — Sprint R2 (Beoordelingen)
+// =============================================================================
+
+export const createEvaluationSchema = z.object({
+	tenderer_name: z.string().min(1, 'Naam inschrijver is verplicht').max(300),
+	scores: z.record(z.unknown()).optional().default({}),
+	total_score: z.number().min(0).optional().default(0),
+	ranking: z.number().int().min(1).optional(),
+	status: z.enum(EVALUATION_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional().default('draft'),
+	notes: z.string().max(10000).optional().default('')
+});
+
+export const updateEvaluationSchema = z.object({
+	tenderer_name: z.string().min(1).max(300).optional(),
+	scores: z.record(z.unknown()).optional(),
+	total_score: z.number().min(0).optional(),
+	ranking: z.number().int().min(1).nullable().optional(),
+	status: z.enum(EVALUATION_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional(),
+	notes: z.string().max(10000).optional()
+});
+
+// =============================================================================
+// KNOWLEDGE BASE SEARCH — Sprint R2 (Kennisbank zoeken)
+// =============================================================================
+
+export const knowledgeBaseSearchSchema = z.object({
+	query: z.string().min(2, 'Zoekterm moet minimaal 2 tekens bevatten').max(500),
+	cpv_codes: z.array(z.string().max(20)).optional().default([]),
+	limit: z.number().int().min(1).max(50).optional().default(10)
 });

@@ -17,7 +17,10 @@ import type {
 	CriterionType,
 	ContractType,
 	GeneralConditionsType,
-	UeaPart
+	UeaPart,
+	ActivityStatus,
+	CorrespondenceStatus,
+	EvaluationStatus
 } from './enums.js';
 
 // =============================================================================
@@ -73,6 +76,8 @@ export interface Project {
 	scoring_methodology: ScoringMethodology | null;
 	contract_type: ContractType | null;
 	general_conditions: GeneralConditionsType | null;
+	profile_confirmed: boolean;
+	profile_confirmed_at: string | null;
 	created_by: string;
 	created_at: string;
 	updated_at: string;
@@ -383,4 +388,149 @@ export interface DocumentWithChunks extends Document {
 
 export interface TenderNedItemWithChunks extends TenderNedItem {
 	chunks: TenderNedChunk[];
+}
+
+// =============================================================================
+// PROJECT PROFILES — Sprint R2 (Projectprofiel)
+// =============================================================================
+
+export interface ProjectProfile {
+	id: string;
+	project_id: string;
+	contracting_authority: string;
+	department: string;
+	contact_name: string;
+	contact_email: string;
+	contact_phone: string;
+	project_goal: string;
+	scope_description: string;
+	estimated_value: number | null;
+	currency: string;
+	cpv_codes: string[];
+	nuts_codes: string[];
+	timeline_start: string | null;
+	timeline_end: string | null;
+	metadata: Record<string, unknown>;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// PHASE ACTIVITIES — Sprint R2 (Fase-activiteiten)
+// =============================================================================
+
+export interface PhaseActivity {
+	id: string;
+	project_id: string;
+	phase: ProjectPhase;
+	activity_type: string;
+	title: string;
+	description: string;
+	status: ActivityStatus;
+	sort_order: number;
+	assigned_to: string | null;
+	due_date: string | null;
+	completed_at: string | null;
+	metadata: Record<string, unknown>;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// CORRESPONDENCE — Sprint R2 (Brieven)
+// =============================================================================
+
+export interface Correspondence {
+	id: string;
+	project_id: string;
+	phase: ProjectPhase;
+	letter_type: string;
+	recipient: string;
+	subject: string;
+	body: string;
+	status: CorrespondenceStatus;
+	sent_at: string | null;
+	metadata: Record<string, unknown>;
+	created_by: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// EVALUATIONS — Sprint R2 (Beoordelingen)
+// =============================================================================
+
+export interface Evaluation {
+	id: string;
+	project_id: string;
+	tenderer_name: string;
+	scores: Record<string, unknown>;
+	total_score: number;
+	ranking: number | null;
+	status: EvaluationStatus;
+	notes: string;
+	metadata: Record<string, unknown>;
+	created_by: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// KNOWLEDGE BASE — Sprint R2 (Kennisbank)
+// =============================================================================
+
+export interface KnowledgeBaseTender {
+	id: string;
+	external_id: string;
+	title: string;
+	description: string | null;
+	contracting_authority: string | null;
+	procedure_type: string | null;
+	estimated_value: number | null;
+	currency: string | null;
+	publication_date: string | null;
+	deadline_date: string | null;
+	cpv_codes: string[];
+	nuts_codes: string[];
+	source_url: string | null;
+	raw_data: Record<string, unknown>;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface KnowledgeBaseRequirement {
+	id: string;
+	tender_id: string;
+	requirement_text: string;
+	category: string | null;
+	source_section: string | null;
+	metadata: Record<string, unknown>;
+	created_at: string;
+}
+
+export interface RequirementChunk {
+	id: string;
+	requirement_id: string;
+	chunk_index: number;
+	content: string;
+	token_count: number | null;
+	metadata: Record<string, unknown>;
+	created_at: string;
+}
+
+export interface HarvestLog {
+	id: string;
+	source: string;
+	started_at: string;
+	finished_at: string | null;
+	records_fetched: number;
+	records_inserted: number;
+	records_updated: number;
+	errors: unknown[];
+	metadata: Record<string, unknown>;
+	created_at: string;
 }

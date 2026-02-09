@@ -238,6 +238,48 @@ export const UEA_PART_ROMAN: Record<UeaPart, string> = {
 };
 
 // =============================================================================
+// ACTIVITY STATUS — Sprint R2 (Fase-activiteiten)
+// =============================================================================
+
+export const ACTIVITY_STATUSES = ['not_started', 'in_progress', 'completed', 'skipped'] as const;
+export type ActivityStatus = (typeof ACTIVITY_STATUSES)[number];
+
+export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
+	not_started: 'Niet gestart',
+	in_progress: 'Bezig',
+	completed: 'Afgerond',
+	skipped: 'Overgeslagen'
+};
+
+// =============================================================================
+// CORRESPONDENCE STATUS — Sprint R2 (Brieven)
+// =============================================================================
+
+export const CORRESPONDENCE_STATUSES = ['draft', 'ready', 'sent', 'archived'] as const;
+export type CorrespondenceStatus = (typeof CORRESPONDENCE_STATUSES)[number];
+
+export const CORRESPONDENCE_STATUS_LABELS: Record<CorrespondenceStatus, string> = {
+	draft: 'Concept',
+	ready: 'Gereed',
+	sent: 'Verzonden',
+	archived: 'Gearchiveerd'
+};
+
+// =============================================================================
+// EVALUATION STATUS — Sprint R2 (Beoordelingen)
+// =============================================================================
+
+export const EVALUATION_STATUSES = ['draft', 'scoring', 'completed', 'published'] as const;
+export type EvaluationStatus = (typeof EVALUATION_STATUSES)[number];
+
+export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
+	draft: 'Concept',
+	scoring: 'Beoordelen',
+	completed: 'Afgerond',
+	published: 'Gepubliceerd'
+};
+
+// =============================================================================
 // AUDIT ACTIONS
 // =============================================================================
 

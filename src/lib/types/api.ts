@@ -12,9 +12,25 @@ import type {
 	Document,
 	DocumentType,
 	TenderNedItem,
-	AuditLogEntry
+	AuditLogEntry,
+	ProjectProfile,
+	PhaseActivity,
+	Correspondence,
+	Evaluation,
+	KnowledgeBaseTender,
+	KnowledgeBaseRequirement
 } from './database.js';
-import type { OrganizationRole, ProcedureType, ProjectRole, ArtifactStatus, DocumentCategory } from './enums.js';
+import type {
+	OrganizationRole,
+	ProcedureType,
+	ProjectRole,
+	ArtifactStatus,
+	DocumentCategory,
+	ProjectPhase,
+	ActivityStatus,
+	CorrespondenceStatus,
+	EvaluationStatus
+} from './enums.js';
 
 // =============================================================================
 // COMMON
@@ -381,4 +397,141 @@ export interface EmbeddingStatusResponse {
 	total_chunks: number;
 	embedded_chunks: number;
 	status: 'pending' | 'processing' | 'complete' | 'error';
+}
+
+// =============================================================================
+// PROJECT PROFILE — Sprint R2 (Projectprofiel)
+// =============================================================================
+
+export interface CreateProjectProfileRequest {
+	contracting_authority?: string;
+	department?: string;
+	contact_name?: string;
+	contact_email?: string;
+	contact_phone?: string;
+	project_goal?: string;
+	scope_description?: string;
+	estimated_value?: number;
+	currency?: string;
+	cpv_codes?: string[];
+	nuts_codes?: string[];
+	timeline_start?: string;
+	timeline_end?: string;
+}
+
+export interface UpdateProjectProfileRequest {
+	contracting_authority?: string;
+	department?: string;
+	contact_name?: string;
+	contact_email?: string;
+	contact_phone?: string;
+	project_goal?: string;
+	scope_description?: string;
+	estimated_value?: number;
+	currency?: string;
+	cpv_codes?: string[];
+	nuts_codes?: string[];
+	timeline_start?: string;
+	timeline_end?: string;
+}
+
+export type ProjectProfileResponse = ProjectProfile;
+
+// =============================================================================
+// PHASE ACTIVITIES — Sprint R2 (Fase-activiteiten)
+// =============================================================================
+
+export interface CreatePhaseActivityRequest {
+	phase: ProjectPhase;
+	activity_type: string;
+	title: string;
+	description?: string;
+	status?: ActivityStatus;
+	sort_order?: number;
+	assigned_to?: string;
+	due_date?: string;
+}
+
+export interface UpdatePhaseActivityRequest {
+	title?: string;
+	description?: string;
+	status?: ActivityStatus;
+	sort_order?: number;
+	assigned_to?: string;
+	due_date?: string;
+}
+
+export type PhaseActivityResponse = PhaseActivity;
+export type PhaseActivityListResponse = PhaseActivity[];
+
+// =============================================================================
+// CORRESPONDENCE — Sprint R2 (Brieven)
+// =============================================================================
+
+export interface CreateCorrespondenceRequest {
+	phase: ProjectPhase;
+	letter_type: string;
+	recipient?: string;
+	subject?: string;
+	body?: string;
+	status?: CorrespondenceStatus;
+}
+
+export interface UpdateCorrespondenceRequest {
+	letter_type?: string;
+	recipient?: string;
+	subject?: string;
+	body?: string;
+	status?: CorrespondenceStatus;
+	sent_at?: string;
+}
+
+export type CorrespondenceResponse = Correspondence;
+export type CorrespondenceListResponse = Correspondence[];
+
+// =============================================================================
+// EVALUATIONS — Sprint R2 (Beoordelingen)
+// =============================================================================
+
+export interface CreateEvaluationRequest {
+	tenderer_name: string;
+	scores?: Record<string, unknown>;
+	total_score?: number;
+	ranking?: number;
+	status?: EvaluationStatus;
+	notes?: string;
+}
+
+export interface UpdateEvaluationRequest {
+	tenderer_name?: string;
+	scores?: Record<string, unknown>;
+	total_score?: number;
+	ranking?: number;
+	status?: EvaluationStatus;
+	notes?: string;
+}
+
+export type EvaluationResponse = Evaluation;
+export type EvaluationListResponse = Evaluation[];
+
+// =============================================================================
+// KNOWLEDGE BASE SEARCH — Sprint R2 (Kennisbank zoeken)
+// =============================================================================
+
+export interface KnowledgeBaseSearchRequest {
+	query: string;
+	cpv_codes?: string[];
+	limit?: number;
+}
+
+export interface KnowledgeBaseSearchResult {
+	tender: KnowledgeBaseTender;
+	requirement: KnowledgeBaseRequirement;
+	snippet: string;
+	relevance: number;
+}
+
+export interface KnowledgeBaseSearchResponse {
+	results: KnowledgeBaseSearchResult[];
+	total: number;
 }
