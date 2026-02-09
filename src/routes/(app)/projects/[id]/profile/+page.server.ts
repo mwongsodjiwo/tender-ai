@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select('*')
 		.eq('project_id', params.id)
 		.is('deleted_at', null)
-		.single();
+		.maybeSingle();
 
 	return {
 		profile: (profile as ProjectProfile | null) ?? null

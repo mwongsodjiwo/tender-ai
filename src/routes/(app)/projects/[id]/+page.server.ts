@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select('id, contracting_authority, project_goal')
 		.eq('project_id', params.id)
 		.is('deleted_at', null)
-		.single();
+		.maybeSingle();
 
 	// Load reviewers for sections in review
 	let reviewers: unknown[] = [];
