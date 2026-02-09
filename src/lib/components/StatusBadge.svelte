@@ -20,11 +20,15 @@
 		generating: 'bg-warning-100 text-warning-700 border-warning-200',
 		published: 'bg-success-100 text-success-700 border-success-200',
 		archived: 'bg-gray-100 text-gray-500 border-gray-200',
-		knockout: 'bg-error-50 text-error-700 border-error-200',
-		award_criterion: 'bg-primary-50 text-primary-700 border-primary-200',
-		wish: 'bg-warning-50 text-warning-700 border-warning-200',
+		eis: 'bg-error-50 text-error-700 border-error-200',
+		wens: 'bg-warning-50 text-warning-700 border-warning-200',
 		price: 'bg-primary-50 text-primary-700 border-primary-200',
-		quality: 'bg-success-50 text-success-700 border-success-200'
+		quality: 'bg-success-50 text-success-700 border-success-200',
+		preparing: 'bg-primary-50 text-primary-700 border-primary-200',
+		exploring: 'bg-warning-50 text-warning-700 border-warning-200',
+		specifying: 'bg-primary-100 text-primary-700 border-primary-200',
+		tendering: 'bg-success-50 text-success-700 border-success-200',
+		contracting: 'bg-success-100 text-success-700 border-success-200'
 	};
 
 	const STATUS_LABELS: Record<string, string> = {
@@ -45,11 +49,15 @@
 		generating: 'Genereren',
 		published: 'Gepubliceerd',
 		archived: 'Gearchiveerd',
-		knockout: 'Knock-out',
-		award_criterion: 'Gunningscriterium',
-		wish: 'Wens',
+		eis: 'Eis (Knock-out)',
+		wens: 'Wens',
 		price: 'Prijs',
-		quality: 'Kwaliteit'
+		quality: 'Kwaliteit',
+		preparing: 'Voorbereiden',
+		exploring: 'Verkennen',
+		specifying: 'Specificeren',
+		tendering: 'Aanbesteden',
+		contracting: 'Contracteren'
 	};
 
 	$: styles = STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700 border-gray-200';

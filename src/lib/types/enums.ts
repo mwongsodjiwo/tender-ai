@@ -14,6 +14,35 @@ export const PROJECT_STATUSES = [
 ] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
+// =============================================================================
+// PROJECT PHASES — Sprint R1 (Projectfasen & Navigatie)
+// =============================================================================
+
+export const PROJECT_PHASES = [
+	'preparing',
+	'exploring',
+	'specifying',
+	'tendering',
+	'contracting'
+] as const;
+export type ProjectPhase = (typeof PROJECT_PHASES)[number];
+
+export const PROJECT_PHASE_LABELS: Record<ProjectPhase, string> = {
+	preparing: 'Voorbereiden',
+	exploring: 'Verkennen',
+	specifying: 'Specificeren',
+	tendering: 'Aanbesteden',
+	contracting: 'Contracteren'
+};
+
+export const PROJECT_PHASE_DESCRIPTIONS: Record<ProjectPhase, string> = {
+	preparing: 'Briefing, projectprofiel opstellen en bevestigen',
+	exploring: 'Deskresearch, RFI, consultatie, rapport',
+	specifying: 'PvE, Aanbestedingsleidraad, EMVI, UEA, Conceptovereenkomst',
+	tendering: 'Publicatie, NvI, beoordeling, gunning, afwijzingsbrieven',
+	contracting: 'Definitieve overeenkomst, ondertekening'
+};
+
 export const PROJECT_ROLES = [
 	'project_leader',
 	'procurement_advisor',
@@ -88,19 +117,17 @@ export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
 // REQUIREMENTS — Sprint R5 (PvE eisenmanager)
 // =============================================================================
 
-export const REQUIREMENT_TYPES = ['knockout', 'award_criterion', 'wish'] as const;
+export const REQUIREMENT_TYPES = ['eis', 'wens'] as const;
 export type RequirementType = (typeof REQUIREMENT_TYPES)[number];
 
 export const REQUIREMENT_TYPE_LABELS: Record<RequirementType, string> = {
-	knockout: 'Knock-out',
-	award_criterion: 'Gunningscriterium',
-	wish: 'Wens'
+	eis: 'Eis (Knock-out)',
+	wens: 'Wens'
 };
 
 export const REQUIREMENT_TYPE_PREFIXES: Record<RequirementType, string> = {
-	knockout: 'KO',
-	award_criterion: 'G',
-	wish: 'W'
+	eis: 'E',
+	wens: 'W'
 };
 
 export const REQUIREMENT_CATEGORIES = [

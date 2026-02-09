@@ -3,6 +3,7 @@
 import type {
 	OrganizationRole,
 	ProjectStatus,
+	ProjectPhase,
 	ProjectRole,
 	ArtifactStatus,
 	MessageRole,
@@ -62,6 +63,7 @@ export interface Project {
 	name: string;
 	description: string | null;
 	status: ProjectStatus;
+	current_phase: ProjectPhase;
 	procedure_type: ProcedureType | null;
 	estimated_value: number | null;
 	currency: string;
