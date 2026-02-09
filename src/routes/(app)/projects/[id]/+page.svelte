@@ -321,9 +321,8 @@
 		<div class="rounded-card bg-white p-6 shadow-card">
 			<p class="text-sm font-medium text-gray-500">Huidige fase</p>
 			<p class="mt-2 text-2xl font-bold text-gray-900">{PROJECT_PHASE_LABELS[currentPhase]}</p>
-			{@const cc = phaseCompletionCount(currentPhase)}
 			<p class="mt-1 text-sm text-gray-500">
-				{cc.completed} van {cc.total} activiteiten afgerond
+				{phaseCompletionCount(currentPhase).completed} van {phaseCompletionCount(currentPhase).total} activiteiten afgerond
 			</p>
 		</div>
 
