@@ -5,13 +5,10 @@
 	import {
 		PROJECT_PHASES,
 		PROJECT_PHASE_LABELS,
-		PROJECT_PHASE_DESCRIPTIONS,
 		PROCEDURE_TYPE_LABELS,
 		type ProjectPhase,
 		type PhaseActivity
 	} from '$types';
-	import RoleSwitcher from '$components/RoleSwitcher.svelte';
-	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import CardGrid from '$lib/components/CardGrid.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
@@ -52,6 +49,7 @@
 	}[];
 	$: dbActivities = (data.phaseActivities ?? []) as PhaseActivity[];
 	$: profileSummary = data.profileSummary as { id: string; contracting_authority: string; project_goal: string } | null;
+	$: leidraadDocTypeId = data.leidraadDocTypeId as string | null;
 
 	// Current phase from project data
 	$: currentPhase = (project.current_phase ?? 'preparing') as ProjectPhase;
@@ -76,18 +74,6 @@
 	onDestroy(() => {
 		if (pollTimer) clearInterval(pollTimer);
 	});
-
-	// Current user's roles
-	$: currentUserRoles = (() => {
-		const currentMember = members.find(
-			(m) => m.profile?.email === data.profile?.email
-		);
-		return currentMember?.roles?.map((r) => r.role) ?? [];
-	})();
-	let activeRole: import('$types').ProjectRole = 'viewer';
-	$: if (currentUserRoles.length > 0 && !currentUserRoles.includes(activeRole)) {
-		activeRole = currentUserRoles[0];
-	}
 
 	// Deadline calculation
 	$: deadlineDays = project.deadline_date
@@ -162,10 +148,10 @@
 			}
 		],
 		exploring: (pid) => [
-			{ label: 'Deskresearch uitvoeren', status: 'not_started', href: null },
-			{ label: 'Request for Information (RFI)', status: 'not_started', href: null },
-			{ label: 'Marktconsultatie', status: 'not_started', href: null },
-			{ label: 'Marktverkenningsrapport opstellen', status: 'not_started', href: null }
+			{ label: 'Deskresearch uitvoeren', status: 'not_started', href: `/projects/${pid}/marktverkenning?tab=deskresearch` },
+			{ label: 'Request for Information (RFI)', status: 'not_started', href: `/projects/${pid}/marktverkenning?tab=rfi` },
+			{ label: 'Marktconsultatie', status: 'not_started', href: `/projects/${pid}/marktverkenning?tab=consultatie` },
+			{ label: 'Marktverkenningsrapport opstellen', status: 'not_started', href: `/projects/${pid}/marktverkenning?tab=rapport` }
 		],
 		specifying: (pid) => [
 			{
@@ -176,7 +162,7 @@
 			{
 				label: 'Aanbestedingsleidraad',
 				status: documentBlocks.find((b) => b.docType.slug === 'aanbestedingsleidraad') ? 'in_progress' : 'not_started',
-				href: `/projects/${pid}/documents`
+				href: leidraadDocTypeId ? `/projects/${pid}/documents/${leidraadDocTypeId}` : `/projects/${pid}/documents`
 			},
 			{ label: 'Gunningscriteria (EMVI)', status: 'not_started', href: `/projects/${pid}/emvi` },
 			{ label: 'UEA configureren', status: 'not_started', href: `/projects/${pid}/uea` },
@@ -185,8 +171,8 @@
 		tendering: (pid) => [
 			{ label: 'Publicatie op TenderNed', status: 'not_started', href: null },
 			{ label: 'Nota van Inlichtingen beantwoorden', status: 'not_started', href: `/projects/${pid}/correspondence` },
-			{ label: 'Inschrijvingen beoordelen', status: 'not_started', href: null },
-			{ label: 'Gunningsbeslissing', status: 'not_started', href: null },
+			{ label: 'Inschrijvingen beoordelen', status: 'not_started', href: `/projects/${pid}/evaluations` },
+			{ label: 'Gunningsbeslissing', status: 'not_started', href: `/projects/${pid}/evaluations` },
 			{ label: 'Afwijzingsbrieven versturen', status: 'not_started', href: `/projects/${pid}/correspondence` }
 		],
 		contracting: (pid) => [
@@ -247,26 +233,11 @@
 <div class="space-y-6">
 	<!-- Project header -->
 	<div class="rounded-card bg-white p-6 shadow-card">
-		<div class="flex items-start justify-between">
-			<div>
-				<div class="flex items-center gap-3">
-					<h1 class="text-2xl font-bold text-gray-900">{project.name}</h1>
-					<StatusBadge status={project.status} />
-					{#if project.profile_confirmed}
-						<span class="rounded-badge bg-success-100 px-2.5 py-0.5 text-xs font-medium text-success-700">
-							Profiel bevestigd
-						</span>
-					{:else}
-						<span class="rounded-badge bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-							Profiel concept
-						</span>
-					{/if}
-				</div>
-				{#if project.description}
-					<p class="mt-1 text-gray-600">{project.description}</p>
-				{/if}
-			</div>
-			<RoleSwitcher roles={currentUserRoles} bind:activeRole />
+		<div>
+			<h1 class="text-2xl font-bold text-gray-900">{project.name}</h1>
+			{#if project.description}
+				<p class="mt-1 text-gray-600">{project.description}</p>
+			{/if}
 		</div>
 
 		<div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
@@ -388,12 +359,8 @@
 								<h2 class="text-base font-semibold {status === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}">
 									{PROJECT_PHASE_LABELS[phase]}
 								</h2>
-								{#if status === 'current'}
-									<span class="rounded-badge bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">Huidige fase</span>
-								{/if}
-							</div>
-							<p class="mt-0.5 text-sm text-gray-500">{PROJECT_PHASE_DESCRIPTIONS[phase]}</p>
 						</div>
+					</div>
 
 						<div class="flex items-center gap-3">
 							<span class="text-sm text-gray-500">{cc.completed}/{cc.total}</span>

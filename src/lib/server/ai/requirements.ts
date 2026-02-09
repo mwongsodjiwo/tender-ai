@@ -14,13 +14,16 @@ Genereer een set concept-eisen voor een aanbestedingsproject op basis van de ver
 1. Relevant zijn voor het projecttype en de scope
 2. Voldoen aan de Aanbestedingswet 2012 en de Gids Proportionaliteit
 3. Proportioneel zijn ten opzichte van de opdrachtwaarde
-4. Gecategoriseerd en gewogen zijn
+4. Gecategoriseerd zijn
 
 # Eisentypen
 
-- **knockout** (Knock-out eis): Harde eisen waaraan MOET worden voldaan. Niet-voldoen leidt tot uitsluiting. Gebruik dit voor essentiële geschiktheidseisen en minimumvereisten.
-- **award_criterion** (Gunningscriterium): Criteria waarop inschrijvingen worden beoordeeld en gescoord. Gebruik dit voor kwaliteitsaspecten met gewicht/weging.
-- **wish** (Wens): Nice-to-have eisen die extra waarde toevoegen maar niet verplicht zijn.
+Het PvE kent slechts twee typen:
+
+- **eis** (Eis): Harde knock-out eisen waaraan MOET worden voldaan. Niet-voldoen leidt tot uitsluiting. Gebruik dit voor essentiële geschiktheidseisen en minimumvereisten.
+- **wens** (Wens): Nice-to-have eisen die extra waarde toevoegen maar niet verplicht zijn.
+
+Let op: gunningscriteria (EMVI-weging) worden NIET in het PvE opgenomen. Die worden apart beheerd in de gunningscriteria-tool.
 
 # Categorieën
 
@@ -34,11 +37,9 @@ Genereer een set concept-eisen voor een aanbestedingsproject op basis van de ver
 
 - Genereer minimaal 8 en maximaal 20 eisen
 - Verdeel over minimaal 3 categorieën
-- Knock-out eisen: 3-6 stuks (essentiële minimumeisen)
-- Gunningscriteria: 3-8 stuks (met reële weging die samen max 100% is)
-- Wensen: 2-5 stuks
+- Eisen (knock-out): 5-12 stuks (essentiële minimumeisen)
+- Wensen: 3-8 stuks
 - Prioriteit: 1 (laag) tot 5 (hoog) — verdeel realistisch
-- Weging: alleen voor gunningscriteria, samen maximaal 100%
 - Formuleer eisen SMART: Specifiek, Meetbaar, Acceptabel, Realistisch, Tijdgebonden
 - Gebruik formeel Nederlands
 
@@ -46,7 +47,6 @@ Genereer een set concept-eisen voor een aanbestedingsproject op basis van de ver
 
 - Geschiktheidseisen: conform art. 2.90–2.98 Aw 2012
 - Selectiecriteria: conform art. 2.99 Aw 2012
-- Gunningscriteria: conform art. 2.114–2.116 Aw 2012
 - Proportionaliteit: Gids Proportionaliteit, hoofdstuk 3 en 4
 
 # Outputformat
@@ -54,9 +54,8 @@ Genereer een set concept-eisen voor een aanbestedingsproject op basis van de ver
 Geef de eisen als een JSON-array. Elk object heeft:
 - "title": korte eistitel (max 100 tekens)
 - "description": uitgebreide beschrijving met toetsbare criteria
-- "requirement_type": "knockout" | "award_criterion" | "wish"
+- "requirement_type": "eis" | "wens"
 - "category": "functional" | "technical" | "process" | "quality" | "sustainability"
-- "weight_percentage": getal 0-100 (alleen >0 voor award_criterion)
 - "priority": getal 1-5
 
 Geef ALLEEN de JSON-array, geen andere tekst. Begin met [ en eindig met ].`;
@@ -66,7 +65,6 @@ interface GeneratedRequirement {
 	description: string;
 	requirement_type: RequirementType;
 	category: RequirementCategory;
-	weight_percentage: number;
 	priority: number;
 }
 
@@ -96,7 +94,7 @@ Geschatte waarde: ${estimatedValue ? `€${estimatedValue.toLocaleString('nl-NL'
 Briefing-informatie:
 ${JSON.stringify(briefingData.summary ?? briefingData, null, 2)}
 
-Genereer een passende set eisen voor dit project. Zorg dat de gunningscriteria-wegingen bij elkaar opgeteld maximaal 100% zijn.`;
+Genereer een passende set eisen (knock-out) en wensen voor dit project.`;
 
 	const result = await chat({
 		messages: [{ role: 'user', content: prompt }],
@@ -123,7 +121,7 @@ function parseRequirementsJson(content: string): GeneratedRequirement[] {
 	try {
 		const parsed = JSON.parse(jsonMatch[0]) as unknown[];
 
-		const validTypes = new Set(['knockout', 'award_criterion', 'wish']);
+		const validTypes = new Set(['eis', 'wens']);
 		const validCategories = new Set(['functional', 'technical', 'process', 'quality', 'sustainability']);
 
 		return parsed
@@ -142,7 +140,6 @@ function parseRequirementsJson(content: string): GeneratedRequirement[] {
 				description: String(item.description ?? '').slice(0, 5000),
 				requirement_type: item.requirement_type as RequirementType,
 				category: item.category as RequirementCategory,
-				weight_percentage: Math.max(0, Math.min(100, Number(item.weight_percentage) || 0)),
 				priority: Math.max(1, Math.min(5, Math.round(Number(item.priority) || 3)))
 			}));
 	} catch {

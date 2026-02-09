@@ -52,8 +52,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	// Track counters for requirement numbering per type
-	const typeCounters: Record<string, number> = { knockout: 0, award_criterion: 0, wish: 0 };
-	const typePrefixes: Record<string, string> = { knockout: 'KO', award_criterion: 'G', wish: 'W' };
+	const typeCounters: Record<string, number> = { eis: 0, wens: 0 };
+	const typePrefixes: Record<string, string> = { eis: 'E', wens: 'W' };
 
 	// Check existing requirements to set correct counters
 	const { data: existingReqs } = await supabase
@@ -89,7 +89,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			description: req.description,
 			requirement_type: req.requirement_type,
 			category: req.category,
-			weight_percentage: req.weight_percentage,
 			priority: req.priority,
 			sort_order: index,
 			created_by: user.id

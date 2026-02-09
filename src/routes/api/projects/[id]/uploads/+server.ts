@@ -8,6 +8,8 @@ import { logAudit } from '$server/db/audit';
 import { createServiceClient } from '$server/db/client';
 import { extractText, isTextExtractable } from '$server/ai/parser';
 import { processDocumentChunks } from '$server/ai/rag';
+import { validateFileSignature } from '$server/ai/file-validator';
+import { sanitizeDocumentText } from '$server/ai/sanitizer';
 
 const STORAGE_BUCKET = 'documents';
 
@@ -70,6 +72,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		);
 	}
 
+	// Validate file signature (magic bytes) matches claimed MIME type
+	const signatureCheck = await validateFileSignature(file, file.type);
+	if (!signatureCheck.valid) {
+		return json(
+			{ message: signatureCheck.reason ?? 'Ongeldig bestand', code: 'VALIDATION_ERROR', status: 400 },
+			{ status: 400 }
+		);
+	}
+
 	// Parse metadata from form
 	const metaValidation = uploadDocumentSchema.safeParse({
 		organization_id: formData.get('organization_id'),
@@ -108,8 +119,20 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	// Extract text content from PDF, Word, TXT, CSV
 	let contentText: string | null = null;
+	let injectionDetected = false;
 	if (isTextExtractable(file.type)) {
-		contentText = await extractText(file);
+		const rawText = await extractText(file);
+		if (rawText) {
+			const sanitized = sanitizeDocumentText(rawText);
+			contentText = sanitized.text;
+			injectionDetected = !sanitized.clean;
+			if (injectionDetected) {
+				console.warn(
+					`Prompt injection detected in upload "${file.name}":`,
+					sanitized.detections.map((d) => d.label)
+				);
+			}
+		}
 	}
 
 	// Save metadata to documents table
@@ -129,7 +152,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 				original_filename: file.name,
 				extension: fileExt,
 				text_extracted: contentText !== null,
-				text_length: contentText?.length ?? 0
+				text_length: contentText?.length ?? 0,
+				injection_detected: injectionDetected
 			}
 		})
 		.select()

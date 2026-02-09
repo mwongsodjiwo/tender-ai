@@ -117,6 +117,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return acc;
 	}, {});
 
+	// Load leidraad document type ID for direct link
+	const { data: leidraadDocType } = await supabase
+		.from('document_types')
+		.select('id')
+		.eq('slug', 'aanbestedingsleidraad')
+		.maybeSingle();
+
 	return {
 		artifacts: allArtifacts,
 		phaseActivities,
@@ -130,6 +137,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			progressPercentage
 		},
 		sectionsInReview,
-		documentBlocks: Object.values(documentBlocks)
+		documentBlocks: Object.values(documentBlocks),
+		leidraadDocTypeId: leidraadDocType?.id ?? null
 	};
 };

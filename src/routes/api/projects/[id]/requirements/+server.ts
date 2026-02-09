@@ -63,7 +63,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		);
 	}
 
-	const { document_type_id, title, description, requirement_type, category, weight_percentage, priority, sort_order } = parsed.data;
+	const { document_type_id, title, description, requirement_type, category, priority, sort_order } = parsed.data;
 
 	// Generate requirement number via database function
 	const { data: numberResult, error: numError } = await supabase
@@ -102,7 +102,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			description: description ?? '',
 			requirement_type,
 			category,
-			weight_percentage: weight_percentage ?? 0,
 			priority: priority ?? 3,
 			sort_order: finalSortOrder,
 			created_by: user.id

@@ -1,7 +1,7 @@
 // Zod validation schemas for API endpoints
 
 import { z } from 'zod';
-import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES } from '$types';
+import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES, MARKET_RESEARCH_ACTIVITY_TYPES, TIME_ENTRY_ACTIVITY_TYPES } from '$types';
 
 // =============================================================================
 // AUTH
@@ -521,6 +521,18 @@ export const updateEvaluationSchema = z.object({
 	notes: z.string().max(10000).optional()
 });
 
+export const batchScoreSchema = z.object({
+	scores: z.array(z.object({
+		evaluation_id: z.string().uuid('Ongeldig evaluation ID'),
+		criterion_id: z.string().uuid('Ongeldig criterium ID'),
+		score: z.number().min(0, 'Score moet minimaal 0 zijn').max(10, 'Score mag maximaal 10 zijn')
+	})).min(1, 'Minimaal één score is verplicht').max(500, 'Maximaal 500 scores per batch')
+});
+
+export const calculateRankingSchema = z.object({
+	evaluation_ids: z.array(z.string().uuid()).min(1).max(100).optional()
+});
+
 // =============================================================================
 // KNOWLEDGE BASE SEARCH — Sprint R2 (Kennisbank zoeken)
 // =============================================================================
@@ -529,4 +541,101 @@ export const knowledgeBaseSearchSchema = z.object({
 	query: z.string().min(2, 'Zoekterm moet minimaal 2 tekens bevatten').max(500),
 	cpv_codes: z.array(z.string().max(20)).optional().default([]),
 	limit: z.number().int().min(1).max(50).optional().default(10)
+});
+
+// =============================================================================
+// MARKET RESEARCH — Sprint R5 (Marktverkenning)
+// =============================================================================
+
+export const deskresearchSchema = z.object({
+	query: z.string().max(500).optional(),
+	cpv_codes: z.array(z.string().max(20)).optional(),
+	limit: z.number().int().min(1).max(50).optional().default(10)
+});
+
+export const generateRfiSchema = z.object({
+	additional_context: z.string().max(5000).optional()
+});
+
+export const generateMarketReportSchema = z.object({
+	additional_context: z.string().max(5000).optional()
+});
+
+export const saveMarketResearchSchema = z.object({
+	activity_type: z.enum(MARKET_RESEARCH_ACTIVITY_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig activiteittype voor marktverkenning' })
+	}),
+	content: z.string().min(1, 'Inhoud mag niet leeg zijn').max(100000),
+	metadata: z.record(z.unknown()).optional().default({})
+});
+
+// =============================================================================
+// LEIDRAAD SECTION GENERATION — Sprint R6 (Aanbestedingsleidraad wizard)
+// =============================================================================
+
+export const generateLeidraadSectionSchema = z.object({
+	section_key: z.string().max(100).optional(),
+	instructions: z.string().max(5000).optional()
+});
+
+// =============================================================================
+// CORRESPONDENCE GENERATION — Sprint R11 (Brief-generatie)
+// =============================================================================
+
+export const generateLetterSchema = z.object({
+	letter_type: z.string().min(1, 'Brieftype is verplicht').max(100),
+	recipient: z.string().max(500).optional(),
+	instructions: z.string().max(5000).optional(),
+	evaluation_id: z.string().uuid('Ongeldig evaluatie-ID').optional()
+});
+
+// =============================================================================
+// DOCUMENT COMMENTS — Sprint R6 (Document-editor opmerkingen)
+// =============================================================================
+
+export const createDocumentCommentSchema = z.object({
+	artifact_id: z.string().uuid('Ongeldig artifact-ID'),
+	selected_text: z.string().min(1, 'Geselecteerde tekst is verplicht').max(5000),
+	comment_text: z.string().min(1, 'Opmerking is verplicht').max(5000)
+});
+
+export const updateDocumentCommentSchema = z.object({
+	comment_text: z.string().min(1).max(5000).optional(),
+	resolved: z.boolean().optional()
+});
+
+// =============================================================================
+// TIME ENTRIES — Urenregistratie module
+// =============================================================================
+
+export const createTimeEntrySchema = z.object({
+	project_id: z.string().uuid('Ongeldig project-ID'),
+	date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn'),
+	hours: z.number()
+		.positive('Uren moeten positief zijn')
+		.max(24, 'Uren mogen niet meer dan 24 per dag zijn'),
+	activity_type: z.enum(TIME_ENTRY_ACTIVITY_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig activiteittype' })
+	}),
+	notes: z.string().max(1000).optional().default('')
+});
+
+export const updateTimeEntrySchema = z.object({
+	project_id: z.string().uuid('Ongeldig project-ID').optional(),
+	date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
+	hours: z.number()
+		.positive('Uren moeten positief zijn')
+		.max(24, 'Uren mogen niet meer dan 24 per dag zijn')
+		.optional(),
+	activity_type: z.enum(TIME_ENTRY_ACTIVITY_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig activiteittype' })
+	}).optional(),
+	notes: z.string().max(1000).optional()
+});
+
+export const timeEntryQuerySchema = z.object({
+	week: z.string().regex(/^\d{4}-W\d{2}$/, 'Week moet in formaat YYYY-Wnn zijn').optional(),
+	from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
+	to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
+	project_id: z.string().uuid('Ongeldig project-ID').optional()
 });

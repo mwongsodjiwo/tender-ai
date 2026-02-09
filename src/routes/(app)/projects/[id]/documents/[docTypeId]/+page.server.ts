@@ -2,9 +2,10 @@
 
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import type { TemplateSection } from '$types';
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
-	const { supabase } = locals;
+	const { supabase, user } = locals;
 
 	// Load document type
 	const { data: documentType, error: dtError } = await supabase
@@ -18,7 +19,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	}
 
 	// Load all artifacts for this project + document type, sorted by sort_order
-	const { data: artifacts, error: artError } = await supabase
+	let { data: artifacts, error: artError } = await supabase
 		.from('artifacts')
 		.select('id, title, section_key, content, status, version, sort_order, updated_at')
 		.eq('project_id', params.id)
@@ -27,6 +28,34 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	if (artError) {
 		throw error(500, 'Kon secties niet laden');
+	}
+
+	// Auto-scaffold: create empty artifacts from template_structure on first visit
+	const templateSections: TemplateSection[] = documentType.template_structure ?? [];
+	if ((!artifacts || artifacts.length === 0) && templateSections.length > 0) {
+		const scaffoldRecords = templateSections.map((section, index) => ({
+			project_id: params.id,
+			document_type_id: params.docTypeId,
+			section_key: section.key,
+			title: section.title,
+			content: '',
+			status: 'draft' as const,
+			sort_order: index,
+			metadata: {},
+			created_by: user?.id ?? null
+		}));
+
+		await supabase.from('artifacts').insert(scaffoldRecords);
+
+		// Reload artifacts after scaffolding
+		const { data: reloaded } = await supabase
+			.from('artifacts')
+			.select('id, title, section_key, content, status, version, sort_order, updated_at')
+			.eq('project_id', params.id)
+			.eq('document_type_id', params.docTypeId)
+			.order('sort_order');
+
+		artifacts = reloaded;
 	}
 
 	const allArtifacts = artifacts ?? [];

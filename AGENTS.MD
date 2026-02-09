@@ -199,5 +199,21 @@ Doel: productie-klaar. Alles werkt, alles is getest, alles draait op Railway.
 | AI | Anthropic Claude API (of vergelijkbaar) |
 | Embeddings | pgvector in Supabase |
 | Export | docx-js (Word), pdf-lib of server-side (PDF) |
-| TenderNed data | Eigen harvester → Supabase |
+| TenderNed data | Eigen harvester → Supabase (knowledge_base schema) |
 | Repo | Monorepo (geen workspaces) |
+
+## Projectfases
+
+De gebruiker doorloopt vijf fases per project:
+
+| Fase | Naam | Beschrijving |
+|------|------|-------------|
+| 1 | Voorbereiden | Briefing, projectprofiel opstellen en bevestigen |
+| 2 | Marktverkennen | Deskresearch, RFI, consultatie, rapport |
+| 3 | Specificeren | PvE, Aanbestedingsleidraad, EMVI, UEA, Conceptovereenkomst |
+| 4 | Aanbesteden | Publicatie, NvI, beoordeling, gunning, afwijzingsbrieven |
+| 5 | Contracteren | Definitieve overeenkomst, ondertekening |
+
+Het bevestigde projectprofiel (fase 1) is de single source of truth voor alle AI-acties.
+
+Zie `REDESIGN.md` voor de volledige UI-redesign sprints (R1–R15).

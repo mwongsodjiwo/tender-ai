@@ -18,7 +18,9 @@ import type {
 	Correspondence,
 	Evaluation,
 	KnowledgeBaseTender,
-	KnowledgeBaseRequirement
+	KnowledgeBaseRequirement,
+	TimeEntry,
+	TimeEntryWithProject
 } from './database.js';
 import type {
 	OrganizationRole,
@@ -29,7 +31,8 @@ import type {
 	ProjectPhase,
 	ActivityStatus,
 	CorrespondenceStatus,
-	EvaluationStatus
+	EvaluationStatus,
+	TimeEntryActivityType
 } from './enums.js';
 
 // =============================================================================
@@ -537,6 +540,60 @@ export interface KnowledgeBaseSearchResponse {
 }
 
 // =============================================================================
+// MARKET RESEARCH — Sprint R5 (Marktverkenning)
+// =============================================================================
+
+export interface DeskresearchRequest {
+	project_id: string;
+	query?: string;
+	cpv_codes?: string[];
+	limit?: number;
+}
+
+export interface DeskresearchResult {
+	id: string;
+	title: string;
+	contracting_authority: string | null;
+	cpv_codes: string[];
+	estimated_value: number | null;
+	currency: string | null;
+	publication_date: string | null;
+	snippet: string;
+	relevance: number;
+}
+
+export interface DeskresearchResponse {
+	results: DeskresearchResult[];
+	total: number;
+	ai_summary?: string;
+}
+
+export interface GenerateRfiRequest {
+	project_id: string;
+	additional_context?: string;
+}
+
+export interface GenerateRfiResponse {
+	content: string;
+	questions: string[];
+}
+
+export interface GenerateMarketReportRequest {
+	project_id: string;
+	additional_context?: string;
+}
+
+export interface GenerateMarketReportResponse {
+	content: string;
+}
+
+export interface SaveMarketResearchRequest {
+	activity_type: string;
+	content: string;
+	metadata?: Record<string, unknown>;
+}
+
+// =============================================================================
 // PROJECT OVERVIEW — Sprint R4 (Project-overzicht & projectprofiel)
 // =============================================================================
 
@@ -579,6 +636,25 @@ export interface MonthlyProjectData {
 	completed: number;
 }
 
+// =============================================================================
+// DOCUMENT COMMENTS
+// =============================================================================
+
+export interface CreateDocumentCommentRequest {
+	artifact_id: string;
+	selected_text: string;
+	comment_text: string;
+}
+
+export interface UpdateDocumentCommentRequest {
+	comment_text?: string;
+	resolved?: boolean;
+}
+
+// =============================================================================
+// DASHBOARD
+// =============================================================================
+
 export interface DashboardRecentProject {
 	id: string;
 	name: string;
@@ -604,4 +680,48 @@ export interface DashboardResponse {
 	recent_projects: DashboardRecentProject[];
 	upcoming_deadlines: DashboardRecentProject[];
 	monthly_data: MonthlyProjectData[];
+}
+
+// =============================================================================
+// TIME ENTRIES — Urenregistratie module
+// =============================================================================
+
+export interface CreateTimeEntryRequest {
+	project_id: string;
+	date: string;
+	hours: number;
+	activity_type: TimeEntryActivityType;
+	notes?: string;
+}
+
+export interface UpdateTimeEntryRequest {
+	project_id?: string;
+	date?: string;
+	hours?: number;
+	activity_type?: TimeEntryActivityType;
+	notes?: string;
+}
+
+export interface TimeEntryQuery {
+	week?: string;
+	from?: string;
+	to?: string;
+	project_id?: string;
+}
+
+export type TimeEntryResponse = TimeEntry;
+export type TimeEntryListResponse = TimeEntryWithProject[];
+
+export interface TimeEntryWeekSummary {
+	entries: TimeEntryWithProject[];
+	week_total: number;
+	day_totals: Record<string, number>;
+}
+
+export interface TimeEntryReportData {
+	entries: TimeEntryWithProject[];
+	total_hours: number;
+	by_project: { project_id: string; project_name: string; hours: number; percentage: number }[];
+	by_activity: { activity_type: TimeEntryActivityType; label: string; hours: number; percentage: number }[];
+	by_week: { week: string; label: string; hours: number }[];
 }

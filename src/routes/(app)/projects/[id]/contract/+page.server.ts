@@ -1,9 +1,10 @@
-// Contract wizard page — load document type, artifacts, and contract settings
+// Contract editor page — load document type, artifacts, and contract settings
+// Uses the standard document-editor layout (Sprint R6)
 
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
 
 	// Load project with contract settings
@@ -42,37 +43,15 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	const allArtifacts = artifacts ?? [];
 
-	// Determine active section index from query param
-	const sectionParam = url.searchParams.get('section');
-	let activeIndex = 0;
-	if (sectionParam) {
-		const idx = allArtifacts.findIndex((a) => a.id === sectionParam);
-		if (idx >= 0) activeIndex = idx;
-	}
-
-	const activeArtifact = allArtifacts[activeIndex] ?? null;
-
-	// Load version history for active artifact
-	let versions: { id: string; version: number; title: string; content: string; created_at: string }[] = [];
-	if (activeArtifact) {
-		const { data: versionData } = await supabase
-			.from('artifact_versions')
-			.select('id, version, title, content, created_at')
-			.eq('artifact_id', activeArtifact.id)
-			.order('version', { ascending: false });
-		versions = versionData ?? [];
-	}
-
-	// Load chat conversation for active artifact
+	// Load chat conversation (general for this document type)
 	let conversationId: string | null = null;
 	let chatMessages: { id: string; role: string; content: string; created_at: string }[] = [];
 
-	if (activeArtifact) {
+	if (allArtifacts.length > 0) {
 		const { data: conversations } = await supabase
 			.from('conversations')
 			.select('id')
 			.eq('project_id', params.id)
-			.eq('artifact_id', activeArtifact.id)
 			.eq('context_type', 'section_chat')
 			.order('created_at', { ascending: false })
 			.limit(1);
@@ -90,7 +69,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		}
 	}
 
-	// Determine which sections are "required" (all Conceptovereenkomst sections are required)
+	// Template sections
 	const templateSections = (documentType.template_structure ?? []) as {
 		key: string;
 		title: string;
@@ -102,9 +81,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		documentType,
 		templateSections,
 		artifacts: allArtifacts,
-		activeIndex,
-		activeArtifact,
-		versions,
+		activeIndex: 0,
 		conversationId,
 		chatMessages
 	};

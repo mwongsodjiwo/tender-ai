@@ -52,7 +52,7 @@
 									? 'text-primary-700'
 									: status === 'current'
 										? 'text-primary-700'
-										: 'text-gray-400'}"
+										: 'text-gray-600'}"
 						>
 							{PROJECT_PHASE_LABELS[phase]}
 						</span>

@@ -11,6 +11,12 @@
 	export let content: string = '';
 	export let editable: boolean = true;
 	export let placeholder: string = 'Begin hier met schrijven...';
+	export let showToolbar: boolean = true;
+
+	/** Expose the Tiptap Editor instance so parent components can control it */
+	export function getEditor(): Editor | null {
+		return editor;
+	}
 
 	const dispatch = createEventDispatcher<{ change: string }>();
 
@@ -147,6 +153,7 @@
 	$: isInTable = editor?.isActive('table') ?? false;
 </script>
 
+{#if showToolbar}
 <!-- Toolbar -->
 <div class="tiptap-toolbar flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-gray-200 bg-gray-50 px-2 py-1.5">
 	<!-- Undo/Redo -->
@@ -304,6 +311,7 @@
 		{/if}
 	</div>
 </div>
+{/if}
 
 <!-- Editor -->
 <div

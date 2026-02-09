@@ -4,7 +4,6 @@
 	import MetricCard from '$lib/components/MetricCard.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
-	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -30,14 +29,13 @@
 	let generateError = '';
 	let expandedCategories: Set<string> = new Set(REQUIREMENT_CATEGORIES);
 	let editingId: string | null = null;
-	let editForm = { title: '', description: '', weight_percentage: 0, priority: 3 };
+	let editForm = { title: '', description: '', priority: 3 };
 	let showNewForm = false;
 	let newForm = {
 		title: '',
 		description: '',
-		requirement_type: 'knockout' as RequirementType,
+		requirement_type: 'eis' as RequirementType,
 		category: 'functional' as RequirementCategory,
-		weight_percentage: 0,
 		priority: 3
 	};
 	let saving = false;
@@ -53,7 +51,6 @@
 		description: string;
 		requirement_type: RequirementType;
 		category: RequirementCategory;
-		weight_percentage: number;
 		priority: number;
 		sort_order: number;
 	}
@@ -83,11 +80,8 @@
 
 	// Metrics
 	$: totalCount = requirements.length;
-	$: knockoutCount = requirements.filter((r) => r.requirement_type === 'knockout').length;
-	$: awardCriteria = requirements.filter((r) => r.requirement_type === 'award_criterion');
-	$: awardCount = awardCriteria.length;
-	$: totalWeight = awardCriteria.reduce((sum, r) => sum + (r.weight_percentage ?? 0), 0);
-	$: wishCount = requirements.filter((r) => r.requirement_type === 'wish').length;
+	$: eisCount = requirements.filter((r) => r.requirement_type === 'eis').length;
+	$: wensCount = requirements.filter((r) => r.requirement_type === 'wens').length;
 
 	// Filter config for FilterBar
 	$: filterConfig = [
@@ -167,7 +161,6 @@
 				description: req.description,
 				requirement_type: req.requirement_type,
 				category: req.category,
-				weight_percentage: req.weight_percentage,
 				priority: req.priority
 			})
 		});
@@ -182,7 +175,6 @@
 		editForm = {
 			title: req.title,
 			description: req.description,
-			weight_percentage: req.weight_percentage,
 			priority: req.priority
 		};
 	}
@@ -219,7 +211,7 @@
 
 		if (response.ok) {
 			showNewForm = false;
-			newForm = { title: '', description: '', requirement_type: 'knockout', category: 'functional', weight_percentage: 0, priority: 3 };
+			newForm = { title: '', description: '', requirement_type: 'eis', category: 'functional', priority: 3 };
 			await invalidateAll();
 		}
 		saving = false;
@@ -277,9 +269,8 @@
 	}
 
 	const TYPE_BADGE_MAP: Record<string, string> = {
-		knockout: 'verplicht',
-		award_criterion: 'optioneel',
-		wish: 'concept'
+		eis: 'verplicht',
+		wens: 'concept'
 	};
 </script>
 
@@ -323,26 +314,11 @@
 	</div>
 
 	<!-- Metric cards -->
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<MetricCard value={totalCount} label="Totaal eisen" />
-		<MetricCard value={knockoutCount} label="Knock-out eisen" />
-		<MetricCard
-			value={awardCount}
-			label="Gunningscriteria"
-			trend="Weging: {totalWeight}%"
-			trendDirection={totalWeight === 100 ? 'up' : totalWeight > 0 ? 'down' : 'neutral'}
-		/>
-		<MetricCard value={wishCount} label="Wensen" />
+	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+		<MetricCard value={totalCount} label="Totaal" />
+		<MetricCard value={eisCount} label="Eisen (Knock-out)" />
+		<MetricCard value={wensCount} label="Wensen" />
 	</div>
-
-	<!-- Weight warning -->
-	{#if awardCount > 0 && totalWeight !== 100}
-		<InfoBanner
-			type="warning"
-			title="Weging niet compleet"
-			message="De totale weging van gunningscriteria is {totalWeight}%. Dit moet 100% zijn."
-		/>
-	{/if}
 
 	<!-- Generate AI requirements -->
 	{#if requirements.length === 0}
@@ -448,19 +424,6 @@
 						{/each}
 					</select>
 				</div>
-				{#if newForm.requirement_type === 'award_criterion'}
-					<div>
-						<label for="new-weight" class="block text-sm font-medium text-gray-700">Weging (%)</label>
-						<input
-							id="new-weight"
-							type="number"
-							bind:value={newForm.weight_percentage}
-							min="0"
-							max="100"
-							class="mt-1 block w-full rounded-card border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
-						/>
-					</div>
-				{/if}
 				<div>
 					<label for="new-priority" class="block text-sm font-medium text-gray-700">Prioriteit (1-5)</label>
 					<input
@@ -548,20 +511,6 @@
 										class="block w-full rounded-card border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
 									></textarea>
 									<div class="flex items-center gap-4">
-										{#if req.requirement_type === 'award_criterion'}
-											<div class="flex items-center gap-2">
-												<label for="edit-weight" class="text-xs text-gray-500">Weging:</label>
-												<input
-													id="edit-weight"
-													type="number"
-													bind:value={editForm.weight_percentage}
-													min="0"
-													max="100"
-													class="w-20 rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:ring-primary-500"
-												/>
-												<span class="text-xs text-gray-500">%</span>
-											</div>
-										{/if}
 										<div class="flex items-center gap-2">
 											<label for="edit-priority" class="text-xs text-gray-500">Prioriteit:</label>
 											<input
@@ -608,11 +557,6 @@
 											<div class="flex flex-wrap items-center gap-2">
 												<span class="text-xs font-mono text-gray-400">{req.requirement_number}</span>
 												<StatusBadge status={TYPE_BADGE_MAP[req.requirement_type] ?? 'concept'} />
-												{#if req.requirement_type === 'award_criterion' && req.weight_percentage > 0}
-													<span class="rounded-badge bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
-														{req.weight_percentage}%
-													</span>
-												{/if}
 											</div>
 											<h3 class="mt-1 text-sm font-medium text-gray-900">{req.title}</h3>
 											{#if req.description}

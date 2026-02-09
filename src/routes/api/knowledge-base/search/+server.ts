@@ -25,7 +25,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Text search on knowledge_base.tenders + requirements
 	let tenderQuery = supabase
-		.from('knowledge_base.tenders')
+		.schema('knowledge_base')
+		.from('tenders')
 		.select('id, external_id, title, description, contracting_authority, procedure_type, estimated_value, currency, publication_date, deadline_date, cpv_codes, nuts_codes, source_url')
 		.or(`title.ilike.%${query}%,description.ilike.%${query}%`)
 		.limit(limit);
@@ -42,7 +43,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Search requirements for matching text
 	const { data: requirements, error: reqError } = await supabase
-		.from('knowledge_base.requirements')
+		.schema('knowledge_base')
+		.from('requirements')
 		.select('id, tender_id, requirement_text, category, source_section')
 		.ilike('requirement_text', `%${query}%`)
 		.limit(limit);

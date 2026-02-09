@@ -36,7 +36,7 @@ describeIf('Requirements API — /api/projects/:id/requirements', () => {
 		expect(Array.isArray(body.data)).toBe(true);
 	});
 
-	it('POST creates a new knockout requirement', async () => {
+	it('POST creates a new eis (knock-out) requirement', async () => {
 		const response = await fetch(`${BASE_URL}/api/projects/${PROJECT_ID}/requirements`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', Cookie: authCookie },
@@ -44,7 +44,7 @@ describeIf('Requirements API — /api/projects/:id/requirements', () => {
 				document_type_id: DOC_TYPE_ID,
 				title: 'Inschrijver beschikt over ISO 9001',
 				description: 'Geldig ISO 9001:2015 certificaat vereist.',
-				requirement_type: 'knockout',
+				requirement_type: 'eis',
 				category: 'quality',
 				priority: 5
 			})
@@ -52,29 +52,27 @@ describeIf('Requirements API — /api/projects/:id/requirements', () => {
 		expect(response.status).toBe(201);
 		const body = await response.json();
 		expect(body.data.id).toBeDefined();
-		expect(body.data.requirement_number).toMatch(/^KO-\d{3}$/);
+		expect(body.data.requirement_number).toMatch(/^E-\d{3}$/);
 		expect(body.data.title).toBe('Inschrijver beschikt over ISO 9001');
 		createdRequirementId = body.data.id;
 	});
 
-	it('POST creates an award criterion with weight', async () => {
+	it('POST creates a wens requirement', async () => {
 		const response = await fetch(`${BASE_URL}/api/projects/${PROJECT_ID}/requirements`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', Cookie: authCookie },
 			body: JSON.stringify({
 				document_type_id: DOC_TYPE_ID,
-				title: 'Plan van aanpak',
-				description: 'Beoordeling op kwaliteit van het plan van aanpak.',
-				requirement_type: 'award_criterion',
-				category: 'process',
-				weight_percentage: 40,
-				priority: 4
+				title: 'Social Return on Investment',
+				description: 'Inschrijver beschrijft SROI-aanpak.',
+				requirement_type: 'wens',
+				category: 'sustainability',
+				priority: 3
 			})
 		});
 		expect(response.status).toBe(201);
 		const body = await response.json();
-		expect(body.data.requirement_number).toMatch(/^G-\d{3}$/);
-		expect(body.data.weight_percentage).toBe(40);
+		expect(body.data.requirement_number).toMatch(/^W-\d{3}$/);
 	});
 
 	it('GET returns created requirements', async () => {
@@ -87,12 +85,12 @@ describeIf('Requirements API — /api/projects/:id/requirements', () => {
 
 	it('GET filters by type', async () => {
 		const response = await fetch(
-			`${BASE_URL}/api/projects/${PROJECT_ID}/requirements?type=knockout`,
+			`${BASE_URL}/api/projects/${PROJECT_ID}/requirements?type=eis`,
 			{ headers: { Cookie: authCookie } }
 		);
 		const body = await response.json();
 		for (const req of body.data) {
-			expect(req.requirement_type).toBe('knockout');
+			expect(req.requirement_type).toBe('eis');
 		}
 	});
 
@@ -172,13 +170,27 @@ describeIf('Requirements API — /api/projects/:id/requirements', () => {
 		expect(response.status).toBe(400);
 	});
 
+	it('POST rejects old award_criterion type', async () => {
+		const response = await fetch(`${BASE_URL}/api/projects/${PROJECT_ID}/requirements`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+			body: JSON.stringify({
+				document_type_id: DOC_TYPE_ID,
+				title: 'Test',
+				requirement_type: 'award_criterion',
+				category: 'functional'
+			})
+		});
+		expect(response.status).toBe(400);
+	});
+
 	it('POST rejects missing title', async () => {
 		const response = await fetch(`${BASE_URL}/api/projects/${PROJECT_ID}/requirements`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', Cookie: authCookie },
 			body: JSON.stringify({
 				document_type_id: DOC_TYPE_ID,
-				requirement_type: 'knockout',
+				requirement_type: 'eis',
 				category: 'functional'
 			})
 		});
@@ -216,7 +228,7 @@ describeIf('Requirements reorder API', () => {
 			body: JSON.stringify({
 				document_type_id: DOC_TYPE_ID,
 				title: 'Reorder test A',
-				requirement_type: 'wish',
+				requirement_type: 'wens',
 				category: 'functional'
 			})
 		});
@@ -228,7 +240,7 @@ describeIf('Requirements reorder API', () => {
 			body: JSON.stringify({
 				document_type_id: DOC_TYPE_ID,
 				title: 'Reorder test B',
-				requirement_type: 'wish',
+				requirement_type: 'wens',
 				category: 'functional'
 			})
 		});

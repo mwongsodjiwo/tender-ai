@@ -11,39 +11,23 @@ import {
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
 describe('createRequirementSchema', () => {
-	it('accepts a valid knockout requirement', () => {
+	it('accepts a valid eis requirement', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'Inschrijver beschikt over ISO 9001 certificering',
 			description: 'De inschrijver dient te beschikken over een geldig ISO 9001:2015 certificaat.',
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'quality',
 			priority: 5
 		});
 		expect(result.success).toBe(true);
 	});
 
-	it('accepts a valid award criterion with weight', () => {
-		const result = createRequirementSchema.safeParse({
-			document_type_id: VALID_UUID,
-			title: 'Plan van aanpak',
-			description: 'Beoordeling op basis van het ingediende plan van aanpak.',
-			requirement_type: 'award_criterion',
-			category: 'process',
-			weight_percentage: 30,
-			priority: 4
-		});
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.weight_percentage).toBe(30);
-		}
-	});
-
-	it('accepts a valid wish requirement', () => {
+	it('accepts a valid wens requirement', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'Social Return on Investment',
-			requirement_type: 'wish',
+			requirement_type: 'wens',
 			category: 'sustainability',
 			priority: 2
 		});
@@ -54,13 +38,12 @@ describe('createRequirementSchema', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'Basis eis',
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional'
 		});
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.data.description).toBe('');
-			expect(result.data.weight_percentage).toBe(0);
 			expect(result.data.priority).toBe(3);
 		}
 	});
@@ -68,7 +51,7 @@ describe('createRequirementSchema', () => {
 	it('rejects missing title', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional'
 		});
 		expect(result.success).toBe(false);
@@ -84,34 +67,32 @@ describe('createRequirementSchema', () => {
 		expect(result.success).toBe(false);
 	});
 
-	it('rejects invalid category', () => {
+	it('rejects old knockout type (no longer valid)', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'Test',
 			requirement_type: 'knockout',
+			category: 'functional'
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it('rejects old award_criterion type (moved to EMVI)', () => {
+		const result = createRequirementSchema.safeParse({
+			document_type_id: VALID_UUID,
+			title: 'Test',
+			requirement_type: 'award_criterion',
+			category: 'functional'
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it('rejects invalid category', () => {
+		const result = createRequirementSchema.safeParse({
+			document_type_id: VALID_UUID,
+			title: 'Test',
+			requirement_type: 'eis',
 			category: 'invalid_category'
-		});
-		expect(result.success).toBe(false);
-	});
-
-	it('rejects weight_percentage above 100', () => {
-		const result = createRequirementSchema.safeParse({
-			document_type_id: VALID_UUID,
-			title: 'Test',
-			requirement_type: 'award_criterion',
-			category: 'functional',
-			weight_percentage: 150
-		});
-		expect(result.success).toBe(false);
-	});
-
-	it('rejects weight_percentage below 0', () => {
-		const result = createRequirementSchema.safeParse({
-			document_type_id: VALID_UUID,
-			title: 'Test',
-			requirement_type: 'award_criterion',
-			category: 'functional',
-			weight_percentage: -5
 		});
 		expect(result.success).toBe(false);
 	});
@@ -120,7 +101,7 @@ describe('createRequirementSchema', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'Test',
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional',
 			priority: 0
 		});
@@ -131,7 +112,7 @@ describe('createRequirementSchema', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'Test',
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional',
 			priority: 6
 		});
@@ -142,14 +123,14 @@ describe('createRequirementSchema', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: 'not-a-uuid',
 			title: 'Test',
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional'
 		});
 		expect(result.success).toBe(false);
 	});
 
 	it('accepts all valid requirement types', () => {
-		const types = ['knockout', 'award_criterion', 'wish'];
+		const types = ['eis', 'wens'];
 		for (const type of types) {
 			const result = createRequirementSchema.safeParse({
 				document_type_id: VALID_UUID,
@@ -167,7 +148,7 @@ describe('createRequirementSchema', () => {
 			const result = createRequirementSchema.safeParse({
 				document_type_id: VALID_UUID,
 				title: `Test ${category}`,
-				requirement_type: 'knockout',
+				requirement_type: 'eis',
 				category
 			});
 			expect(result.success).toBe(true);
@@ -178,7 +159,7 @@ describe('createRequirementSchema', () => {
 		const result = createRequirementSchema.safeParse({
 			document_type_id: VALID_UUID,
 			title: 'a'.repeat(501),
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional'
 		});
 		expect(result.success).toBe(false);
@@ -189,7 +170,7 @@ describe('createRequirementSchema', () => {
 			document_type_id: VALID_UUID,
 			title: 'Test',
 			description: 'a'.repeat(5001),
-			requirement_type: 'knockout',
+			requirement_type: 'eis',
 			category: 'functional'
 		});
 		expect(result.success).toBe(false);
@@ -204,9 +185,8 @@ describe('updateRequirementSchema', () => {
 		expect(result.success).toBe(true);
 	});
 
-	it('accepts partial update with weight and priority', () => {
+	it('accepts partial update with priority', () => {
 		const result = updateRequirementSchema.safeParse({
-			weight_percentage: 25,
 			priority: 4
 		});
 		expect(result.success).toBe(true);
@@ -215,13 +195,6 @@ describe('updateRequirementSchema', () => {
 	it('accepts empty object (no updates)', () => {
 		const result = updateRequirementSchema.safeParse({});
 		expect(result.success).toBe(true);
-	});
-
-	it('rejects invalid weight_percentage', () => {
-		const result = updateRequirementSchema.safeParse({
-			weight_percentage: 200
-		});
-		expect(result.success).toBe(false);
 	});
 
 	it('rejects invalid priority', () => {
@@ -240,7 +213,7 @@ describe('updateRequirementSchema', () => {
 
 	it('accepts requirement_type change', () => {
 		const result = updateRequirementSchema.safeParse({
-			requirement_type: 'wish'
+			requirement_type: 'wens'
 		});
 		expect(result.success).toBe(true);
 	});

@@ -20,7 +20,8 @@ import type {
 	UeaPart,
 	ActivityStatus,
 	CorrespondenceStatus,
-	EvaluationStatus
+	EvaluationStatus,
+	TimeEntryActivityType
 } from './enums.js';
 
 // =============================================================================
@@ -511,6 +512,61 @@ export interface KnowledgeBaseRequirement {
 	metadata: Record<string, unknown>;
 	created_at: string;
 }
+
+// =============================================================================
+// DOCUMENT COMMENTS
+// =============================================================================
+
+export interface DocumentComment {
+	id: string;
+	project_id: string;
+	artifact_id: string;
+	selected_text: string;
+	comment_text: string;
+	resolved: boolean;
+	resolved_at: string | null;
+	resolved_by: string | null;
+	created_by: string;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+export interface DocumentCommentWithAuthor extends DocumentComment {
+	author: {
+		first_name: string;
+		last_name: string;
+		email: string;
+	};
+}
+
+// =============================================================================
+// TIME ENTRIES — Urenregistratie module
+// =============================================================================
+
+export interface TimeEntry {
+	id: string;
+	user_id: string;
+	organization_id: string;
+	project_id: string;
+	date: string;
+	hours: number;
+	activity_type: TimeEntryActivityType;
+	notes: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface TimeEntryWithProject extends TimeEntry {
+	project: {
+		id: string;
+		name: string;
+	};
+}
+
+// =============================================================================
+// KNOWLEDGE BASE
+// =============================================================================
 
 export interface RequirementChunk {
 	id: string;

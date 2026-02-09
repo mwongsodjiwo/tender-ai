@@ -10,14 +10,18 @@ import {
 } from '../../src/lib/types/enums';
 
 describe('Requirement types', () => {
-	it('has exactly 3 types', () => {
-		expect(REQUIREMENT_TYPES).toHaveLength(3);
+	it('has exactly 2 types', () => {
+		expect(REQUIREMENT_TYPES).toHaveLength(2);
 	});
 
-	it('contains knockout, award_criterion, wish', () => {
-		expect(REQUIREMENT_TYPES).toContain('knockout');
-		expect(REQUIREMENT_TYPES).toContain('award_criterion');
-		expect(REQUIREMENT_TYPES).toContain('wish');
+	it('contains eis and wens', () => {
+		expect(REQUIREMENT_TYPES).toContain('eis');
+		expect(REQUIREMENT_TYPES).toContain('wens');
+	});
+
+	it('does NOT contain knockout or award_criterion (moved to EMVI)', () => {
+		expect(REQUIREMENT_TYPES).not.toContain('knockout');
+		expect(REQUIREMENT_TYPES).not.toContain('award_criterion');
 	});
 
 	it('has Dutch labels for all types', () => {
@@ -29,9 +33,8 @@ describe('Requirement types', () => {
 	});
 
 	it('has correct Dutch labels', () => {
-		expect(REQUIREMENT_TYPE_LABELS.knockout).toBe('Knock-out');
-		expect(REQUIREMENT_TYPE_LABELS.award_criterion).toBe('Gunningscriterium');
-		expect(REQUIREMENT_TYPE_LABELS.wish).toBe('Wens');
+		expect(REQUIREMENT_TYPE_LABELS.eis).toBe('Eis (Knock-out)');
+		expect(REQUIREMENT_TYPE_LABELS.wens).toBe('Wens');
 	});
 
 	it('has prefixes for numbering for all types', () => {
@@ -42,9 +45,8 @@ describe('Requirement types', () => {
 	});
 
 	it('has correct prefixes', () => {
-		expect(REQUIREMENT_TYPE_PREFIXES.knockout).toBe('KO');
-		expect(REQUIREMENT_TYPE_PREFIXES.award_criterion).toBe('G');
-		expect(REQUIREMENT_TYPE_PREFIXES.wish).toBe('W');
+		expect(REQUIREMENT_TYPE_PREFIXES.eis).toBe('E');
+		expect(REQUIREMENT_TYPE_PREFIXES.wens).toBe('W');
 	});
 });
 

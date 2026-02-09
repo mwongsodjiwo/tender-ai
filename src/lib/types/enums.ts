@@ -238,6 +238,27 @@ export const UEA_PART_ROMAN: Record<UeaPart, string> = {
 };
 
 // =============================================================================
+// MARKET RESEARCH ACTIVITY TYPES — Sprint R5 (Marktverkenning)
+// =============================================================================
+
+export const MARKET_RESEARCH_ACTIVITY_TYPES = [
+	'deskresearch',
+	'rfi',
+	'market_consultation',
+	'conversations',
+	'report'
+] as const;
+export type MarketResearchActivityType = (typeof MARKET_RESEARCH_ACTIVITY_TYPES)[number];
+
+export const MARKET_RESEARCH_ACTIVITY_TYPE_LABELS: Record<MarketResearchActivityType, string> = {
+	deskresearch: 'Deskresearch',
+	rfi: 'Request for Information (RFI)',
+	market_consultation: 'Marktconsultatie',
+	conversations: 'Gesprekken',
+	report: 'Marktverkenningsrapport'
+};
+
+// =============================================================================
 // ACTIVITY STATUS — Sprint R2 (Fase-activiteiten)
 // =============================================================================
 
@@ -277,6 +298,31 @@ export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
 	scoring: 'Beoordelen',
 	completed: 'Afgerond',
 	published: 'Gepubliceerd'
+};
+
+// =============================================================================
+// TIME ENTRY ACTIVITY TYPES — Urenregistratie module
+// =============================================================================
+
+export const TIME_ENTRY_ACTIVITY_TYPES = [
+	'specifying',
+	'evaluation',
+	'nvi',
+	'correspondence',
+	'market_research',
+	'meeting',
+	'other'
+] as const;
+export type TimeEntryActivityType = (typeof TIME_ENTRY_ACTIVITY_TYPES)[number];
+
+export const TIME_ENTRY_ACTIVITY_TYPE_LABELS: Record<TimeEntryActivityType, string> = {
+	specifying: 'Specificeren',
+	evaluation: 'Beoordeling',
+	nvi: 'NvI',
+	correspondence: 'Correspondentie',
+	market_research: 'Marktverkenning',
+	meeting: 'Overleg',
+	other: 'Overig'
 };
 
 // =============================================================================
