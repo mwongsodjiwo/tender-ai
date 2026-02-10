@@ -309,43 +309,65 @@
 		/>
 	{/if}
 
-	<!-- Letters list -->
+	<!-- Letters table -->
 	{#if filteredLetters.length > 0}
-		<div class="rounded-card bg-white shadow-card divide-y divide-gray-100">
-			{#each filteredLetters as letter (letter.id)}
-				<a
-					href="/projects/{project.id}/correspondence/{letter.id}"
-					data-sveltekit-reload
-					class="flex items-center justify-between px-6 py-4 transition-colors hover:bg-gray-50"
-				>
-					<div class="flex items-center gap-4 min-w-0">
-						<div class="flex items-center gap-2 shrink-0">
-							<StatusBadge status={letter.phase} />
-						</div>
-						<div class="min-w-0">
-							<div class="flex items-center gap-2">
-								<span class="text-sm font-medium text-gray-900">
-									{LETTER_TYPE_LABELS[letter.letter_type] ?? letter.letter_type}
-								</span>
-								<StatusBadge status={letter.status} />
-							</div>
-							<p class="mt-0.5 text-sm text-gray-600 truncate">
-								{#if letter.subject}
-									{letter.subject}
-								{:else}
-									<span class="text-gray-400">(geen onderwerp)</span>
-								{/if}
-							</p>
-							{#if letter.recipient}
-								<p class="mt-0.5 text-xs text-gray-400">{letter.recipient}</p>
-							{/if}
-						</div>
-					</div>
-					<div class="shrink-0 text-sm text-gray-500">
-						{formatDate(letter.created_at)}
-					</div>
-				</a>
-			{/each}
+		<div class="rounded-card bg-white shadow-card overflow-hidden">
+			<!-- Table header -->
+			<table class="w-full">
+				<thead>
+					<tr class="border-b border-gray-200">
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Fase</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Titel</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Ontvanger</th>
+						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-gray-100">
+					{#each filteredLetters as letter (letter.id)}
+						<tr class="group transition-colors hover:bg-gray-50">
+							<td class="px-6 py-4">
+								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+									<StatusBadge status={letter.phase} />
+								</a>
+							</td>
+							<td class="px-6 py-4">
+								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block min-w-0">
+									<span class="text-sm font-medium text-gray-900">
+										{LETTER_TYPE_LABELS[letter.letter_type] ?? letter.letter_type}
+									</span>
+									<p class="mt-0.5 truncate text-sm text-gray-500">
+										{#if letter.subject}
+											{letter.subject}
+										{:else}
+											<span class="text-gray-400">(geen onderwerp)</span>
+										{/if}
+									</p>
+								</a>
+							</td>
+							<td class="px-6 py-4">
+								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+									<StatusBadge status={letter.status} />
+								</a>
+							</td>
+							<td class="px-6 py-4">
+								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+									{#if letter.recipient}
+										<span class="text-sm text-gray-700">{letter.recipient}</span>
+									{:else}
+										<span class="text-sm text-gray-400">-</span>
+									{/if}
+								</a>
+							</td>
+							<td class="px-6 py-4 text-right">
+								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+									<span class="text-sm text-gray-500">{formatDate(letter.created_at)}</span>
+								</a>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	{/if}
 </div>

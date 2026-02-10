@@ -305,24 +305,20 @@ export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
 // =============================================================================
 
 export const TIME_ENTRY_ACTIVITY_TYPES = [
+	'preparing',
+	'exploring',
 	'specifying',
-	'evaluation',
-	'nvi',
-	'correspondence',
-	'market_research',
-	'meeting',
-	'other'
+	'tendering',
+	'contracting'
 ] as const;
 export type TimeEntryActivityType = (typeof TIME_ENTRY_ACTIVITY_TYPES)[number];
 
 export const TIME_ENTRY_ACTIVITY_TYPE_LABELS: Record<TimeEntryActivityType, string> = {
+	preparing: 'Voorbereiden',
+	exploring: 'Verkennen',
 	specifying: 'Specificeren',
-	evaluation: 'Beoordeling',
-	nvi: 'NvI',
-	correspondence: 'Correspondentie',
-	market_research: 'Marktverkenning',
-	meeting: 'Overleg',
-	other: 'Overig'
+	tendering: 'Aanbesteden',
+	contracting: 'Contracteren'
 };
 
 // =============================================================================

@@ -4,6 +4,7 @@
 	import type { ProjectProfile, Document } from '$types';
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
+	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 
 	export let data: PageData;
 
@@ -29,6 +30,12 @@
 	let confirming = false;
 	let error = '';
 	let success = '';
+	let showUploadPopup = false;
+
+	function handleUploadComplete(): void {
+		showUploadPopup = false;
+		invalidateAll();
+	}
 
 
 
@@ -165,6 +172,34 @@
 		confirming = false;
 		success = 'Projectprofiel bevestigd.';
 		await invalidateAll();
+	}
+
+	const MIME_TYPE_LABELS: Record<string, string> = {
+		'application/pdf': 'PDF',
+		'application/msword': 'DOC',
+		'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+		'application/vnd.ms-excel': 'XLS',
+		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+		'text/plain': 'TXT',
+		'text/csv': 'CSV'
+	};
+
+	function formatFileType(mimeType: string): string {
+		return MIME_TYPE_LABELS[mimeType] ?? mimeType.split('/').pop()?.toUpperCase() ?? '—';
+	}
+
+	function formatFileSize(bytes: number): string {
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
+	function formatDate(dateStr: string): string {
+		return new Date(dateStr).toLocaleDateString('nl-NL', {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		});
 	}
 
 	const FIELD_LABELS: Record<string, string> = {
@@ -431,13 +466,28 @@
 							</div>
 						</div>
 					{:else if activeTab === 'documenten'}
-						<p class="text-sm text-gray-500">Documenten worden beheerd via de documentenpagina.</p>
-						<a
-							href="/projects/{project.id}/documents"
-							class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-						>
-							Naar documenten
-						</a>
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-sm text-gray-500">Documenten worden beheerd via de documentenpagina.</p>
+								<a
+									href="/projects/{project.id}/documents"
+									class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+								>
+									Naar documenten
+								</a>
+							</div>
+							<button
+								type="button"
+								on:click={() => (showUploadPopup = true)}
+								class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 transition-colors"
+								title="Document uploaden"
+								aria-label="Document uploaden"
+							>
+								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+								</svg>
+							</button>
+						</div>
 					{/if}
 				</div>
 			</div>
@@ -586,53 +636,106 @@
 					{#if !profile?.timeline_start && !profile?.timeline_end}
 						<p class="text-sm text-gray-400">Geen gegevens ingevuld.</p>
 					{/if}
-				{:else if activeTab === 'documenten'}
-					{#if documents.length === 0}
-						<div class="text-center py-8">
-							<svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-							</svg>
-							<p class="mt-2 text-sm text-gray-500">Nog geen documenten geüpload.</p>
-							<a
-								href="/projects/{project.id}/documents"
-								class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-							>
-								Documenten uploaden
-							</a>
-						</div>
-					{:else}
-						<div class="space-y-3">
-							{#each documents as doc (doc.id)}
-								<div class="flex items-center justify-between rounded-lg border border-gray-100 p-4 hover:bg-gray-50 transition-colors">
-									<div class="flex items-center gap-3 min-w-0">
-										<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-											<svg class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-											</svg>
-										</div>
-										<div class="min-w-0">
-											<p class="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
-											<div class="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
-												<span class="rounded-badge bg-gray-100 px-2 py-0.5 font-medium text-gray-600">{DOCUMENT_CATEGORY_LABELS[doc.category] ?? doc.category}</span>
-												<span>{(doc.file_size / 1024).toFixed(0)} KB</span>
-												<span>{new Date(doc.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-											</div>
-										</div>
-									</div>
-								</div>
-							{/each}
-						</div>
-						<div class="mt-4 flex justify-end">
-							<a
-								href="/projects/{project.id}/documents"
-								class="text-sm font-medium text-primary-600 hover:text-primary-700"
-							>
-								Alle documenten bekijken &rarr;
-							</a>
-						</div>
-					{/if}
+			{:else if activeTab === 'documenten'}
+				<!-- Upload button top-right -->
+				<div class="flex justify-end mb-4">
+					<button
+						type="button"
+						on:click={() => (showUploadPopup = true)}
+						class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 transition-colors"
+						title="Document uploaden"
+						aria-label="Document uploaden"
+					>
+						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+						</svg>
+					</button>
+				</div>
+
+				{#if documents.length === 0}
+					<div class="text-center py-8">
+						<svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+						</svg>
+						<p class="mt-2 text-sm text-gray-500">Nog geen documenten geüpload.</p>
+						<a
+							href="/projects/{project.id}/documents"
+							class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+						>
+							Documenten bekijken
+						</a>
+					</div>
+				{:else}
+					<div class="rounded-card overflow-hidden border border-gray-200">
+						<table class="w-full">
+							<thead>
+								<tr class="border-b border-gray-200">
+									<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Categorie</th>
+									<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Naam</th>
+									<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Type</th>
+									<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Grootte</th>
+									<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-gray-100">
+								{#each documents as doc (doc.id)}
+									<tr class="group transition-colors hover:bg-gray-50">
+										<td class="px-6 py-4">
+											<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+												{DOCUMENT_CATEGORY_LABELS[doc.category] ?? doc.category}
+											</span>
+										</td>
+										<td class="px-6 py-4 max-w-[240px]">
+											<span class="block truncate text-sm font-medium text-gray-900">{doc.name}</span>
+										</td>
+										<td class="px-6 py-4">
+											<span class="text-sm text-gray-500">{formatFileType(doc.mime_type)}</span>
+										</td>
+										<td class="px-6 py-4 text-right">
+											<span class="text-sm text-gray-500">{formatFileSize(doc.file_size)}</span>
+										</td>
+										<td class="px-6 py-4 text-right">
+											<span class="text-sm text-gray-500">{formatDate(doc.created_at)}</span>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
 				{/if}
+			{/if}
 			</div>
 		</div>
 	{/if}
 </div>
+
+<!-- Upload popup modal -->
+{#if showUploadPopup}
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+		on:click|self={() => (showUploadPopup = false)}
+	>
+		<div class="relative w-full max-w-lg mx-4 animate-in">
+			<!-- Close button -->
+			<button
+				type="button"
+				on:click={() => (showUploadPopup = false)}
+				class="absolute -top-3 -right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-400 shadow-md hover:text-gray-600 transition-colors"
+				aria-label="Sluiten"
+			>
+				<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+
+			<!-- Upload component -->
+			<DocumentUpload
+				projectId={project.id}
+				organizationId={project.organization_id}
+				onUploadComplete={handleUploadComplete}
+			/>
+		</div>
+	</div>
+{/if}

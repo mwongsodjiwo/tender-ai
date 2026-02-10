@@ -14,13 +14,11 @@
 	] as const;
 
 	const ACTIVITY_COLORS: Record<string, string> = {
-		specifying: '#2563EB',
-		evaluation: '#7C3AED',
-		nvi: '#059669',
-		correspondence: '#D97706',
-		market_research: '#DC2626',
-		meeting: '#EC4899',
-		other: '#6B7280'
+		preparing: '#2563EB',
+		exploring: '#7C3AED',
+		specifying: '#059669',
+		tendering: '#D97706',
+		contracting: '#DC2626'
 	};
 
 	const PROJECT_COLORS = [
@@ -31,6 +29,13 @@
 	let selectedPeriod = data.period;
 	let selectedProject = data.projectFilter ?? '';
 
+	// Export panel state
+	let showExportPanel = false;
+	let exportFrom = data.fromDate;
+	let exportTo = data.toDate;
+	let exporting = false;
+	let exportError = '';
+
 	function applyFilters(): void {
 		const params = new URLSearchParams();
 		params.set('period', selectedPeriod);
@@ -40,9 +45,19 @@
 		goto(`/time-tracking/reports?${params.toString()}`);
 	}
 
-	function exportCSV(): void {
+	function toggleExportPanel(): void {
+		showExportPanel = !showExportPanel;
+		if (showExportPanel) {
+			exportFrom = data.fromDate;
+			exportTo = data.toDate;
+			exportError = '';
+		}
+	}
+
+	/** Build CSV string from an array of time entry records */
+	function buildCSV(entries: Record<string, unknown>[], fromDate: string, toDate: string): void {
 		const headers = ['Datum', 'Project', 'Activiteit', 'Uren', 'Notitie'];
-		const rows = data.entries.map((e: Record<string, unknown>) => {
+		const rows = entries.map((e) => {
 			const project = e.project as { name: string } | null;
 			const actType = e.activity_type as TimeEntryActivityType;
 			return [
@@ -59,11 +74,42 @@
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement('a');
 		link.setAttribute('href', url);
-		link.setAttribute('download', `urenregistratie_${data.fromDate}_${data.toDate}.csv`);
+		link.setAttribute('download', `urenregistratie_${fromDate}_${toDate}.csv`);
 		link.style.visibility = 'hidden';
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+	}
+
+	async function exportCSV(): Promise<void> {
+		exporting = true;
+		exportError = '';
+
+		try {
+			const params = new URLSearchParams({ from: exportFrom, to: exportTo });
+			const response = await fetch(`/api/time-entries?${params.toString()}`);
+
+			if (!response.ok) {
+				const body = await response.json().catch(() => ({ message: 'Onbekende fout' }));
+				exportError = body.message ?? 'Fout bij ophalen uren';
+				return;
+			}
+
+			const result = await response.json();
+			const entries = (result.data ?? []) as Record<string, unknown>[];
+
+			if (entries.length === 0) {
+				exportError = 'Geen uren gevonden in de geselecteerde periode.';
+				return;
+			}
+
+			buildCSV(entries, exportFrom, exportTo);
+			showExportPanel = false;
+		} catch {
+			exportError = 'Er ging iets mis. Controleer je internetverbinding.';
+		} finally {
+			exporting = false;
+		}
 	}
 
 	// Bar chart calculations
@@ -94,7 +140,7 @@
 			</p>
 		</div>
 		<button
-			on:click={exportCSV}
+			on:click={toggleExportPanel}
 			class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
 		>
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -103,6 +149,63 @@
 			Exporteer CSV
 		</button>
 	</div>
+
+	<!-- Export panel -->
+	{#if showExportPanel}
+		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+			<h3 class="text-sm font-semibold text-gray-900">Exporteer uren als CSV</h3>
+			<p class="mt-1 text-xs text-gray-500">Kies de periode waarvoor je uren wilt exporteren.</p>
+
+			{#if exportError}
+				<div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700" role="alert">
+					{exportError}
+				</div>
+			{/if}
+
+			<div class="mt-4 flex flex-wrap items-end gap-4">
+				<div>
+					<label for="export-from" class="mb-1.5 block text-xs font-medium text-gray-500">Van</label>
+					<input
+						id="export-from"
+						type="date"
+						bind:value={exportFrom}
+						class="min-w-[160px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+					/>
+				</div>
+				<div>
+					<label for="export-to" class="mb-1.5 block text-xs font-medium text-gray-500">Tot</label>
+					<input
+						id="export-to"
+						type="date"
+						bind:value={exportTo}
+						class="min-w-[160px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+					/>
+				</div>
+				<div class="flex items-center gap-2">
+					<button
+						on:click={exportCSV}
+						disabled={exporting}
+						class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						{#if exporting}
+							Exporteren...
+						{:else}
+							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+							</svg>
+							Download CSV
+						{/if}
+					</button>
+					<button
+						on:click={toggleExportPanel}
+						class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+					>
+						Annuleren
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Filters -->
 	<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -113,7 +216,7 @@
 					id="filter-period"
 					bind:value={selectedPeriod}
 					on:change={applyFilters}
-					class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+					class="min-w-[140px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 				>
 					{#each PERIOD_OPTIONS as opt (opt.value)}
 						<option value={opt.value}>{opt.label}</option>
@@ -126,7 +229,7 @@
 					id="filter-project"
 					bind:value={selectedProject}
 					on:change={applyFilters}
-					class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+					class="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 				>
 					<option value="">Alle projecten</option>
 					{#each data.projects as project (project.id)}

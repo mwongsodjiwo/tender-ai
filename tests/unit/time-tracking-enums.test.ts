@@ -12,34 +12,30 @@ import {
 // =============================================================================
 
 describe('Time entry activity types enum', () => {
-	it('has exactly 7 activity types', () => {
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toHaveLength(7);
+	it('has exactly 5 activity types (project phases)', () => {
+		expect(TIME_ENTRY_ACTIVITY_TYPES).toHaveLength(5);
 	});
 
-	it('contains all expected types', () => {
+	it('contains all expected project phases', () => {
+		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('preparing');
+		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('exploring');
 		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('specifying');
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('evaluation');
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('nvi');
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('correspondence');
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('market_research');
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('meeting');
-		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('other');
+		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('tendering');
+		expect(TIME_ENTRY_ACTIVITY_TYPES).toContain('contracting');
 	});
 
-	it('is in correct order matching spec', () => {
-		expect(TIME_ENTRY_ACTIVITY_TYPES[0]).toBe('specifying');
-		expect(TIME_ENTRY_ACTIVITY_TYPES[1]).toBe('evaluation');
-		expect(TIME_ENTRY_ACTIVITY_TYPES[2]).toBe('nvi');
-		expect(TIME_ENTRY_ACTIVITY_TYPES[3]).toBe('correspondence');
-		expect(TIME_ENTRY_ACTIVITY_TYPES[4]).toBe('market_research');
-		expect(TIME_ENTRY_ACTIVITY_TYPES[5]).toBe('meeting');
-		expect(TIME_ENTRY_ACTIVITY_TYPES[6]).toBe('other');
+	it('is in correct order matching project phase sequence', () => {
+		expect(TIME_ENTRY_ACTIVITY_TYPES[0]).toBe('preparing');
+		expect(TIME_ENTRY_ACTIVITY_TYPES[1]).toBe('exploring');
+		expect(TIME_ENTRY_ACTIVITY_TYPES[2]).toBe('specifying');
+		expect(TIME_ENTRY_ACTIVITY_TYPES[3]).toBe('tendering');
+		expect(TIME_ENTRY_ACTIVITY_TYPES[4]).toBe('contracting');
 	});
 
 	it('is a readonly tuple (enforced by as const)', () => {
 		// TypeScript enforces readonly at compile time; at runtime we verify it's an array with fixed length
 		expect(Array.isArray(TIME_ENTRY_ACTIVITY_TYPES)).toBe(true);
-		expect(TIME_ENTRY_ACTIVITY_TYPES.length).toBe(7);
+		expect(TIME_ENTRY_ACTIVITY_TYPES.length).toBe(5);
 	});
 });
 
@@ -56,13 +52,11 @@ describe('Time entry activity type labels', () => {
 	});
 
 	it('maps to correct Dutch labels', () => {
+		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.preparing).toBe('Voorbereiden');
+		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.exploring).toBe('Verkennen');
 		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.specifying).toBe('Specificeren');
-		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.evaluation).toBe('Beoordeling');
-		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.nvi).toBe('NvI');
-		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.correspondence).toBe('Correspondentie');
-		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.market_research).toBe('Marktverkenning');
-		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.meeting).toBe('Overleg');
-		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.other).toBe('Overig');
+		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.tendering).toBe('Aanbesteden');
+		expect(TIME_ENTRY_ACTIVITY_TYPE_LABELS.contracting).toBe('Contracteren');
 	});
 
 	it('has no extra keys beyond the enum values', () => {
@@ -81,14 +75,12 @@ describe('Time entry activity type labels', () => {
 describe('TimeEntryActivityType type', () => {
 	it('accepts valid activity types', () => {
 		const validTypes: TimeEntryActivityType[] = [
+			'preparing',
+			'exploring',
 			'specifying',
-			'evaluation',
-			'nvi',
-			'correspondence',
-			'market_research',
-			'meeting',
-			'other'
+			'tendering',
+			'contracting'
 		];
-		expect(validTypes).toHaveLength(7);
+		expect(validTypes).toHaveLength(5);
 	});
 });

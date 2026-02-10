@@ -64,7 +64,7 @@
 	// Right sidebar tab & visibility
 	type SidebarTab = 'fields' | 'comments';
 	let sidebarTab: SidebarTab = 'comments';
-	let showRightSidebar = true;
+	let showRightSidebar = false;
 
 	function toggleCommentsSidebar() {
 		if (showRightSidebar && sidebarTab === 'comments') {
@@ -980,7 +980,7 @@
 		<span class="toolbar-divider"></span>
 
 		<!-- Comments toggle -->
-		<button on:click={toggleCommentsSidebar} class="toolbar-btn relative" class:active={showRightSidebar && sidebarTab === 'comments'} title="Opmerkingen tonen/verbergen" aria-label="Opmerkingen tonen/verbergen" type="button">
+		<button on:click={toggleCommentsSidebar} class="toolbar-btn relative" class:active={showRightSidebar && sidebarTab === 'comments'} class:has-comments={activeComments.length > 0 && !(showRightSidebar && sidebarTab === 'comments')} title="Opmerkingen tonen/verbergen" aria-label="Opmerkingen tonen/verbergen" type="button">
 			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
 			{#if activeComments.length > 0}
 				<span class="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white">{activeComments.length}</span>
@@ -1447,6 +1447,14 @@
 	.toolbar-btn.active {
 		background-color: #dbeafe;
 		color: #1d4ed8;
+	}
+	.toolbar-btn.has-comments {
+		background-color: #fef3c7;
+		color: #d97706;
+	}
+	.toolbar-btn.has-comments:hover:not(:disabled) {
+		background-color: #fde68a;
+		color: #b45309;
 	}
 	.toolbar-select {
 		height: 2.25rem;

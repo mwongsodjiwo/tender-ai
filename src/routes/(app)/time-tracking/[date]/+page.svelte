@@ -55,7 +55,7 @@
 			{
 				id: null,
 				project_id: data.projects[0]?.id ?? '',
-				activity_type: 'specifying',
+				activity_type: 'preparing',
 				hours: 1,
 				notes: '',
 				isNew: true,

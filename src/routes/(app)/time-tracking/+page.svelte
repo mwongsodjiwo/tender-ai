@@ -92,7 +92,7 @@
 							{
 								id: null,
 								project_id: data.projects[0]?.id ?? '',
-								activity_type: 'specifying' as TimeEntryActivityType,
+								activity_type: 'preparing' as TimeEntryActivityType,
 								hours: 1,
 								notes: '',
 								isNew: true,
@@ -297,7 +297,7 @@
 		<!-- Left: Week content -->
 		<div class="flex-1 space-y-4">
 			<!-- Week header -->
-			<div class="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+			<div class="flex items-center justify-between px-5 py-4">
 				<div class="flex items-center gap-4">
 					<h2 class="text-lg font-semibold text-gray-900">
 						Week {weekNumber} — {weekRange}

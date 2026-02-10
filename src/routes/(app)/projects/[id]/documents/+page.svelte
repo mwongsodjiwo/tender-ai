@@ -1,8 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Document } from '$types';
-	import DocumentUpload from '$components/DocumentUpload.svelte';
-	import DocumentList from '$components/DocumentList.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 
 	export let data: PageData;
@@ -19,7 +16,6 @@
 		progress: number;
 	}[];
 	$: emviCount = (data.emviCount ?? 0) as number;
-	$: uploadedDocuments = (data.uploadedDocuments ?? []) as Document[];
 
 	let exporting = '';
 
@@ -65,9 +61,6 @@
 		exporting = '';
 	}
 
-	function reloadUploads(): void {
-		window.location.reload();
-	}
 </script>
 
 <svelte:head>
@@ -190,25 +183,4 @@
 			</div>
 		</div>
 	</div>
-
-	<!-- Uploaded documents -->
-	<section>
-		<h2 class="mb-4 text-lg font-semibold text-gray-900">Uploads</h2>
-		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-			<div class="lg:col-span-2">
-				<DocumentList
-					documents={uploadedDocuments}
-					projectId={project.id}
-					onDelete={reloadUploads}
-				/>
-			</div>
-			<div>
-				<DocumentUpload
-					projectId={project.id}
-					organizationId={project.organization_id}
-					onUploadComplete={reloadUploads}
-				/>
-			</div>
-		</div>
-	</section>
 </div>
