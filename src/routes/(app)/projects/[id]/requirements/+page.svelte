@@ -282,16 +282,7 @@
 	<!-- Page header -->
 	<div class="flex items-start justify-between">
 		<div>
-			<div class="flex items-center gap-2">
-				<a
-					href="/projects/{project.id}"
-					class="text-sm text-gray-500 hover:text-gray-700"
-				>
-					{project.name}
-				</a>
-				<span class="text-gray-300">/</span>
-			</div>
-			<h1 class="mt-1 text-2xl font-bold text-gray-900">Programma van Eisen</h1>
+			<h1 class="text-2xl font-bold text-gray-900">Programma van Eisen</h1>
 			<p class="mt-1 text-sm text-gray-500">Beheer de eisen voor dit aanbestedingsproject.</p>
 		</div>
 		<div class="flex items-center gap-2">

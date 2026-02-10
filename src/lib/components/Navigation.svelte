@@ -10,7 +10,6 @@
 	export let projects: { id: string; name: string; status: ProjectStatus; updated_at: string }[] = [];
 
 	let mobileOpen = false;
-	let projectsExpanded = true;
 
 	const BASE_NAV_LINKS = [
 		{ href: '/dashboard', label: 'Dashboard', icon: 'home' },
@@ -22,8 +21,9 @@
 		? [...BASE_NAV_LINKS, { href: '/admin', label: 'Beheer', icon: 'settings' }]
 		: BASE_NAV_LINKS;
 
+	// Reactive path tracking — ensures sidebar re-renders on navigation
+	$: currentPath = $page.url.pathname;
 	$: activeProjectId = $page.params.id ?? null;
-	$: isOnProjectPage = $page.url.pathname.startsWith('/projects/') && activeProjectId != null;
 
 	const PROJECT_SUB_LINKS = [
 		{ path: '', label: 'Overzicht', icon: 'layout-dashboard' },
@@ -34,31 +34,9 @@
 		{ path: '/team', label: 'Team', icon: 'users' }
 	];
 
-	const STATUS_DOTS: Record<string, string> = {
-		draft: 'bg-gray-400',
-		briefing: 'bg-primary-400',
-		generating: 'bg-warning-400',
-		review: 'bg-purple-400',
-		approved: 'bg-success-500',
-		published: 'bg-success-600',
-		archived: 'bg-gray-300'
-	};
-
 	async function handleLogout() {
 		await supabase.auth.signOut();
 		goto('/login');
-	}
-
-	function isActive(href: string): boolean {
-		return $page.url.pathname.startsWith(href);
-	}
-
-	function isSubLinkActive(projectId: string, subPath: string): boolean {
-		const fullPath = `/projects/${projectId}${subPath}`;
-		if (subPath === '') {
-			return $page.url.pathname === fullPath;
-		}
-		return $page.url.pathname.startsWith(fullPath);
 	}
 
 	function closeMobile() {
@@ -120,10 +98,10 @@
 					href={link.href}
 					on:click={closeMobile}
 					class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-						{isActive(link.href)
+						{currentPath.startsWith(link.href)
 							? 'bg-primary-50 text-primary-700'
 							: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}"
-					aria-current={isActive(link.href) ? 'page' : undefined}
+					aria-current={currentPath.startsWith(link.href) ? 'page' : undefined}
 				>
 					{#if link.icon === 'home'}
 						<!-- Lucide: LayoutDashboard -->
@@ -153,123 +131,102 @@
 			{/each}
 		</div>
 
-		<!-- Projects section -->
+		<!-- Project selector -->
 		<div class="mt-6">
-			<button
-				on:click={() => (projectsExpanded = !projectsExpanded)}
-				class="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors"
-				aria-expanded={projectsExpanded}
-			>
-				<span>Projecten</span>
-				<svg
-					class="h-4 w-4 transition-transform duration-200 {projectsExpanded ? 'rotate-0' : '-rotate-90'}"
-					fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"
+			<span class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+				Project
+			</span>
+
+			<div class="mt-1 px-1.5">
+				<select
+					value={activeProjectId ?? ''}
+					on:change={(e) => {
+						const id = e.currentTarget.value;
+						if (id) { closeMobile(); goto(`/projects/${id}`); }
+					}}
+					class="w-full rounded-lg border px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1
+						{activeProjectId
+							? 'border-violet-200 bg-violet-50 focus:border-violet-500 focus:ring-violet-500'
+							: 'border-gray-200 bg-white focus:border-primary-500 focus:ring-primary-500'}"
+					aria-label="Selecteer een project"
 				>
-					<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-				</svg>
-			</button>
+					<option value="" disabled>Kies een project...</option>
+					{#each projects as proj (proj.id)}
+						<option value={proj.id}>{proj.name}</option>
+					{/each}
+				</select>
+			</div>
 
-			{#if projectsExpanded}
-				<div class="mt-1 space-y-0.5">
-					{#if projects.length === 0}
-						<p class="px-3 py-2 text-xs text-gray-400">Geen projecten</p>
-					{:else}
-						{#each projects as project (project.id)}
-							{@const isSelected = activeProjectId === project.id}
-							<div>
-								<a
-									href="/projects/{project.id}"
-									on:click={closeMobile}
-									class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors
-										{isSelected
-											? 'bg-primary-50 text-primary-700 font-medium'
-											: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}"
-									aria-current={isSelected ? 'page' : undefined}
-								>
-									<span class="h-2 w-2 shrink-0 rounded-full {STATUS_DOTS[project.status] ?? 'bg-gray-400'}" aria-hidden="true"></span>
-									<span class="truncate">{project.name}</span>
-								</a>
-
-								<!-- Sub-navigation for selected project -->
-								{#if isSelected}
-									<div class="ml-5 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-3">
-										{#each PROJECT_SUB_LINKS as subLink (subLink.path)}
-											{@const subActive = isSubLinkActive(project.id, subLink.path)}
-											<a
-												href="/projects/{project.id}{subLink.path}"
-												on:click={closeMobile}
-												class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors
-													{subActive
-														? 'text-primary-700 font-medium bg-primary-50/50'
-														: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}"
-												aria-current={subActive ? 'page' : undefined}
-											>
-												{#if subLink.icon === 'layout-dashboard'}
-													<!-- Lucide: LayoutDashboard -->
-													<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-														<rect x="3" y="3" width="7" height="9" rx="1" />
-														<rect x="14" y="3" width="7" height="5" rx="1" />
-														<rect x="14" y="12" width="7" height="9" rx="1" />
-														<rect x="3" y="16" width="7" height="5" rx="1" />
-													</svg>
-												{:else if subLink.icon === 'clipboard-list'}
-													<!-- Lucide: ClipboardList -->
-													<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-														<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-														<rect x="9" y="3" width="6" height="4" rx="1" />
-														<path stroke-linecap="round" d="M9 12h6M9 16h4" />
-													</svg>
-												{:else if subLink.icon === 'search'}
-												<!-- Lucide: Search -->
-												<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-													<circle cx="11" cy="11" r="8" />
-													<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35" />
-												</svg>
-											{:else if subLink.icon === 'file-text'}
-													<!-- Lucide: FileText -->
-													<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-														<path stroke-linecap="round" stroke-linejoin="round" d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" />
-														<polyline points="14 2 14 8 20 8" stroke-linecap="round" stroke-linejoin="round" />
-														<line x1="16" y1="13" x2="8" y2="13" stroke-linecap="round" />
-														<line x1="16" y1="17" x2="8" y2="17" stroke-linecap="round" />
-														<line x1="10" y1="9" x2="8" y2="9" stroke-linecap="round" />
-													</svg>
-												{:else if subLink.icon === 'mail'}
-													<!-- Lucide: Mail -->
-													<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-														<rect x="2" y="4" width="20" height="16" rx="2" />
-														<path stroke-linecap="round" stroke-linejoin="round" d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" />
-													</svg>
-												{:else if subLink.icon === 'users'}
-													<!-- Lucide: Users -->
-													<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-														<path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-														<circle cx="9" cy="7" r="4" />
-														<path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-													</svg>
-												{/if}
-												{subLink.label}
-											</a>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						{/each}
-					{/if}
-
-					<!-- New project link -->
-					<a
-						href="/projects/new"
-						on:click={closeMobile}
-						class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
-					>
-						<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-						</svg>
-						Nieuw project
-					</a>
+			<!-- Sub-navigation for active project -->
+			{#if activeProjectId}
+				<div class="mt-2 space-y-0.5">
+					{#each PROJECT_SUB_LINKS as subLink (subLink.path)}
+						{@const subFullPath = `/projects/${activeProjectId}${subLink.path}`}
+						{@const subActive = subLink.path === '' ? currentPath === subFullPath : currentPath.startsWith(subFullPath)}
+						<a
+							href={subFullPath}
+							on:click={closeMobile}
+							class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors
+								{subActive
+									? 'text-primary-700 font-medium bg-primary-50/50'
+									: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}"
+							aria-current={subActive ? 'page' : undefined}
+						>
+							{#if subLink.icon === 'layout-dashboard'}
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<rect x="3" y="3" width="7" height="9" rx="1" />
+									<rect x="14" y="3" width="7" height="5" rx="1" />
+									<rect x="14" y="12" width="7" height="9" rx="1" />
+									<rect x="3" y="16" width="7" height="5" rx="1" />
+								</svg>
+							{:else if subLink.icon === 'clipboard-list'}
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+									<rect x="9" y="3" width="6" height="4" rx="1" />
+									<path stroke-linecap="round" d="M9 12h6M9 16h4" />
+								</svg>
+							{:else if subLink.icon === 'search'}
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<circle cx="11" cy="11" r="8" />
+									<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35" />
+								</svg>
+							{:else if subLink.icon === 'file-text'}
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" />
+									<polyline points="14 2 14 8 20 8" stroke-linecap="round" stroke-linejoin="round" />
+									<line x1="16" y1="13" x2="8" y2="13" stroke-linecap="round" />
+									<line x1="16" y1="17" x2="8" y2="17" stroke-linecap="round" />
+									<line x1="10" y1="9" x2="8" y2="9" stroke-linecap="round" />
+								</svg>
+							{:else if subLink.icon === 'mail'}
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<rect x="2" y="4" width="20" height="16" rx="2" />
+									<path stroke-linecap="round" stroke-linejoin="round" d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" />
+								</svg>
+							{:else if subLink.icon === 'users'}
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+									<circle cx="9" cy="7" r="4" />
+									<path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+								</svg>
+							{/if}
+							{subLink.label}
+						</a>
+					{/each}
 				</div>
 			{/if}
+
+			<!-- New project link -->
+			<a
+				href="/projects/new"
+				on:click={closeMobile}
+				class="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+			>
+				<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+				</svg>
+				Nieuw project
+			</a>
 		</div>
 	</nav>
 

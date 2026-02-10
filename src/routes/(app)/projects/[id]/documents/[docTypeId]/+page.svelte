@@ -351,9 +351,11 @@
 	// ── Search state ──
 	let showSearch = false;
 	let searchQuery = '';
-	let searchResults: { artifactId: string; index: number }[] = [];
+	let replaceQuery = '';
+	let searchResults: { artifactId: string; from: number; to: number }[] = [];
 	let currentSearchResult = -1;
 	let searchInput: HTMLInputElement;
+	let replaceInput: HTMLInputElement;
 
 	function toggleSearch() {
 		showSearch = !showSearch;
@@ -369,9 +371,36 @@
 
 	function clearSearch() {
 		searchQuery = '';
+		replaceQuery = '';
 		searchResults = [];
 		currentSearchResult = -1;
 		removeSearchHighlights();
+	}
+
+	function getEditorSearchMatches(
+		ed: Editor,
+		query: string
+	): { from: number; to: number }[] {
+		const matches: { from: number; to: number }[] = [];
+		const queryLower = query.toLowerCase();
+
+		ed.state.doc.descendants((node, pos) => {
+			if (!node.isText || !node.text) return;
+
+			const nodeText = node.text;
+			const lowerNodeText = nodeText.toLowerCase();
+			let matchIndex = 0;
+
+			while ((matchIndex = lowerNodeText.indexOf(queryLower, matchIndex)) !== -1) {
+				matches.push({
+					from: pos + matchIndex,
+					to: pos + matchIndex + query.length
+				});
+				matchIndex += query.length;
+			}
+		});
+
+		return matches;
 	}
 
 	function removeSearchHighlights() {
@@ -393,8 +422,7 @@
 
 		if (!searchQuery.trim()) return;
 
-		const query = searchQuery.toLowerCase();
-		let resultIndex = 0;
+		const query = searchQuery.trim();
 
 		for (const artifact of artifacts) {
 			const comp = editorComponents[artifact.id];
@@ -403,14 +431,13 @@
 			const ed = comp.getEditor();
 			if (!ed) continue;
 
-			const text = ed.getText();
-			const lowerText = text.toLowerCase();
-			let pos = 0;
-
-			while ((pos = lowerText.indexOf(query, pos)) !== -1) {
-				searchResults.push({ artifactId: artifact.id, index: resultIndex });
-				resultIndex++;
-				pos += query.length;
+			const matches = getEditorSearchMatches(ed, query);
+			for (const match of matches) {
+				searchResults.push({
+					artifactId: artifact.id,
+					from: match.from,
+					to: match.to
+				});
 			}
 		}
 
@@ -432,6 +459,9 @@
 		if (el) {
 			el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 		}
+
+		const currentEditor = editorComponents[result.artifactId]?.getEditor();
+		currentEditor?.chain().focus().setTextSelection({ from: result.from, to: result.to }).run();
 
 		// Highlight all matches visually using DOM
 		if (typeof window === 'undefined') return;
@@ -527,6 +557,63 @@
 		if (event.key === 'Escape') {
 			toggleSearch();
 		}
+	}
+
+	function replaceCurrentMatch() {
+		if (!searchQuery.trim() || currentSearchResult < 0 || currentSearchResult >= searchResults.length) {
+			return;
+		}
+
+		removeSearchHighlights();
+		const result = searchResults[currentSearchResult];
+		const ed = editorComponents[result.artifactId]?.getEditor();
+		if (!ed) return;
+
+		ed.chain()
+			.focus()
+			.setTextSelection({ from: result.from, to: result.to })
+			.insertContent(replaceQuery)
+			.run();
+
+		sectionContents[result.artifactId] = ed.getHTML();
+		sectionContents = sectionContents;
+
+		const nextIndex = currentSearchResult;
+		performSearch();
+		if (searchResults.length > 0) {
+			currentSearchResult = Math.min(nextIndex, searchResults.length - 1);
+			highlightAndScrollToResult();
+		}
+	}
+
+	function replaceAllMatches() {
+		if (!searchQuery.trim() || searchResults.length === 0) return;
+
+		removeSearchHighlights();
+
+		for (const artifact of artifacts) {
+			const artifactMatches = searchResults
+				.filter((result) => result.artifactId === artifact.id)
+				.sort((a, b) => b.from - a.from);
+
+			if (artifactMatches.length === 0) continue;
+
+			const ed = editorComponents[artifact.id]?.getEditor();
+			if (!ed) continue;
+
+			for (const match of artifactMatches) {
+				ed.chain()
+					.focus()
+					.setTextSelection({ from: match.from, to: match.to })
+					.insertContent(replaceQuery)
+					.run();
+			}
+
+			sectionContents[artifact.id] = ed.getHTML();
+		}
+
+		sectionContents = sectionContents;
+		performSearch();
 	}
 
 	// ── Zoom & font size state ──
@@ -800,6 +887,18 @@
 				searchInput?.select();
 			}
 		}
+
+		// Ctrl+H or Cmd+H to open search + replace
+		if ((event.ctrlKey || event.metaKey) && event.key === 'h') {
+			event.preventDefault();
+			if (!showSearch) {
+				toggleSearch();
+				tick().then(() => replaceInput?.focus());
+				return;
+			}
+			replaceInput?.focus();
+			replaceInput?.select();
+		}
 	}
 </script>
 
@@ -1004,6 +1103,26 @@
 					aria-label="Zoekterm invoeren"
 				/>
 			</div>
+			<div class="relative flex items-center">
+				<input
+					bind:this={replaceInput}
+					bind:value={replaceQuery}
+					on:keydown={(event) => {
+						if (event.key === 'Enter') {
+							event.preventDefault();
+							if (event.shiftKey) {
+								replaceAllMatches();
+							} else {
+								replaceCurrentMatch();
+							}
+						}
+					}}
+					type="text"
+					placeholder="Vervangen door..."
+					class="h-8 w-64 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+					aria-label="Vervangtekst invoeren"
+				/>
+			</div>
 
 			{#if searchResults.length > 0}
 				<span class="text-xs text-gray-500">{currentSearchResult + 1} van {searchResults.length}</span>
@@ -1016,6 +1135,26 @@
 			</button>
 			<button on:click={nextSearchResult} class="toolbar-btn" title="Volgende (Enter)" aria-label="Volgend resultaat" type="button" disabled={searchResults.length === 0}>
 				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+			</button>
+			<button
+				on:click={replaceCurrentMatch}
+				class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+				title="Vervang huidige match (Enter in vervangveld)"
+				aria-label="Vervang huidige match"
+				type="button"
+				disabled={searchResults.length === 0 || !searchQuery.trim()}
+			>
+				Vervang
+			</button>
+			<button
+				on:click={replaceAllMatches}
+				class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+				title="Vervang alle matches (Shift+Enter in vervangveld)"
+				aria-label="Vervang alle matches"
+				type="button"
+				disabled={searchResults.length === 0 || !searchQuery.trim()}
+			>
+				Alles
 			</button>
 			<button on:click={toggleSearch} class="toolbar-btn" title="Zoeken sluiten" aria-label="Zoeken sluiten" type="button">
 				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
