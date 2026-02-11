@@ -139,6 +139,21 @@
 	let milestoneFormError: string = '';
 	let milestoneFormSubmitting: boolean = false;
 
+	// Export dropdown
+	let showExportMenu: boolean = false;
+
+	function handleExport(format: 'ical' | 'csv') {
+		showExportMenu = false;
+		window.location.href = `/api/projects/${project.id}/planning/export/${format}`;
+	}
+
+	function closeExportMenu(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.export-menu-wrapper')) {
+			showExportMenu = false;
+		}
+	}
+
 	// Milestone management panel
 	let showMilestonePanel: boolean = false;
 
@@ -181,6 +196,8 @@
 	}
 </script>
 
+<svelte:window on:click={closeExportMenu} />
+
 <svelte:head>
 	<title>Planning — {project.name} — Tendermanager</title>
 </svelte:head>
@@ -204,6 +221,34 @@
 			</p>
 		</div>
 		<div class="flex items-center gap-3">
+			<!-- Export dropdown -->
+			<div class="export-menu-wrapper relative">
+				<button
+					type="button"
+					on:click|stopPropagation={() => { showExportMenu = !showExportMenu; }}
+					class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+				>
+					Exporteren
+				</button>
+				{#if showExportMenu}
+					<div class="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+						<button
+							type="button"
+							on:click={() => handleExport('ical')}
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+						>
+							iCal (.ics)
+						</button>
+						<button
+							type="button"
+							on:click={() => handleExport('csv')}
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+						>
+							CSV (.csv)
+						</button>
+					</div>
+				{/if}
+			</div>
 			<button
 				type="button"
 				on:click={() => { showMilestonePanel = !showMilestonePanel; }}
