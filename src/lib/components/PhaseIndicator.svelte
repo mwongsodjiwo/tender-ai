@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import {
 		PROJECT_PHASES,
 		PROJECT_PHASE_LABELS,
@@ -7,13 +8,23 @@
 
 	export let currentPhase: ProjectPhase;
 	export let compact: boolean = false;
+	export let interactive: boolean = false;
+	export let selectedPhase: ProjectPhase | null = null;
+
+	const dispatch = createEventDispatcher<{ phaseSelect: ProjectPhase }>();
 
 	$: currentIndex = PROJECT_PHASES.indexOf(currentPhase);
+	$: selectedIndex = selectedPhase ? PROJECT_PHASES.indexOf(selectedPhase) : -1;
 
 	function phaseStatus(index: number): 'completed' | 'current' | 'upcoming' {
 		if (index < currentIndex) return 'completed';
 		if (index === currentIndex) return 'current';
 		return 'upcoming';
+	}
+
+	function handlePhaseSelect(phase: ProjectPhase) {
+		if (!interactive) return;
+		dispatch('phaseSelect', phase);
 	}
 
 	$: phaseCount = PROJECT_PHASES.length;
@@ -26,16 +37,32 @@
 			{@const isLast = index === PROJECT_PHASES.length - 1}
 
 			<!-- Phase step -->
-			<div
-				class="phase-step {status}"
-				aria-current={status === 'current' ? 'step' : undefined}
-				role="listitem"
-			>
-				<div class="phase-circle"></div>
-				{#if !compact}
-					<span class="phase-label">{PROJECT_PHASE_LABELS[phase]}</span>
-				{/if}
-			</div>
+			{#if interactive}
+				<button
+					type="button"
+					class="phase-step {status} interactive"
+					class:selected={selectedPhase === phase}
+					aria-current={status === 'current' ? 'step' : undefined}
+					aria-label={`Selecteer fase ${index + 1}: ${PROJECT_PHASE_LABELS[phase]}`}
+					on:click={() => handlePhaseSelect(phase)}
+				>
+					<div class="phase-circle"></div>
+					{#if !compact}
+						<span class="phase-label">{PROJECT_PHASE_LABELS[phase]}</span>
+					{/if}
+				</button>
+			{:else}
+				<div
+					class="phase-step {status}"
+					aria-current={status === 'current' ? 'step' : undefined}
+					role="listitem"
+				>
+					<div class="phase-circle"></div>
+					{#if !compact}
+						<span class="phase-label">{PROJECT_PHASE_LABELS[phase]}</span>
+					{/if}
+				</div>
+			{/if}
 
 			<!-- Connector line -->
 			{#if !isLast}
@@ -44,6 +71,7 @@
 					class:completed={index < currentIndex - 1}
 					class:active-left={index === currentIndex - 1}
 					class:future={index >= currentIndex}
+					class:selected-left={selectedIndex >= 0 && index < selectedIndex}
 					style="
 						left: calc({((index) / phaseCount) * 100 + (100 / phaseCount / 2)}% + {compact ? '12px' : '20px'});
 						right: calc({(1 - ((index + 1) / phaseCount) - (1 / phaseCount / 2)) * 100}% + {compact ? '12px' : '20px'});
@@ -73,12 +101,25 @@
 	}
 
 	.phase-step {
+		background: transparent;
+		border: none;
+		padding: 0;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		flex: 1;
 		position: relative;
 		z-index: 1;
+	}
+
+	.phase-step.interactive {
+		cursor: pointer;
+	}
+
+	.phase-step.interactive:focus-visible {
+		outline: 2px solid #6b7280;
+		outline-offset: 6px;
+		border-radius: 12px;
 	}
 
 	/* ── Circle base ── */
@@ -151,6 +192,15 @@
 		color: #1e293b;
 	}
 
+	/* Selected state: ring around circle — only for completed and upcoming, not current */
+	.phase-step.selected.completed .phase-circle {
+		box-shadow: 0 0 0 4px rgba(5, 122, 85, 0.35);
+	}
+
+	.phase-step.selected.upcoming .phase-circle {
+		box-shadow: 0 0 0 4px rgba(55, 65, 81, 0.3);
+	}
+
 	.phase-step.completed .phase-label {
 		color: #10b981;
 		font-weight: 500;
@@ -172,6 +222,8 @@
 	.phase-connector.active-left {
 		background: #10b981;
 	}
+
+	/* No separate connector color for selected — keep the phase status colors */
 
 	.phase-connector.future {
 		background: #e2e8f0;

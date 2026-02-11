@@ -3,6 +3,7 @@
 	import { Editor } from '@tiptap/core';
 	import TiptapEditor from '$components/TiptapEditor.svelte';
 	import StepperSidebar from '$lib/components/StepperSidebar.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import {
@@ -813,15 +814,10 @@
 	<!-- Header bar -->
 	<header class="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 sm:px-6">
 		<div class="flex items-center gap-4">
-			<a
-				href="/projects/{project.id}/documents"
-				class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-			>
-				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-				</svg>
-				Terug
-			</a>
+			<Breadcrumbs items={[
+				{ label: project.name, href: `/projects/${project.id}` },
+				{ label: 'Conceptovereenkomst' }
+			]} />
 		</div>
 		<h1 class="text-sm font-semibold text-gray-900">Conceptovereenkomst</h1>
 		<div class="flex items-center gap-3">

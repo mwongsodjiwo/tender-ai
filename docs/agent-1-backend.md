@@ -43,4 +43,11 @@ Zie AGENTS.md voor de volledige beschrijving van elke stap.
 - **Audit alles.** Elke state-wijziging (create, update, delete) wordt gelogd in audit_log.
 - **TypeScript strict mode.** Geen `any`. Geen `@ts-ignore`. Elk type is expliciet.
 
-Zie AGENTS.md voor alle 22 regels.
+## Kwaliteitsbewaking (regels 23-25)
+
+- **Na elke wijziging aan een type-bestand:** controleer of het bestand < 200 regels is. Zo niet, split naar domeinen (bijv. `types/db/projects.ts`, `types/api/artifacts.ts`) met een barrel export in `types/index.ts`.
+- **Elke nieuwe server-module (`db/`, `api/`) krijgt direct een testbestand.** Maak een `.test.ts` aan met minimaal de happy path en één error case. Geen module zonder test.
+- **Elke `as unknown` cast is een rode vlag.** Maak een expliciet type aan voor joined queries in plaats van te casten. Voeg het type toe aan `types/query-results.ts`.
+- **Voordat je een taak afsluit:** check bestandsgrootte, functielengte (max 30 regels), en of er tests zijn.
+
+Zie AGENTS.md voor alle 25 regels.

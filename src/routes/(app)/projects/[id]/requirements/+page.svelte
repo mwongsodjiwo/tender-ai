@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import MetricCard from '$lib/components/MetricCard.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
@@ -279,6 +280,12 @@
 </svelte:head>
 
 <div class="space-y-6">
+	<!-- Breadcrumbs -->
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${project.id}` },
+		{ label: 'Programma van Eisen' }
+	]} />
+
 	<!-- Page header -->
 	<div class="flex items-start justify-between">
 		<div>

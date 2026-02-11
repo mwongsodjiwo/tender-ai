@@ -1,15 +1,16 @@
-// Project planning page — load milestones, activities with dates, and dependencies
+// Project planning page — load milestones, activities with dates, dependencies
+// Enhanced for Sprint 3 Gantt chart (also loads dependencies for timeline view)
 
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { PhaseActivity, Milestone, DeadlineItem } from '$types';
+import type { PhaseActivity, Milestone, DeadlineItem, ActivityDependency } from '$types';
 
 const DAYS_MS = 1000 * 60 * 60 * 24;
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
 
-	const [activitiesResult, milestonesResult, profileResult, projectResult] = await Promise.all([
+	const [activitiesResult, milestonesResult, profileResult, projectResult, dependenciesResult] = await Promise.all([
 		// Load phase activities (with due_date or planning dates)
 		supabase
 			.from('phase_activities')
@@ -40,11 +41,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.from('projects')
 			.select('id, name')
 			.eq('id', params.id)
-			.single()
+			.single(),
+
+		// Load activity dependencies for Gantt chart
+		supabase
+			.from('activity_dependencies')
+			.select('*')
+			.eq('project_id', params.id)
 	]);
 
 	const activities: PhaseActivity[] = (activitiesResult.data ?? []) as PhaseActivity[];
 	const milestones: Milestone[] = (milestonesResult.data ?? []) as Milestone[];
+	const dependencies: ActivityDependency[] = (dependenciesResult.data ?? []) as ActivityDependency[];
 	const projectProfile = profileResult.data ?? null;
 	const project = projectResult.data;
 
@@ -114,6 +122,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		activities,
 		milestones,
+		dependencies,
 		deadlineItems,
 		projectProfile,
 		planningMetrics: {

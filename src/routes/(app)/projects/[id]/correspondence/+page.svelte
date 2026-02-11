@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
@@ -189,6 +190,11 @@
 </svelte:head>
 
 <div class="space-y-6">
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${project.id}` },
+		{ label: 'Correspondentie' }
+	]} />
+
 	<!-- Page header -->
 	<div class="flex items-start justify-between">
 		<div>

@@ -20,12 +20,14 @@ import type {
 	KnowledgeBaseTender,
 	KnowledgeBaseRequirement,
 	TimeEntry,
-	TimeEntryWithProject
+	TimeEntryWithProject,
+	Milestone
 } from './database.js';
 import type {
 	OrganizationRole,
 	ProcedureType,
 	ProjectRole,
+	ProjectStatus,
 	ArtifactStatus,
 	DocumentCategory,
 	ProjectPhase,
@@ -756,4 +758,45 @@ export interface DeadlineSummary {
 export interface DeadlineResponse {
 	items: DeadlineItem[];
 	summary: DeadlineSummary;
+}
+
+// =============================================================================
+// CROSS-PROJECT PLANNING — Planning Sprint 5
+// =============================================================================
+
+export interface OrganizationProjectPlanning {
+	id: string;
+	name: string;
+	current_phase: ProjectPhase;
+	timeline_start: string | null;
+	timeline_end: string | null;
+	progress: number;
+	status: ProjectStatus;
+	is_on_track: boolean;
+	phases: {
+		phase: ProjectPhase;
+		start_date: string | null;
+		end_date: string | null;
+	}[];
+	upcoming_milestones: Milestone[];
+}
+
+export interface CapacityMonth {
+	month: string;
+	label: string;
+	active_projects: number;
+	projects_in_specification: number;
+	total_estimated_hours: number;
+	available_hours: number;
+}
+
+export interface OrganizationPlanningOverview {
+	projects: OrganizationProjectPlanning[];
+	capacity: CapacityMonth[];
+	warnings: string[];
+	summary: {
+		total_active: number;
+		on_track: number;
+		critical_deadlines: number;
+	};
 }

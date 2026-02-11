@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import type { SupabaseClient } from '@supabase/supabase-js';
 	import type { Profile, ProjectStatus } from '$types';
+	import { lastProjectId } from '$lib/stores/lastProject';
 
 	export let supabase: SupabaseClient;
 	export let profile: Profile | null;
@@ -13,6 +14,7 @@
 
 	const BASE_NAV_LINKS = [
 		{ href: '/dashboard', label: 'Dashboard', icon: 'home' },
+		{ href: '/planning', label: 'Planning', icon: 'calendar' },
 		{ href: '/kennisbank', label: 'Kennisbank', icon: 'book' },
 		{ href: '/time-tracking', label: 'Urenregistratie', icon: 'clock' }
 	];
@@ -23,12 +25,22 @@
 
 	// Reactive path tracking — ensures sidebar re-renders on navigation
 	$: currentPath = $page.url.pathname;
-	$: activeProjectId = $page.params.id ?? null;
+	$: urlProjectId = $page.params.id ?? null;
+
+	// When visiting a project page, persist the project id
+	$: if (urlProjectId) {
+		lastProjectId.set(urlProjectId);
+	}
+
+	// Use URL project id when on a project page, otherwise fall back to last visited project
+	// (only if that project still exists in the loaded projects list)
+	$: activeProjectId = urlProjectId
+		?? (projects.some((p) => p.id === $lastProjectId) ? $lastProjectId : null);
 
 	const PROJECT_SUB_LINKS = [
 		{ path: '', label: 'Overzicht', icon: 'layout-dashboard' },
 		{ path: '/profile', label: 'Projectprofiel', icon: 'clipboard-list' },
-		{ path: '/marktverkenning', label: 'Marktverkenning', icon: 'search' },
+		{ path: '/planning', label: 'Planning', icon: 'calendar-clock' },
 		{ path: '/documents', label: 'Documenten', icon: 'file-text' },
 		{ path: '/correspondence', label: 'Correspondentie', icon: 'mail' },
 		{ path: '/team', label: 'Team', icon: 'users' }
@@ -108,6 +120,12 @@
 						<svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M3 9h4V3H3v6zm0 12h4v-8H3v8zm6 0h4V11H9v10zm0-18v6h4V3H9zm6 18h4v-8h-4v8zm0-12v4h4V9h-4z" />
 						</svg>
+					{:else if link.icon === 'calendar'}
+						<!-- Lucide: CalendarRange -->
+						<svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+							<rect x="3" y="4" width="18" height="18" rx="2" stroke-linecap="round" stroke-linejoin="round" />
+							<path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18M17 14h-6M7 14h.01M7 18h.01M11 18h6" />
+						</svg>
 					{:else if link.icon === 'book'}
 						<!-- Lucide: BookOpen -->
 						<svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -173,19 +191,29 @@
 							aria-current={subActive ? 'page' : undefined}
 						>
 							{#if subLink.icon === 'layout-dashboard'}
-								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-									<rect x="3" y="3" width="7" height="9" rx="1" />
-									<rect x="14" y="3" width="7" height="5" rx="1" />
-									<rect x="14" y="12" width="7" height="9" rx="1" />
-									<rect x="3" y="16" width="7" height="5" rx="1" />
+								<!-- Lucide: Grid2x2Check -->
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3"/>
+									<path d="m16 19 2 2 4-4"/>
 								</svg>
 							{:else if subLink.icon === 'clipboard-list'}
-								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-									<rect x="9" y="3" width="6" height="4" rx="1" />
-									<path stroke-linecap="round" d="M9 12h6M9 16h4" />
+								<!-- Lucide: ChartNoAxesGantt -->
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M6 5h12"/>
+									<path d="M4 12h10"/>
+									<path d="M12 19h8"/>
 								</svg>
-							{:else if subLink.icon === 'search'}
+							{:else if subLink.icon === 'calendar-clock'}
+							<!-- Lucide: CalendarClock -->
+							<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M16 14v2.2l1.6 1"/>
+								<path d="M16 2v4"/>
+								<path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/>
+								<path d="M3 10h5"/>
+								<path d="M8 2v4"/>
+								<circle cx="16" cy="16" r="6"/>
+							</svg>
+						{:else if subLink.icon === 'search'}
 								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 									<circle cx="11" cy="11" r="8" />
 									<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35" />
@@ -199,15 +227,16 @@
 									<line x1="10" y1="9" x2="8" y2="9" stroke-linecap="round" />
 								</svg>
 							{:else if subLink.icon === 'mail'}
-								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-									<rect x="2" y="4" width="20" height="16" rx="2" />
-									<path stroke-linecap="round" stroke-linejoin="round" d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" />
+								<!-- Lucide: Folder -->
+								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
 								</svg>
 							{:else if subLink.icon === 'users'}
 								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-									<circle cx="9" cy="7" r="4" />
-									<path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+									<path d="M18 21a8 8 0 0 0-16 0" />
+									<circle cx="10" cy="8" r="5" />
+									<path d="M22 20c0-3.37-2.15-6.23-5.15-7.3" />
+									<circle cx="18" cy="6" r="3" />
 								</svg>
 							{/if}
 							{subLink.label}

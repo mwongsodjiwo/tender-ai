@@ -43,4 +43,11 @@ Zie AGENTS.md voor de volledige beschrijving van elke stap.
 - **Content is Nederlands.** Alle UI-teksten, labels, meldingen, tooltips en placeholder-teksten zijn Nederlands.
 - **Componenten zijn dom.** Data via props, geen eigen data-fetching. Data-logica leeft in server load functions of stores.
 
-Zie AGENTS.md voor alle 22 regels.
+## Kwaliteitsbewaking (regels 23-25)
+
+- **Na elke wijziging aan een component of pagina:** controleer of het bestand < 200 regels is. Zo niet, extract logische blokken naar child-componenten die data via props ontvangen. De pagina wordt een dunne orchestratielaag.
+- **Splits proactief.** Als je functionaliteit toevoegt aan een bestaand bestand en het groeit voorbij 200 regels, stop en refactor vóórdat je verdergaat. Dit voorkomt mega-componenten.
+- **Geen pagina zonder vier states.** Bij elke nieuwe of gewijzigde pagina: controleer of loading, empty, data én error states aanwezig zijn.
+- **Voordat je een taak afsluit:** check bestandsgrootte (< 200 regels), functielengte (max 30 regels), vier states, en accessibility (keyboard navigatie, aria-labels).
+
+Zie AGENTS.md voor alle 25 regels.

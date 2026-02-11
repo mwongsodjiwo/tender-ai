@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { DeadlineItem, ProjectPhase, Milestone } from '$types';
+	import type { DeadlineItem, ProjectPhase, Milestone, PhaseActivity, ActivityDependency } from '$types';
 	import {
 		PROJECT_PHASE_LABELS,
 		PROJECT_PHASES,
@@ -12,26 +12,124 @@
 	import MetricCard from '$lib/components/MetricCard.svelte';
 	import DeadlineList from '$lib/components/planning/DeadlineList.svelte';
 	import DeadlineCalendar from '$lib/components/planning/DeadlineCalendar.svelte';
+	import GanttChart from '$lib/components/planning/GanttChart.svelte';
+	import PlanningWizard from '$lib/components/planning/PlanningWizard.svelte';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 
 	export let data: PageData;
 
 	$: project = data.project;
 	$: milestones = (data.milestones ?? []) as Milestone[];
 	$: deadlineItems = (data.deadlineItems ?? []) as DeadlineItem[];
-	$: activities = data.activities ?? [];
+	$: activities = (data.activities ?? []) as PhaseActivity[];
+	$: dependencies = (data.dependencies ?? []) as ActivityDependency[];
 	$: projectProfile = data.projectProfile;
 	$: metrics = data.planningMetrics;
 
-	// Tab state
+	// Critical path state
+	let criticalPathIds: Set<string> = new Set();
+	let nodeFloats: Map<string, number> = new Map();
+	let criticalPathError: string = '';
+	let showCriticalPath: boolean = true;
+
+	async function loadCriticalPath(): Promise<void> {
+		criticalPathError = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/planning/critical-path`);
+			if (!response.ok) {
+				const errorData = await response.json();
+				criticalPathError = errorData.message ?? 'Fout bij berekenen kritiek pad.';
+				return;
+			}
+			const result = await response.json();
+			criticalPathIds = new Set(result.data.critical_path_ids);
+			const floats = new Map<string, number>();
+			for (const node of result.data.nodes) {
+				floats.set(node.id, node.total_float);
+			}
+			nodeFloats = floats;
+		} catch {
+			criticalPathError = 'Netwerkfout bij ophalen kritiek pad.';
+		}
+	}
+
+	// Load critical path on mount and when dependencies change
+	onMount(() => { loadCriticalPath(); });
+	$: if (dependencies) { loadCriticalPath(); }
+
+	async function handleDependencyCreate(sourceId: string, targetId: string): Promise<void> {
+		ganttUpdateError = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/dependencies`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					source_type: 'activity',
+					source_id: sourceId,
+					target_type: 'activity',
+					target_id: targetId,
+					dependency_type: 'finish_to_start',
+					lag_days: 0
+				})
+			});
+			if (!response.ok) {
+				const errorData = await response.json();
+				ganttUpdateError = errorData.message ?? 'Fout bij aanmaken afhankelijkheid.';
+				return;
+			}
+			await invalidateAll();
+		} catch {
+			ganttUpdateError = 'Netwerkfout bij aanmaken afhankelijkheid.';
+		}
+	}
+
+	// Tab state — support ?tab= query parameter
 	type PlanningTab = 'deadlines' | 'timeline' | 'ai';
+	$: tabParam = $page.url.searchParams.get('tab') as PlanningTab | null;
 	let activeTab: PlanningTab = 'deadlines';
+
+	// Initialize from query parameter
+	$: if (tabParam && ['deadlines', 'timeline', 'ai'].includes(tabParam)) {
+		activeTab = tabParam;
+	}
 
 	const TABS: { id: PlanningTab; label: string; disabled: boolean }[] = [
 		{ id: 'deadlines', label: 'Deadlines', disabled: false },
-		{ id: 'timeline', label: 'Tijdlijn', disabled: true },
-		{ id: 'ai', label: 'AI Suggesties', disabled: true }
+		{ id: 'timeline', label: 'Tijdlijn', disabled: false },
+		{ id: 'ai', label: 'AI Suggesties', disabled: false }
 	];
+
+	// Gantt chart: activity update handler (drag-and-drop)
+	let ganttUpdateError: string = '';
+
+	async function handleActivityUpdate(activityId: string, changes: Partial<PhaseActivity>): Promise<void> {
+		ganttUpdateError = '';
+		try {
+			const response = await fetch(`/api/projects/${project.id}/activities/${activityId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(changes)
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				ganttUpdateError = errorData.message ?? 'Fout bij opslaan van wijziging.';
+				return;
+			}
+
+			// Refresh page data
+			await invalidateAll();
+		} catch {
+			ganttUpdateError = 'Netwerkfout bij opslaan van wijziging.';
+		}
+	}
+
+	function handleMilestoneClick(milestone: Milestone): void {
+		showMilestonePanel = true;
+	}
 
 	// View toggle (list vs calendar)
 	let deadlineView: 'list' | 'calendar' = 'list';
@@ -46,14 +144,14 @@
 
 	// Phase groups for overview
 	$: phaseGroups = activities.reduce(
-		(acc: Record<string, typeof activities>, activity: { phase: string }) => {
+		(acc: Record<string, PhaseActivity[]>, activity: PhaseActivity) => {
 			if (!acc[activity.phase]) {
 				acc[activity.phase] = [];
 			}
 			acc[activity.phase].push(activity);
 			return acc;
 		},
-		{} as Record<string, typeof activities>
+		{} as Record<string, PhaseActivity[]>
 	);
 
 	function handleDeadlineClick(item: DeadlineItem): void {
@@ -238,7 +336,7 @@
 							{@const pct = total > 0 ? Math.round((completed / total) * 100) : 0}
 							<div>
 								<div class="flex items-center justify-between text-sm">
-									<span class="font-medium text-gray-700">{PROJECT_PHASE_LABELS[phase]}</span>
+									<span class="font-medium text-gray-700">{PROJECT_PHASE_LABELS[phase as ProjectPhase]}</span>
 									<span class="text-gray-500">{completed}/{total} ({pct}%)</span>
 								</div>
 								<div class="mt-1 h-2 overflow-hidden rounded-full bg-gray-100">
@@ -273,19 +371,85 @@
 				</div>
 			{/if}
 		{:else if activeTab === 'timeline'}
-			<div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
-				<h3 class="text-sm font-medium text-gray-900">Tijdlijn — Binnenkort beschikbaar</h3>
-				<p class="mt-1 text-sm text-gray-500">
-					Een interactieve Gantt-chart met drag-and-drop planning wordt hier toegevoegd.
-				</p>
-			</div>
+			<!-- Gantt update error -->
+			{#if ganttUpdateError}
+				<div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+					{ganttUpdateError}
+					<button
+						type="button"
+						on:click={() => { ganttUpdateError = ''; }}
+						class="ml-2 font-medium text-red-800 underline hover:text-red-900"
+					>
+						Sluiten
+					</button>
+				</div>
+			{/if}
+
+			<!-- Critical path toggle and info -->
+			{#if criticalPathError}
+				<div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+					{criticalPathError}
+				</div>
+			{/if}
+
+			{#if activities.length === 0 && milestones.length === 0}
+				<div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+					<svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+					</svg>
+					<h3 class="mt-4 text-sm font-medium text-gray-900">Geen planningsdata</h3>
+					<p class="mt-1 text-sm text-gray-500">
+						Voeg milestones of activiteiten toe om de tijdlijn te zien.
+					</p>
+					<button
+						type="button"
+						on:click={() => { showMilestoneModal = true; }}
+						class="mt-4 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+					>
+						Eerste milestone toevoegen
+					</button>
+				</div>
+			{:else}
+				<!-- Critical path toggle -->
+				{#if dependencies.length > 0}
+					<div class="mb-3 flex items-center gap-3">
+						<label class="flex items-center gap-2">
+							<input
+								type="checkbox"
+								bind:checked={showCriticalPath}
+								class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+							/>
+							<span class="text-sm text-gray-700">Kritiek pad tonen</span>
+						</label>
+						{#if showCriticalPath && criticalPathIds.size > 0}
+							<span class="text-xs text-gray-500">
+								{criticalPathIds.size} {criticalPathIds.size === 1 ? 'item' : 'items'} op het kritieke pad
+							</span>
+						{/if}
+					</div>
+				{/if}
+
+				<GanttChart
+					{activities}
+					{milestones}
+					{dependencies}
+					timelineStart={projectProfile?.timeline_start ?? null}
+					timelineEnd={projectProfile?.timeline_end ?? null}
+					readonly={false}
+					{criticalPathIds}
+					{nodeFloats}
+					{showCriticalPath}
+					onActivityUpdate={handleActivityUpdate}
+					onMilestoneClick={handleMilestoneClick}
+					onDependencyCreate={handleDependencyCreate}
+				/>
+			{/if}
 		{:else if activeTab === 'ai'}
-			<div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
-				<h3 class="text-sm font-medium text-gray-900">AI Suggesties — Binnenkort beschikbaar</h3>
-				<p class="mt-1 text-sm text-gray-500">
-					Laat de AI een realistische planning voorstellen op basis van procedure-type en scope.
-				</p>
-			</div>
+			<PlanningWizard
+				projectId={project.id}
+				timelineStart={projectProfile?.timeline_start ?? null}
+				timelineEnd={projectProfile?.timeline_end ?? null}
+			/>
 		{/if}
 	</div>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	export let data: PageData;
 
@@ -68,6 +69,11 @@
 </svelte:head>
 
 <div class="space-y-8">
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${project.id}` },
+		{ label: 'Documenten' }
+	]} />
+
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Documenten</h1>
 		<p class="mt-1 text-sm text-gray-500">Alle producten en documenten voor {project.name}</p>

@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import type { DeskresearchResult } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
@@ -11,6 +12,7 @@
 
 	// Safe accessor — data.savedContent may be undefined during SSR hydration
 	$: _sc = ((data as Record<string, unknown>).savedContent ?? {}) as Record<string, string>;
+	$: project = data.project;
 	$: profile = data.profile;
 	$: projectId = $page.params.id;
 
@@ -202,15 +204,15 @@
 </svelte:head>
 
 <div class="space-y-6">
+	<!-- Breadcrumbs -->
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${projectId}` },
+		{ label: 'Marktverkenning' }
+	]} />
+
 	<!-- Page header -->
 	<div class="flex items-center justify-between">
 		<h1 class="text-xl font-bold text-gray-900">Marktverkenning</h1>
-		<a
-			href="/projects/{projectId}"
-			class="text-sm font-medium text-primary-600 hover:text-primary-700"
-		>
-			&larr; Terug naar overzicht
-		</a>
 	</div>
 
 	<!-- Profile check -->

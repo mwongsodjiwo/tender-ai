@@ -9,6 +9,7 @@
 		CRITERION_TYPE_LABELS
 	} from '$types';
 	import MetricCard from '$lib/components/MetricCard.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
@@ -188,13 +189,16 @@
 </svelte:head>
 
 <div class="space-y-6">
+	<!-- Breadcrumbs -->
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${project.id}` },
+		{ label: 'Beoordelingen' }
+	]} />
+
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div>
-			<div class="flex items-center gap-3">
-				<a href="/projects/{project.id}" class="text-sm text-gray-500 hover:text-gray-700">&larr; Project</a>
-			</div>
-			<h1 class="mt-1 text-2xl font-bold text-gray-900">Beoordelingen</h1>
+			<h1 class="text-2xl font-bold text-gray-900">Beoordelingen</h1>
 			<p class="mt-1 text-sm text-gray-500">
 				Beoordeel inschrijvingen en bereken de ranking voor {project.name}
 				{#if scoringMethodology}

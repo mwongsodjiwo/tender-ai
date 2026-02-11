@@ -39,4 +39,11 @@ Zie AGENTS.md voor de volledige beschrijving van elke stap.
 - **Geen hardcoded waarden.** Prompts, model namen, temperatuur — alles configureerbaar. Geen magic strings.
 - **Content is Nederlands.** Alle AI-gegenereerde tekst voor de gebruiker is Nederlands.
 
-Zie AGENTS.md voor alle 22 regels.
+## Kwaliteitsbewaking (regels 23-25)
+
+- **Elke nieuwe AI-module krijgt direct een testbestand.** Maak een `.test.ts` aan met mocked LLM calls. Test minimaal: prompt building (happy path), error handling (API failure), en output parsing (malformed response). Geen module zonder test.
+- **Na elke wijziging:** controleer of het bestand < 200 regels is. Zo niet, split in logische delen (bijv. prompt building, response parsing, error handling als aparte functies).
+- **Geen hardcoded prompts in functies.** Houd prompts in aparte template-variabelen of bestanden. Dit maakt ze testbaar en aanpasbaar zonder codewijzigingen.
+- **Voordat je een taak afsluit:** check bestandsgrootte, functielengte (max 30 regels), tests aanwezig, en geen `console.log` (gebruik logger).
+
+Zie AGENTS.md voor alle 25 regels.

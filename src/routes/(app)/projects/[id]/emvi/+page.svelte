@@ -9,6 +9,7 @@
 		CRITERION_TYPE_LABELS
 	} from '$types';
 	import MetricCard from '$lib/components/MetricCard.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
@@ -169,6 +170,12 @@
 </svelte:head>
 
 <div class="space-y-8">
+	<!-- Breadcrumbs -->
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${project.id}` },
+		{ label: 'Gunningscriteria' }
+	]} />
+
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Gunningscriteria</h1>
 		<p class="mt-1 text-sm text-gray-500">

@@ -464,7 +464,14 @@ export const updatePhaseActivitySchema = z.object({
 	}).optional(),
 	sort_order: z.number().int().min(0).optional(),
 	assigned_to: z.string().uuid('Ongeldig profiel-ID').nullable().optional(),
-	due_date: z.string().nullable().optional()
+	due_date: z.string().nullable().optional(),
+	// Planning fields (Sprint 3 — Gantt chart drag-and-drop)
+	planned_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet YYYY-MM-DD zijn').nullable().optional(),
+	planned_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet YYYY-MM-DD zijn').nullable().optional(),
+	actual_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet YYYY-MM-DD zijn').nullable().optional(),
+	actual_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet YYYY-MM-DD zijn').nullable().optional(),
+	estimated_hours: z.number().min(0).max(10000).nullable().optional(),
+	progress_percentage: z.number().int().min(0).max(100).optional()
 });
 
 // =============================================================================
@@ -685,6 +692,54 @@ export const updateMilestoneSchema = z.object({
 // =============================================================================
 // ACTIVITY DEPENDENCIES — Planning Sprint 1
 // =============================================================================
+
+// =============================================================================
+// AI PLANNING — Planning Sprint 4
+// =============================================================================
+
+export const generatePlanningSchema = z.object({
+	target_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').nullable().optional(),
+	target_end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').nullable().optional(),
+	preferences: z.object({
+		buffer_days: z.number().int().min(0).max(30).optional().default(5),
+		parallel_activities: z.boolean().optional().default(true),
+		include_reviews: z.boolean().optional().default(true)
+	}).optional().default({})
+});
+
+export const applyPlanningSchema = z.object({
+	planning: z.object({
+		phases: z.array(z.object({
+			phase: z.string(),
+			start_date: z.string(),
+			end_date: z.string(),
+			activities: z.array(z.object({
+				title: z.string(),
+				description: z.string(),
+				activity_type: z.string(),
+				planned_start: z.string(),
+				planned_end: z.string(),
+				estimated_hours: z.number(),
+				assigned_role: z.string()
+			})),
+			milestones: z.array(z.object({
+				milestone_type: z.string(),
+				title: z.string(),
+				target_date: z.string(),
+				is_critical: z.boolean()
+			}))
+		})),
+		dependencies: z.array(z.object({
+			from_title: z.string(),
+			to_title: z.string(),
+			type: z.string(),
+			lag_days: z.number()
+		})),
+		total_duration_days: z.number(),
+		total_estimated_hours: z.number()
+	}),
+	clear_existing: z.boolean().optional().default(false)
+});
 
 export const createDependencySchema = z.object({
 	source_type: z.enum(['activity', 'milestone'] as const, {

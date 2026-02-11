@@ -47,4 +47,11 @@ Zie AGENTS.md voor de volledige beschrijving van elke stap.
 - **Input validatie testen.** Valideer dat zowel frontend als backend Zod schemas correct afdwingen.
 - **Vier states testen.** Elke pagina moet loading, empty, data, en error states hebben.
 
-Zie AGENTS.md voor alle 22 regels.
+## Kwaliteitsbewaking (regels 23-25)
+
+- **Handhaaf de drie nieuwe regels.** Als een andere agent een bestand > 200 regels oplevert, of een module zonder test, of een functie > 30 regels — faal de review. Dit zijn geen suggesties, het zijn harde grenzen.
+- **Automatiseer de checks.** Bouw een script (`scripts/quality-check.sh` of CI-stap) dat automatisch controleert: bestandsgrootte, functielengte, ontbrekende testbestanden, `console.log` in productiecode, en `as unknown` casts.
+- **Testdekking bewaken.** Houd bij welke modules tests hebben en welke niet. Elke sprint moet de testdekking omhoog brengen, nooit omlaag.
+- **Voordat je een taak afsluit:** run de kwaliteitscheck over de hele codebase en rapporteer afwijkingen.
+
+Zie AGENTS.md voor alle 25 regels.

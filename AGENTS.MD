@@ -188,6 +188,9 @@ Doel: productie-klaar. Alles werkt, alles is getest, alles draait op Railway.
 20. **Input validatie op beide lagen.** Zod schemas voor validatie in zowel frontend als backend. Vertrouw nooit client-side data.
 21. **Database naamgeving is snake_case.** Tabellen en kolommen in snake_case. Elke tabel heeft id (uuid), created_at, updated_at. Soft deletes met deleted_at waar relevant.
 22. **Elke pagina heeft vier states.** Loading, empty, data, en error. Geen van de vier mag ontbreken.
+23. **Bestandsgrootte bewaken na elke wijziging.** Als een bestand na jouw wijziging meer dan 200 regels heeft, split het op vóórdat je de taak als afgerond markeert. Dit is geen aparte refactoring-stap — het is onderdeel van elke taak.
+24. **Elke nieuwe module krijgt direct een testbestand.** Schrijf je een nieuwe functie, module of utility, maak dan in dezelfde taak een bijbehorend `.test.ts` bestand aan met minimaal de happy path en één error case. Tests zijn geen nawerk — ze zijn onderdeel van de deliverable.
+25. **Kwaliteitscheck bij afsluiting.** Voordat je een taak als afgerond markeert, controleer: (a) geen functies > 30 regels, (b) geen bestanden > 200 regels, (c) geen `console.log` zonder logger, (d) alle nieuwe code heeft tests. Als één check faalt, is de taak niet af.
 
 ## Technische stack
 

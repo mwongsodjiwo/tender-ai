@@ -9,6 +9,7 @@
 		type ProjectPhase,
 		type PhaseActivity
 	} from '$types';
+	import PhaseIndicator from '$lib/components/PhaseIndicator.svelte';
 	import CardGrid from '$lib/components/CardGrid.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
@@ -48,7 +49,7 @@
 		created_at: string;
 	}[];
 	$: dbActivities = (data.phaseActivities ?? []) as PhaseActivity[];
-	$: profileSummary = data.profileSummary as { id: string; contracting_authority: string; project_goal: string } | null;
+	$: profileSummary = data.profileSummary as { id: string; contracting_authority: string; project_goal: string; planning_generated_at: string | null } | null;
 	$: leidraadDocTypeId = data.leidraadDocTypeId as string | null;
 
 	// Current phase from project data
@@ -195,20 +196,21 @@
 		return FALLBACK_PHASE_ACTIVITIES[phase](project.id);
 	}
 
-	// Expanded phases tracking (current phase is always expanded)
-	let expandedPhases: Set<ProjectPhase> = new Set([currentPhase]);
-	$: {
-		if (!expandedPhases.has(currentPhase)) {
-			expandedPhases = new Set([...expandedPhases, currentPhase]);
-		}
+	// Selected phase for the interactive phasebar — purely local state
+	let selectedPhase: ProjectPhase | null = null;
+	let userHasSelected = false;
+
+	// Initialize selectedPhase from currentPhase on first render / when project changes
+	$: if (!userHasSelected) {
+		selectedPhase = currentPhase;
 	}
 
-	function togglePhase(phase: ProjectPhase) {
-		if (expandedPhases.has(phase)) {
-			expandedPhases = new Set([...expandedPhases].filter(p => p !== phase));
-		} else {
-			expandedPhases = new Set([...expandedPhases, phase]);
-		}
+	// Ensure selectedPhase always has a valid value
+	$: effectiveSelectedPhase = selectedPhase ?? currentPhase;
+
+	function handlePhaseSelect(event: CustomEvent<ProjectPhase>) {
+		userHasSelected = true;
+		selectedPhase = event.detail;
 	}
 
 	function phaseCompletionCount(phase: ProjectPhase): { completed: number; total: number } {
@@ -224,6 +226,38 @@
 		if (phaseIndex === currentPhaseIndex) return 'current';
 		return 'upcoming';
 	}
+
+	// Derived values for the selected phase card
+	$: selectedPhaseIndex = PROJECT_PHASES.indexOf(effectiveSelectedPhase);
+	$: selectedStatus = phaseStatus(selectedPhaseIndex);
+	$: selectedCompletion = phaseCompletionCount(effectiveSelectedPhase);
+	$: selectedActivities = getActivitiesForPhase(effectiveSelectedPhase);
+
+	// Phase-specific tools — each tool links to a page relevant for that phase
+	type PhaseTool = {
+		label: string;
+		description: string;
+		href: string;
+		icon: 'briefing' | 'profile' | 'team' | 'documents' | 'market' | 'requirements' | 'leidraad' | 'emvi' | 'uea' | 'contract' | 'correspondence' | 'evaluations' | 'tenderned';
+	};
+
+	const PHASE_TOOLS: Record<ProjectPhase, (pid: string) => PhaseTool[]> = {
+		preparing: () => [],
+		exploring: (pid) => [
+			{ label: 'Marktverkenning', description: 'Deskresearch, RFI en consultatie', href: `/projects/${pid}/marktverkenning`, icon: 'market' }
+		],
+		specifying: (pid) => [
+			{ label: 'Programma van Eisen', description: 'Eisen en wensen opstellen', href: `/projects/${pid}/requirements`, icon: 'requirements' },
+			{ label: 'Gunningscriteria', description: 'EMVI-wegingstool', href: `/projects/${pid}/emvi`, icon: 'emvi' },
+			{ label: 'UEA', description: 'Uniform Europees Aanbestedingsdocument', href: `/projects/${pid}/uea`, icon: 'uea' }
+		],
+		tendering: (pid) => [
+			{ label: 'Beoordelingen', description: 'Inschrijvingen beoordelen', href: `/projects/${pid}/evaluations`, icon: 'evaluations' }
+		],
+		contracting: () => []
+	};
+
+	$: selectedPhaseTools = PHASE_TOOLS[effectiveSelectedPhase](project.id);
 </script>
 
 <svelte:head>
@@ -231,6 +265,16 @@
 </svelte:head>
 
 <div class="space-y-6">
+	<!-- Interactive phase indicator -->
+	<div class="px-4 py-6 sm:px-6">
+		<PhaseIndicator
+			{currentPhase}
+			interactive={true}
+			selectedPhase={effectiveSelectedPhase}
+			on:phaseSelect={handlePhaseSelect}
+		/>
+	</div>
+
 	<!-- Project header -->
 	<div class="rounded-card bg-white p-6 shadow-card">
 		<div>
@@ -276,6 +320,35 @@
 			title="Projectprofiel nog niet bevestigd"
 			message="Het projectprofiel is ingevuld maar nog niet bevestigd. Bevestig het profiel om door te gaan naar de volgende fase."
 		/>
+	{/if}
+
+	<!-- Planning suggestion banner -->
+	{#if project.profile_confirmed && profileSummary && !profileSummary.planning_generated_at}
+		<div class="rounded-card bg-blue-50 border border-blue-200 p-5 shadow-card">
+			<div class="flex items-start gap-4">
+				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+					<svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+					</svg>
+				</div>
+				<div class="flex-1">
+					<h3 class="text-sm font-semibold text-blue-900">AI-planning beschikbaar</h3>
+					<p class="mt-1 text-sm text-blue-700">
+						Het projectprofiel is bevestigd. Laat de AI een realistische planning genereren
+						op basis van het gekozen procedure-type en de scope van dit project.
+					</p>
+					<a
+						href="/projects/{project.id}/planning?tab=ai"
+						class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+					>
+						Planning genereren
+						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+						</svg>
+					</a>
+				</div>
+			</div>
+		</div>
 	{/if}
 
 	<!-- Top row: 3 metric cards -->
@@ -325,66 +398,120 @@
 	<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
 		<!-- Phase checklists (spans 2 cols) -->
 		<div class="space-y-4 lg:col-span-2">
-			<!-- All phases as collapsible sections -->
-			{#each PROJECT_PHASES as phase, index (phase)}
-				{@const status = phaseStatus(index)}
-				{@const cc = phaseCompletionCount(phase)}
-				{@const isExpanded = expandedPhases.has(phase)}
-				<div class="rounded-card bg-white shadow-card overflow-hidden">
-					<button
-						class="flex w-full items-center gap-4 p-5 text-left transition-colors hover:bg-gray-50"
-						on:click={() => togglePhase(phase)}
-						aria-expanded={isExpanded}
+			<!-- Selected phase card (always expanded) -->
+			<div class="rounded-card bg-white shadow-card overflow-hidden">
+				<div class="flex w-full items-center gap-4 p-5">
+					<!-- Phase status icon -->
+					<div
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold
+							{selectedStatus === 'completed'
+								? 'bg-success-100 text-success-600'
+								: selectedStatus === 'current'
+									? 'bg-primary-600 text-white ring-4 ring-primary-100'
+									: 'bg-gray-100 text-gray-400'}"
 					>
-						<!-- Phase status icon -->
-						<div
-							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold
-								{status === 'completed'
-									? 'bg-success-100 text-success-600'
-									: status === 'current'
-										? 'bg-primary-600 text-white ring-4 ring-primary-100'
-										: 'bg-gray-100 text-gray-400'}"
-						>
-							{#if status === 'completed'}
-								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-								</svg>
-							{:else}
-								{index + 1}
-							{/if}
-						</div>
-
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2">
-								<h2 class="text-base font-semibold {status === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}">
-									{PROJECT_PHASE_LABELS[phase]}
-								</h2>
-						</div>
+						{#if selectedStatus === 'completed'}
+							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+							</svg>
+						{:else}
+							{selectedPhaseIndex + 1}
+						{/if}
 					</div>
 
-						<div class="flex items-center gap-3">
-							<span class="text-sm text-gray-500">{cc.completed}/{cc.total}</span>
-							<svg
-								class="h-5 w-5 text-gray-400 transition-transform {isExpanded ? 'rotate-180' : ''}"
-								fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"
-							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-							</svg>
-						</div>
-					</button>
+					<div class="flex-1 min-w-0">
+						<h2 class="text-base font-semibold {selectedStatus === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}">
+							{PROJECT_PHASE_LABELS[effectiveSelectedPhase]}
+						</h2>
+					</div>
 
-					{#if isExpanded}
-						<div class="border-t border-gray-100 px-5 pb-5 pt-3">
-							{#if cc.total > 0}
-								<div class="mb-3">
-									<ProgressBar value={cc.completed} max={cc.total || 1} showPercentage={false} size="sm" />
-								</div>
-							{/if}
-							<ActivityChecklist activities={getActivitiesForPhase(phase)} />
+					<span class="text-sm text-gray-500">{selectedCompletion.completed}/{selectedCompletion.total}</span>
+				</div>
+
+				<div class="border-t border-gray-100 px-5 pb-5 pt-3">
+					{#if selectedCompletion.total > 0}
+						<div class="mb-3">
+							<ProgressBar value={selectedCompletion.completed} max={selectedCompletion.total || 1} showPercentage={false} size="sm" />
 						</div>
 					{/if}
+					<ActivityChecklist activities={selectedActivities} />
 				</div>
-			{/each}
+			</div>
+
+			<!-- Phase tools -->
+			{#if selectedPhaseTools.length > 0}
+				<div class="space-y-3">
+					<h2 class="text-base font-semibold text-gray-900">Tools</h2>
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+						{#each selectedPhaseTools as tool (tool.href)}
+							<a
+								href={tool.href}
+								class="flex items-start gap-3 rounded-card bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
+							>
+								<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+									{#if tool.icon === 'briefing'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+										</svg>
+									{:else if tool.icon === 'profile'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm-3.375 3.375h4.5" />
+										</svg>
+									{:else if tool.icon === 'team'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+										</svg>
+									{:else if tool.icon === 'documents'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+										</svg>
+									{:else if tool.icon === 'market'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+										</svg>
+									{:else if tool.icon === 'requirements'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+										</svg>
+									{:else if tool.icon === 'leidraad'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+										</svg>
+									{:else if tool.icon === 'emvi'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
+										</svg>
+									{:else if tool.icon === 'uea'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12" />
+										</svg>
+									{:else if tool.icon === 'contract'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+										</svg>
+									{:else if tool.icon === 'correspondence'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+										</svg>
+									{:else if tool.icon === 'evaluations'}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+										</svg>
+									{:else}
+										<svg class="h-4.5 w-4.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.1-3.18M5.52 9.03l5.1-3.18M17.82 12l-5.1 3.18m0-6.36l5.1 3.18M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25z" />
+										</svg>
+									{/if}
+								</div>
+								<div class="min-w-0">
+									<p class="text-sm font-semibold text-gray-900">{tool.label}</p>
+									<p class="mt-0.5 text-xs text-gray-500">{tool.description}</p>
+								</div>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/if}
 
 			<!-- Document blocks (show in specifying phase and beyond) -->
 			{#if currentPhase === 'specifying' || currentPhase === 'tendering' || currentPhase === 'contracting'}

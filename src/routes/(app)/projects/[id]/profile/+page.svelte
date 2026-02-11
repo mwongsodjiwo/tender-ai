@@ -4,6 +4,7 @@
 	import type { ProjectProfile, Document } from '$types';
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 
 	export let data: PageData;
@@ -31,6 +32,12 @@
 	let error = '';
 	let success = '';
 	let showUploadPopup = false;
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && editing) {
+			cancelEditing();
+		}
+	}
 
 	function handleUploadComplete(): void {
 		showUploadPopup = false;
@@ -223,50 +230,33 @@
 	<title>Projectprofiel — {project.name} — Tendermanager</title>
 </svelte:head>
 
-<div class="space-y-6">
-	<!-- Page header -->
-	<div class="flex items-center justify-between">
-		<h1 class="text-xl font-bold text-gray-900">Projectprofiel</h1>
-		<div class="flex items-center gap-3">
-			{#if isConfirmed}
-				<span class="rounded-badge bg-success-100 px-3 py-1 text-sm font-medium text-success-700">
-					Bevestigd
-				</span>
-			{:else}
-				<span class="rounded-badge bg-warning-100 px-3 py-1 text-sm font-medium text-warning-700">
-					Concept
-				</span>
-			{/if}
-			{#if !editing}
-				<button
-					on:click={startEditing}
-					class="rounded-card border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-				>
-					Bewerken
-				</button>
-			{/if}
-		</div>
-	</div>
+<svelte:window on:keydown={handleKeydown} />
 
-	<!-- Tab navigation -->
-	<div>
-		<nav class="flex gap-2" aria-label="Profiel tabbladen">
-			{#each TABS as tab (tab.id)}
-				<button
-					on:click={() => (activeTab = tab.id)}
-					class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors
-						{activeTab === tab.id
-							? 'border border-gray-900 text-gray-900'
-							: 'text-gray-500 hover:text-gray-700'}"
-					aria-selected={activeTab === tab.id}
-					role="tab"
-				>
-					{tab.label}
-				</button>
-			{/each}
-		</nav>
-		<div class="mt-4 border-t border-gray-200"></div>
-	</div>
+<div class="space-y-6">
+	<Breadcrumbs items={[
+		{ label: project.name, href: `/projects/${project.id}` },
+		{ label: 'Projectprofiel' }
+	]} />
+
+	<!-- Simplified page header -->
+	<h1 class="text-xl font-bold text-gray-900">Projectprofiel</h1>
+
+	<!-- Underline-style tab navigation -->
+	<nav class="-mb-px flex gap-6 border-b border-gray-200" aria-label="Profiel tabbladen">
+		{#each TABS as tab (tab.id)}
+			<button
+				on:click={() => (activeTab = tab.id)}
+				class="whitespace-nowrap border-b-2 px-1 pb-3 text-sm font-medium transition-colors
+					{activeTab === tab.id
+						? 'border-primary-600 text-primary-600'
+						: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+				aria-selected={activeTab === tab.id}
+				role="tab"
+			>
+				{tab.label}
+			</button>
+		{/each}
+	</nav>
 
 	<!-- Messages -->
 	{#if error}
@@ -274,30 +264,6 @@
 	{/if}
 	{#if success}
 		<InfoBanner type="info" message={success} />
-	{/if}
-
-	<!-- Confirmation banner -->
-	{#if !isConfirmed && profile && !editing}
-		<div class="rounded-card border-2 border-dashed border-warning-300 bg-warning-50 p-6">
-			<div class="flex items-start gap-4">
-				<svg class="mt-0.5 h-6 w-6 shrink-0 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-				</svg>
-				<div class="flex-1">
-					<h3 class="text-sm font-semibold text-warning-800">Profiel nog niet bevestigd</h3>
-					<p class="mt-1 text-sm text-warning-700">
-						Controleer de gegevens hieronder. Na bevestiging wordt dit profiel de single source of truth voor alle AI-acties in dit project.
-					</p>
-					<button
-						on:click={confirmProfile}
-						disabled={confirming}
-						class="mt-4 rounded-card bg-warning-600 px-4 py-2 text-sm font-medium text-white hover:bg-warning-700 disabled:opacity-50"
-					>
-						{confirming ? 'Bevestigen...' : 'Profiel bevestigen'}
-					</button>
-				</div>
-			</div>
-		</div>
 	{/if}
 
 	<!-- No profile yet -->
@@ -316,394 +282,437 @@
 			</button>
 		</div>
 	{:else if editing}
-		<!-- Edit form — tab content in single card -->
-		<form on:submit|preventDefault={saveProfile}>
-			<div class="rounded-card bg-white shadow-card">
-				<!-- Section title -->
-				<div class="border-b border-gray-100 px-6 pt-6 pb-4">
-					<h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-						{TABS.find((t) => t.id === activeTab)?.label ?? ''}
-					</h2>
-				</div>
+		<!-- Edit mode — two-column layout -->
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<!-- Main card (form) -->
+			<form on:submit|preventDefault={saveProfile} class="lg:col-span-2">
+				<div class="rounded-card bg-white shadow-card">
+					<!-- Section title with icon + save button -->
+					<div class="flex items-center justify-between border-b border-gray-100 px-6 pt-6 pb-4">
+						<div class="flex items-center gap-3">
+							<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+								<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+								</svg>
+							</div>
+							<h2 class="text-base font-semibold text-gray-900">
+								{TABS.find((t) => t.id === activeTab)?.label ?? ''} bewerken
+							</h2>
+						</div>
+						<button type="submit" disabled={saving}
+							class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm hover:bg-primary-700 transition-colors disabled:opacity-50"
+							title={saving ? 'Opslaan...' : 'Opslaan'} aria-label="Opslaan">
+							{#if saving}
+								<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+								</svg>
+							{:else}
+								<!-- Lucide: Save -->
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+									<polyline points="17 21 17 13 7 13 7 21"/>
+									<polyline points="7 3 7 8 15 8"/>
+								</svg>
+							{/if}
+						</button>
+					</div>
 
-				<!-- Tab content -->
-				<div class="px-6 py-6">
-					{#if activeTab === 'opdrachtgever'}
-						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<div>
-								<label for="contracting_authority" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contracting_authority}</label>
-								<input
-									id="contracting_authority"
-									type="text"
-									bind:value={form.contracting_authority}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="Naam organisatie"
-								/>
-							</div>
-							<div>
-								<label for="department" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.department}</label>
-								<input
-									id="department"
-									type="text"
-									bind:value={form.department}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="Afdeling"
-								/>
-							</div>
-							<div>
-								<label for="contact_name" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_name}</label>
-								<input
-									id="contact_name"
-									type="text"
-									bind:value={form.contact_name}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="Naam contactpersoon"
-								/>
-							</div>
-							<div>
-								<label for="contact_email" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_email}</label>
-								<input
-									id="contact_email"
-									type="email"
-									bind:value={form.contact_email}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="email@voorbeeld.nl"
-								/>
-							</div>
-							<div>
-								<label for="contact_phone" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_phone}</label>
-								<input
-									id="contact_phone"
-									type="tel"
-									bind:value={form.contact_phone}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="+31 6 12345678"
-								/>
-							</div>
-						</div>
-					{:else if activeTab === 'project'}
-						<div class="space-y-4">
-							<div>
-								<label for="project_goal" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.project_goal}</label>
-								<textarea
-									id="project_goal"
-									bind:value={form.project_goal}
-									rows="3"
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="Wat is het doel van dit project?"
-								></textarea>
-							</div>
-							<div>
-								<label for="scope_description" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.scope_description}</label>
-								<textarea
-									id="scope_description"
-									bind:value={form.scope_description}
-									rows="4"
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="Beschrijf de scope en omvang van de opdracht"
-								></textarea>
-							</div>
-						</div>
-					{:else if activeTab === 'financieel'}
-						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<div>
-								<label for="estimated_value" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.estimated_value}</label>
-								<div class="relative mt-1">
-									<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">&euro;</span>
-									<input
-										id="estimated_value"
-										type="number"
-										bind:value={form.estimated_value}
-										class="block w-full rounded-lg border border-gray-300 pl-8 pr-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="0"
-										min="0"
-										step="1000"
-									/>
+					<!-- Form fields -->
+					<div class="px-6 py-6">
+						{#if activeTab === 'opdrachtgever'}
+							<div class="space-y-5">
+								<div>
+									<label for="contracting_authority" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contracting_authority}</label>
+									<input id="contracting_authority" type="text" bind:value={form.contracting_authority}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="Naam organisatie" />
+								</div>
+								<div>
+									<label for="department" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.department}</label>
+									<input id="department" type="text" bind:value={form.department}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="Afdeling" />
+								</div>
+								<div>
+									<label for="contact_name" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_name}</label>
+									<input id="contact_name" type="text" bind:value={form.contact_name}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="Naam contactpersoon" />
+								</div>
+								<div>
+									<label for="contact_email" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_email}</label>
+									<input id="contact_email" type="email" bind:value={form.contact_email}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="email@voorbeeld.nl" />
+								</div>
+								<div>
+									<label for="contact_phone" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_phone}</label>
+									<input id="contact_phone" type="tel" bind:value={form.contact_phone}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="+31 6 12345678" />
 								</div>
 							</div>
-							<div>
-								<label for="cpv_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.cpv_codes}</label>
-								<input
-									id="cpv_codes"
-									type="text"
-									bind:value={form.cpv_codes}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="72000000-5, 72200000-7"
-								/>
-								<p class="mt-1 text-xs text-gray-400">Kommagescheiden CPV-codes</p>
+						{:else if activeTab === 'project'}
+							<div class="space-y-5">
+								<div>
+									<label for="project_goal" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.project_goal}</label>
+									<textarea id="project_goal" bind:value={form.project_goal} rows="3"
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="Wat is het doel van dit project?"></textarea>
+								</div>
+								<div>
+									<label for="scope_description" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.scope_description}</label>
+									<textarea id="scope_description" bind:value={form.scope_description} rows="4"
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="Beschrijf de scope en omvang van de opdracht"></textarea>
+								</div>
 							</div>
-							<div>
-								<label for="nuts_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.nuts_codes}</label>
-								<input
-									id="nuts_codes"
-									type="text"
-									bind:value={form.nuts_codes}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-									placeholder="NL329"
-								/>
-								<p class="mt-1 text-xs text-gray-400">Kommagescheiden NUTS-codes</p>
+						{:else if activeTab === 'financieel'}
+							<div class="space-y-5">
+								<div>
+									<label for="estimated_value" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.estimated_value}</label>
+									<div class="relative mt-1">
+										<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">&euro;</span>
+										<input id="estimated_value" type="number" bind:value={form.estimated_value}
+											class="block w-full rounded-lg border border-gray-300 pl-8 pr-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+											placeholder="0" min="0" step="1000" />
+									</div>
+								</div>
+								<div>
+									<label for="cpv_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.cpv_codes}</label>
+									<input id="cpv_codes" type="text" bind:value={form.cpv_codes}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="72000000-5, 72200000-7" />
+									<p class="mt-1 text-xs text-gray-400">Kommagescheiden CPV-codes</p>
+								</div>
+								<div>
+									<label for="nuts_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.nuts_codes}</label>
+									<input id="nuts_codes" type="text" bind:value={form.nuts_codes}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+										placeholder="NL329" />
+									<p class="mt-1 text-xs text-gray-400">Kommagescheiden NUTS-codes</p>
+								</div>
 							</div>
-						</div>
-					{:else if activeTab === 'planning'}
-						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<div>
-								<label for="timeline_start" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.timeline_start}</label>
-								<input
-									id="timeline_start"
-									type="date"
-									bind:value={form.timeline_start}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-								/>
+						{:else if activeTab === 'planning'}
+							<div class="space-y-5">
+								<div>
+									<label for="timeline_start" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.timeline_start}</label>
+									<input id="timeline_start" type="date" bind:value={form.timeline_start}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" />
+								</div>
+								<div>
+									<label for="timeline_end" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.timeline_end}</label>
+									<input id="timeline_end" type="date" bind:value={form.timeline_end}
+										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" />
+								</div>
 							</div>
-							<div>
-								<label for="timeline_end" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.timeline_end}</label>
-								<input
-									id="timeline_end"
-									type="date"
-									bind:value={form.timeline_end}
-									class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-								/>
+						{:else if activeTab === 'documenten'}
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="text-sm text-gray-500">Documenten worden beheerd via de documentenpagina.</p>
+									<a href="/projects/{project.id}/documents"
+										class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+										Naar documenten
+									</a>
+								</div>
+								<button type="button" on:click={() => (showUploadPopup = true)}
+									class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 transition-colors"
+									title="Document uploaden" aria-label="Document uploaden">
+									<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+									</svg>
+								</button>
 							</div>
-						</div>
-					{:else if activeTab === 'documenten'}
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-sm text-gray-500">Documenten worden beheerd via de documentenpagina.</p>
-								<a
-									href="/projects/{project.id}/documents"
-									class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-								>
-									Naar documenten
-								</a>
+						{/if}
+					</div>
+
+				</div>
+			</form>
+
+			<!-- Sidebar -->
+			<div class="space-y-4">
+				<!-- Status card -->
+				<div class="rounded-card bg-white p-6 shadow-card">
+					<div class="flex items-center gap-2">
+						{#if isConfirmed}
+							<span class="h-2.5 w-2.5 rounded-full bg-success-500"></span>
+							<span class="text-sm font-medium text-gray-900">Bevestigd</span>
+						{:else}
+							<span class="h-2.5 w-2.5 rounded-full bg-warning-500"></span>
+							<span class="text-sm font-medium text-gray-900">Concept</span>
+						{/if}
+					</div>
+				</div>
+			</div>
+		</div>
+	{:else}
+		<!-- View mode — two-column layout like Remote.com -->
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<!-- Main card with key-value rows -->
+			<div class="lg:col-span-2">
+				{#if activeTab === 'documenten'}
+					<!-- Documents tab — full-width card with table -->
+					<div class="rounded-card bg-white shadow-card">
+						<div class="flex items-center justify-between border-b border-gray-100 px-6 pt-6 pb-4">
+							<div class="flex items-center gap-3">
+								<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+									</svg>
+								</div>
+								<h2 class="text-base font-semibold text-gray-900">Documenten</h2>
 							</div>
-							<button
-								type="button"
-								on:click={() => (showUploadPopup = true)}
-								class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 transition-colors"
-								title="Document uploaden"
-								aria-label="Document uploaden"
-							>
-								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+							<button type="button" on:click={() => (showUploadPopup = true)}
+								class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm hover:bg-primary-700 transition-colors"
+								title="Document uploaden" aria-label="Document uploaden">
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
 								</svg>
 							</button>
 						</div>
-					{/if}
-				</div>
-			</div>
-
-			<!-- Form actions -->
-			<div class="mt-6 flex items-center justify-between">
-				<button
-					type="button"
-					on:click={cancelEditing}
-					class="rounded-card border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-				>
-					Annuleren
-				</button>
-				<button
-					type="submit"
-					disabled={saving}
-					class="rounded-card bg-primary-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-				>
-					{saving ? 'Opslaan...' : 'Profiel opslaan'}
-				</button>
-			</div>
-		</form>
-	{:else}
-		<!-- View mode — tab content in single card -->
-		<div class="rounded-card bg-white shadow-card">
-			<!-- Section title -->
-			<div class="border-b border-gray-100 px-6 pt-6 pb-4">
-				<h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-					{TABS.find((t) => t.id === activeTab)?.label ?? ''}
-				</h2>
-			</div>
-
-			<!-- Tab content -->
-			<div class="px-6 py-6">
-				{#if activeTab === 'opdrachtgever'}
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-						{#if profile?.contracting_authority}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.contracting_authority}</dt>
-								<dd class="mt-1 text-sm text-gray-900">{profile.contracting_authority}</dd>
-							</div>
-						{/if}
-						{#if profile?.department}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.department}</dt>
-								<dd class="mt-1 text-sm text-gray-900">{profile.department}</dd>
-							</div>
-						{/if}
-						{#if profile?.contact_name}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.contact_name}</dt>
-								<dd class="mt-1 text-sm text-gray-900">{profile.contact_name}</dd>
-							</div>
-						{/if}
-						{#if profile?.contact_email}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.contact_email}</dt>
-								<dd class="mt-1 text-sm text-gray-900">{profile.contact_email}</dd>
-							</div>
-						{/if}
-						{#if profile?.contact_phone}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.contact_phone}</dt>
-								<dd class="mt-1 text-sm text-gray-900">{profile.contact_phone}</dd>
-							</div>
-						{/if}
-					</dl>
-					{#if !profile?.contracting_authority && !profile?.department && !profile?.contact_name}
-						<p class="text-sm text-gray-400">Geen gegevens ingevuld.</p>
-					{/if}
-				{:else if activeTab === 'project'}
-					<dl class="space-y-4">
-						{#if profile?.project_goal}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.project_goal}</dt>
-								<dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{profile.project_goal}</dd>
-							</div>
-						{/if}
-						{#if profile?.scope_description}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.scope_description}</dt>
-								<dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{profile.scope_description}</dd>
-							</div>
-						{/if}
-					</dl>
-					{#if !profile?.project_goal && !profile?.scope_description}
-						<p class="text-sm text-gray-400">Geen gegevens ingevuld.</p>
-					{/if}
-				{:else if activeTab === 'financieel'}
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-						{#if profile?.estimated_value}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.estimated_value}</dt>
-								<dd class="mt-1 text-sm text-gray-900">&euro;{profile.estimated_value.toLocaleString('nl-NL')}</dd>
-							</div>
-						{/if}
-						{#if project.procedure_type}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">Procedure</dt>
-								<dd class="mt-1 text-sm text-gray-900">{PROCEDURE_TYPE_LABELS[project.procedure_type] ?? project.procedure_type}</dd>
-							</div>
-						{/if}
-						{#if profile?.cpv_codes && profile.cpv_codes.length > 0}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.cpv_codes}</dt>
-								<dd class="mt-1 flex flex-wrap gap-1">
-									{#each profile.cpv_codes as code}
-										<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{code}</span>
-									{/each}
-								</dd>
-							</div>
-						{/if}
-						{#if profile?.nuts_codes && profile.nuts_codes.length > 0}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.nuts_codes}</dt>
-								<dd class="mt-1 flex flex-wrap gap-1">
-									{#each profile.nuts_codes as code}
-										<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{code}</span>
-									{/each}
-								</dd>
-							</div>
-						{/if}
-					</dl>
-					{#if !profile?.estimated_value && !project.procedure_type && (!profile?.cpv_codes || profile.cpv_codes.length === 0)}
-						<p class="text-sm text-gray-400">Geen gegevens ingevuld.</p>
-					{/if}
-				{:else if activeTab === 'planning'}
-					<dl class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-						{#if profile?.timeline_start}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.timeline_start}</dt>
-								<dd class="mt-1 text-sm text-gray-900">
-									{new Date(profile.timeline_start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-								</dd>
-							</div>
-						{/if}
-						{#if profile?.timeline_end}
-							<div>
-								<dt class="text-sm font-medium text-gray-500">{FIELD_LABELS.timeline_end}</dt>
-								<dd class="mt-1 text-sm text-gray-900">
-									{new Date(profile.timeline_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-								</dd>
-							</div>
-						{/if}
-					</dl>
-					{#if !profile?.timeline_start && !profile?.timeline_end}
-						<p class="text-sm text-gray-400">Geen gegevens ingevuld.</p>
-					{/if}
-			{:else if activeTab === 'documenten'}
-				<!-- Upload button top-right -->
-				<div class="flex justify-end mb-4">
-					<button
-						type="button"
-						on:click={() => (showUploadPopup = true)}
-						class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 transition-colors"
-						title="Document uploaden"
-						aria-label="Document uploaden"
-					>
-						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-						</svg>
-					</button>
-				</div>
-
-				{#if documents.length === 0}
-					<div class="text-center py-8">
-						<svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-						</svg>
-						<p class="mt-2 text-sm text-gray-500">Nog geen documenten geüpload.</p>
-						<a
-							href="/projects/{project.id}/documents"
-							class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-						>
-							Documenten bekijken
-						</a>
+						<div class="px-6 py-6">
+							{#if documents.length === 0}
+								<div class="text-center py-8">
+									<svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+									</svg>
+									<p class="mt-2 text-sm text-gray-500">Nog geen documenten geüpload.</p>
+									<a href="/projects/{project.id}/documents"
+										class="mt-4 inline-flex items-center rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+										Documenten bekijken
+									</a>
+								</div>
+							{:else}
+								<div class="rounded-lg overflow-hidden border border-gray-200">
+									<table class="w-full">
+										<thead>
+											<tr class="border-b border-gray-200">
+												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Categorie</th>
+												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Naam</th>
+												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Type</th>
+												<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Grootte</th>
+												<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
+											</tr>
+										</thead>
+										<tbody class="divide-y divide-gray-100">
+											{#each documents as doc (doc.id)}
+												<tr class="group transition-colors hover:bg-gray-50">
+													<td class="px-6 py-4">
+														<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+															{DOCUMENT_CATEGORY_LABELS[doc.category] ?? doc.category}
+														</span>
+													</td>
+													<td class="px-6 py-4 max-w-[240px]">
+														<span class="block truncate text-sm font-medium text-gray-900">{doc.name}</span>
+													</td>
+													<td class="px-6 py-4">
+														<span class="text-sm text-gray-500">{formatFileType(doc.mime_type)}</span>
+													</td>
+													<td class="px-6 py-4 text-right">
+														<span class="text-sm text-gray-500">{formatFileSize(doc.file_size)}</span>
+													</td>
+													<td class="px-6 py-4 text-right">
+														<span class="text-sm text-gray-500">{formatDate(doc.created_at)}</span>
+													</td>
+												</tr>
+											{/each}
+										</tbody>
+									</table>
+								</div>
+							{/if}
+						</div>
 					</div>
 				{:else}
-					<div class="rounded-card overflow-hidden border border-gray-200">
-						<table class="w-full">
-							<thead>
-								<tr class="border-b border-gray-200">
-									<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Categorie</th>
-									<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Naam</th>
-									<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Type</th>
-									<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Grootte</th>
-									<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
-								</tr>
-							</thead>
-							<tbody class="divide-y divide-gray-100">
-								{#each documents as doc (doc.id)}
-									<tr class="group transition-colors hover:bg-gray-50">
-										<td class="px-6 py-4">
-											<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-												{DOCUMENT_CATEGORY_LABELS[doc.category] ?? doc.category}
-											</span>
-										</td>
-										<td class="px-6 py-4 max-w-[240px]">
-											<span class="block truncate text-sm font-medium text-gray-900">{doc.name}</span>
-										</td>
-										<td class="px-6 py-4">
-											<span class="text-sm text-gray-500">{formatFileType(doc.mime_type)}</span>
-										</td>
-										<td class="px-6 py-4 text-right">
-											<span class="text-sm text-gray-500">{formatFileSize(doc.file_size)}</span>
-										</td>
-										<td class="px-6 py-4 text-right">
-											<span class="text-sm text-gray-500">{formatDate(doc.created_at)}</span>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
+					<!-- Profile data tabs — Remote-style key-value card -->
+					<div class="rounded-card bg-white shadow-card">
+						<!-- Card header with section icon + title + edit button -->
+						<div class="flex items-center justify-between border-b border-gray-100 px-6 pt-6 pb-4">
+							<div class="flex items-center gap-3">
+								<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+								{#if activeTab === 'opdrachtgever'}
+									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+									</svg>
+								{:else if activeTab === 'project'}
+									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+									</svg>
+								{:else if activeTab === 'financieel'}
+									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+									</svg>
+								{:else}
+									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+									</svg>
+								{/if}
+							</div>
+							<h2 class="text-base font-semibold text-gray-900">
+								{TABS.find((t) => t.id === activeTab)?.label ?? ''}
+							</h2>
+							</div>
+						<button on:click={startEditing}
+							class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm hover:bg-primary-700 transition-colors"
+							title="Bewerken" aria-label="Bewerken">
+							<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<circle cx="12" cy="5" r="2" />
+								<circle cx="12" cy="12" r="2" />
+								<circle cx="12" cy="19" r="2" />
+							</svg>
+						</button>
+						</div>
+
+						<!-- Key-value rows separated by dividers -->
+						<dl class="divide-y divide-gray-100">
+							{#if activeTab === 'opdrachtgever'}
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.contracting_authority}</dt>
+									<dd class="text-sm text-gray-900">{profile?.contracting_authority || '—'}</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.department}</dt>
+									<dd class="text-sm text-gray-900">{profile?.department || '—'}</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.contact_name}</dt>
+									<dd class="text-sm text-gray-900">{profile?.contact_name || '—'}</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.contact_email}</dt>
+									<dd class="text-sm text-gray-900">{profile?.contact_email || '—'}</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.contact_phone}</dt>
+									<dd class="text-sm text-gray-900">{profile?.contact_phone || '—'}</dd>
+								</div>
+							{:else if activeTab === 'project'}
+								<div class="px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.project_goal}</dt>
+									<dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{profile?.project_goal || '—'}</dd>
+								</div>
+								<div class="px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.scope_description}</dt>
+									<dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{profile?.scope_description || '—'}</dd>
+								</div>
+							{:else if activeTab === 'financieel'}
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.estimated_value}</dt>
+									<dd class="text-sm text-gray-900">
+										{#if profile?.estimated_value}
+											&euro;{profile.estimated_value.toLocaleString('nl-NL')}
+										{:else}
+											—
+										{/if}
+									</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">Procedure</dt>
+									<dd class="text-sm text-gray-900">
+										{project.procedure_type ? (PROCEDURE_TYPE_LABELS[project.procedure_type] ?? project.procedure_type) : '—'}
+									</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.cpv_codes}</dt>
+									<dd class="flex flex-wrap gap-1">
+										{#if profile?.cpv_codes && profile.cpv_codes.length > 0}
+											{#each profile.cpv_codes as code}
+												<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{code}</span>
+											{/each}
+										{:else}
+											<span class="text-sm text-gray-900">—</span>
+										{/if}
+									</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.nuts_codes}</dt>
+									<dd class="flex flex-wrap gap-1">
+										{#if profile?.nuts_codes && profile.nuts_codes.length > 0}
+											{#each profile.nuts_codes as code}
+												<span class="rounded-badge bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">{code}</span>
+											{/each}
+										{:else}
+											<span class="text-sm text-gray-900">—</span>
+										{/if}
+									</dd>
+								</div>
+							{:else if activeTab === 'planning'}
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.timeline_start}</dt>
+									<dd class="text-sm text-gray-900">
+										{#if profile?.timeline_start}
+											{new Date(profile.timeline_start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+										{:else}
+											—
+										{/if}
+									</dd>
+								</div>
+								<div class="flex items-center justify-between px-6 py-4">
+									<dt class="text-sm text-gray-500">{FIELD_LABELS.timeline_end}</dt>
+									<dd class="text-sm text-gray-900">
+										{#if profile?.timeline_end}
+											{new Date(profile.timeline_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+										{:else}
+											—
+										{/if}
+									</dd>
+								</div>
+							{/if}
+						</dl>
+
 					</div>
 				{/if}
-			{/if}
+			</div>
+
+			<!-- Right sidebar -->
+			<div class="space-y-4">
+				<!-- Status card -->
+				<div class="rounded-card bg-white p-6 shadow-card">
+					<p class="text-sm font-medium text-gray-500">Profielstatus</p>
+					<div class="mt-2 flex items-center gap-2">
+						{#if isConfirmed}
+							<span class="h-2.5 w-2.5 rounded-full bg-success-500"></span>
+							<span class="text-sm font-semibold text-gray-900">Bevestigd</span>
+						{:else}
+							<span class="h-2.5 w-2.5 rounded-full bg-warning-500"></span>
+							<span class="text-sm font-semibold text-gray-900">Concept</span>
+						{/if}
+					</div>
+
+					{#if project.procedure_type}
+						<p class="mt-4 text-sm font-medium text-gray-500">Procedure</p>
+						<p class="mt-1 text-sm text-gray-900">{PROCEDURE_TYPE_LABELS[project.procedure_type] ?? project.procedure_type}</p>
+					{/if}
+
+					{#if profile?.estimated_value}
+						<p class="mt-4 text-sm font-medium text-gray-500">Geschatte waarde</p>
+						<p class="mt-1 text-sm text-gray-900">&euro;{profile.estimated_value.toLocaleString('nl-NL')}</p>
+					{/if}
+
+					{#if project.deadline_date}
+						<p class="mt-4 text-sm font-medium text-gray-500">Deadline</p>
+						<p class="mt-1 text-sm text-gray-900">
+							{new Date(project.deadline_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+						</p>
+					{/if}
+				</div>
+
+				<!-- Action buttons -->
+				{#if !isConfirmed && profile}
+					<button on:click={confirmProfile} disabled={confirming}
+						class="flex w-full items-center gap-3 rounded-card bg-white p-4 shadow-card transition-colors hover:bg-gray-50 disabled:opacity-50">
+						<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-50">
+							<svg class="h-5 w-5 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+						</div>
+						<div class="text-left">
+							<p class="text-sm font-semibold text-gray-900">{confirming ? 'Bevestigen...' : 'Profiel bevestigen'}</p>
+							<p class="text-xs text-gray-500">Bevestig als single source of truth</p>
+						</div>
+					</button>
+				{/if}
+
 			</div>
 		</div>
 	{/if}

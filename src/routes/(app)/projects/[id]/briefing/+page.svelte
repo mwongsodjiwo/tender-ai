@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { tick } from 'svelte';
 	import type { PageData } from './$types';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	export let data: PageData;
 
@@ -133,9 +134,10 @@
 	<!-- Header -->
 	<div class="mb-4 flex items-center justify-between">
 		<div>
-			<a href="/projects/{data.project.id}" class="text-sm text-gray-500 hover:text-gray-700">
-				&larr; Terug naar project
-			</a>
+			<Breadcrumbs items={[
+				{ label: data.project.name, href: `/projects/${data.project.id}` },
+				{ label: 'Briefing' }
+			]} />
 			<h1 class="mt-1 text-xl font-bold text-gray-900">Briefing: {data.project.name}</h1>
 		</div>
 		{#if briefingComplete}

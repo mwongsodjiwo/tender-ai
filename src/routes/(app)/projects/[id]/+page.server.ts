@@ -26,10 +26,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const phaseActivities: PhaseActivity[] = (phaseActivitiesData ?? []) as PhaseActivity[];
 
-	// Load project profile for confirmation status
+	// Load project profile for confirmation status and planning state
 	const { data: profileData } = await supabase
 		.from('project_profiles')
-		.select('id, contracting_authority, project_goal')
+		.select('id, contracting_authority, project_goal, planning_generated_at')
 		.eq('project_id', params.id)
 		.is('deleted_at', null)
 		.maybeSingle();
@@ -128,7 +128,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		artifacts: allArtifacts,
 		phaseActivities,
 		profileSummary: profileData
-			? { id: profileData.id, contracting_authority: profileData.contracting_authority, project_goal: profileData.project_goal }
+			? {
+				id: profileData.id,
+				contracting_authority: profileData.contracting_authority,
+				project_goal: profileData.project_goal,
+				planning_generated_at: profileData.planning_generated_at ?? null
+			}
 			: null,
 		auditEntries: auditEntries ?? [],
 		projectMetrics: {
