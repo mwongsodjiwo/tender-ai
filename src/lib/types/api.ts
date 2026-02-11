@@ -729,6 +729,57 @@ export interface TimeEntryReportData {
 }
 
 // =============================================================================
+// TEAM WORKLOAD — Planning Sprint 7
+// =============================================================================
+
+export interface WorkloadAssignment {
+	project_id: string;
+	project_name: string;
+	activity_id: string;
+	activity_title: string;
+	phase: ProjectPhase;
+	planned_start: string | null;
+	planned_end: string | null;
+	estimated_hours: number | null;
+	status: ActivityStatus;
+}
+
+export interface MemberTimeLogged {
+	week: string;
+	hours: number;
+	by_project: Record<string, number>;
+}
+
+export interface MemberWorkloadSummary {
+	total_assigned_hours: number;
+	total_logged_hours: number;
+	utilization_percentage: number;
+	overloaded_weeks: string[];
+}
+
+export interface MemberWorkload {
+	profile_id: string;
+	name: string;
+	avatar_url: string | null;
+	roles: string[];
+	assignments: WorkloadAssignment[];
+	time_logged: MemberTimeLogged[];
+	summary: MemberWorkloadSummary;
+}
+
+export interface OverloadWarning {
+	member_name: string;
+	profile_id: string;
+	weeks: string[];
+	suggestion: string | null;
+}
+
+export interface TeamWorkloadResponse {
+	members: MemberWorkload[];
+	warnings: OverloadWarning[];
+}
+
+// =============================================================================
 // DEADLINE TRACKER — Planning Sprint 2
 // =============================================================================
 

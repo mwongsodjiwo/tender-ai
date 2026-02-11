@@ -3,17 +3,19 @@
 	import MultiProjectTimeline from '$components/planning/MultiProjectTimeline.svelte';
 	import CapacityHeatmap from '$components/planning/CapacityHeatmap.svelte';
 	import DeadlineList from '$components/planning/DeadlineList.svelte';
+	import WorkloadView from '$components/planning/WorkloadView.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
-	type Tab = 'overview' | 'capacity' | 'deadlines';
+	type Tab = 'overview' | 'capacity' | 'deadlines' | 'workload';
 	let activeTab: Tab = 'overview';
 
 	$: overview = data.overview;
 	$: summary = overview.summary;
 	$: warnings = overview.warnings;
 	$: deadlineItems = data.deadlineItems;
+	$: workload = data.workload;
 
 	function handleProjectClick(projectId: string) {
 		goto(`/projects/${projectId}/planning`);
@@ -23,10 +25,15 @@
 		goto(`/projects/${item.project_id}/planning`);
 	}
 
+	function handleMemberClick(profileId: string) {
+		// Future: navigate to member detail view
+	}
+
 	const TABS: { value: Tab; label: string }[] = [
 		{ value: 'overview', label: 'Overzicht' },
 		{ value: 'capacity', label: 'Capaciteit' },
-		{ value: 'deadlines', label: 'Deadlines' }
+		{ value: 'deadlines', label: 'Deadlines' },
+		{ value: 'workload', label: 'Werkbelasting' }
 	];
 </script>
 
@@ -100,6 +107,11 @@
 							{deadlineItems.length}
 						</span>
 					{/if}
+					{#if tab.value === 'workload' && workload.warnings.length > 0}
+						<span class="ml-1.5 inline-flex items-center justify-center rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-600">
+							{workload.warnings.length}
+						</span>
+					{/if}
 				</button>
 			{/each}
 		</nav>
@@ -135,5 +147,13 @@
 				onItemClick={handleDeadlineClick}
 			/>
 		{/if}
+	{:else if activeTab === 'workload'}
+		<WorkloadView
+			members={workload.members}
+			warnings={workload.warnings}
+			from={data.workloadFrom}
+			to={data.workloadTo}
+			onMemberClick={handleMemberClick}
+		/>
 	{/if}
 </div>

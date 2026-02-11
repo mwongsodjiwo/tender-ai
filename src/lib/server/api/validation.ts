@@ -755,3 +755,20 @@ export const createDependencySchema = z.object({
 	}).optional().default('finish_to_start'),
 	lag_days: z.number().int().min(-365).max(365).optional().default(0)
 });
+
+// =============================================================================
+// TEAM WORKLOAD — Planning Sprint 7
+// =============================================================================
+
+export const workloadQuerySchema = z.object({
+	from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
+	to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional()
+}).refine(
+	(data) => {
+		if (data.from && data.to) {
+			return new Date(data.from) <= new Date(data.to);
+		}
+		return true;
+	},
+	{ message: 'Startdatum moet voor einddatum liggen' }
+);
