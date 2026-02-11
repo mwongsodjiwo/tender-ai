@@ -1,7 +1,7 @@
 // Zod validation schemas for API endpoints
 
 import { z } from 'zod';
-import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES, MARKET_RESEARCH_ACTIVITY_TYPES, TIME_ENTRY_ACTIVITY_TYPES, MILESTONE_TYPES, DEPENDENCY_TYPES } from '$types';
+import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES, MARKET_RESEARCH_ACTIVITY_TYPES, TIME_ENTRY_ACTIVITY_TYPES, MILESTONE_TYPES, DEPENDENCY_TYPES, NOTIFICATION_TYPES } from '$types';
 
 // =============================================================================
 // AUTH
@@ -772,3 +772,38 @@ export const workloadQuerySchema = z.object({
 	},
 	{ message: 'Startdatum moet voor einddatum liggen' }
 );
+
+// =============================================================================
+// NOTIFICATIONS — Sprint 8
+// =============================================================================
+
+export const notificationListQuerySchema = z.object({
+	unread_only: z.coerce.boolean().optional().default(false),
+	project_id: z.string().uuid('Ongeldig project-ID').optional(),
+	notification_type: z.enum(NOTIFICATION_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig notificatietype' })
+	}).optional(),
+	limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+	offset: z.coerce.number().int().min(0).optional().default(0)
+});
+
+export const markNotificationsReadSchema = z.object({
+	notification_ids: z.array(z.string().uuid('Ongeldig notificatie-ID'))
+		.min(1, 'Minimaal één notificatie-ID vereist')
+		.max(100, 'Maximaal 100 notificaties tegelijk')
+});
+
+export const updateNotificationPreferenceSchema = z.object({
+	notification_type: z.enum(NOTIFICATION_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig notificatietype' })
+	}),
+	in_app: z.boolean().optional(),
+	email: z.boolean().optional(),
+	days_before_deadline: z.number().int().min(1).max(30).optional()
+});
+
+export const planningExportQuerySchema = z.object({
+	phase: z.enum(PROJECT_PHASES).optional(),
+	include_activities: z.coerce.boolean().optional().default(true),
+	include_milestones: z.coerce.boolean().optional().default(true)
+});

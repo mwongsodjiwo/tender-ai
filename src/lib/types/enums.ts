@@ -370,6 +370,41 @@ export const DEPENDENCY_TYPE_LABELS: Record<DependencyType, string> = {
 };
 
 // =============================================================================
+// NOTIFICATIONS — Sprint 8 (Notificaties & Integraties)
+// =============================================================================
+
+export const NOTIFICATION_TYPES = [
+	'deadline_approaching',
+	'deadline_overdue',
+	'activity_assigned',
+	'planning_changed',
+	'milestone_completed',
+	'overload_warning',
+	'weekly_summary'
+] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
+	deadline_approaching: 'Naderende deadline',
+	deadline_overdue: 'Verlopen deadline',
+	activity_assigned: 'Nieuwe toewijzing',
+	planning_changed: 'Planning gewijzigd',
+	milestone_completed: 'Milestone bereikt',
+	overload_warning: 'Overbezetting',
+	weekly_summary: 'Wekelijks overzicht'
+};
+
+export const NOTIFICATION_TYPE_DESCRIPTIONS: Record<NotificationType, string> = {
+	deadline_approaching: 'Waarschuwing X dagen voor een deadline',
+	deadline_overdue: 'Melding wanneer een deadline is verlopen',
+	activity_assigned: 'Melding bij een nieuwe activiteittoewijzing',
+	planning_changed: 'Melding wanneer de projectplanning wijzigt',
+	milestone_completed: 'Melding wanneer een milestone is bereikt',
+	overload_warning: 'Waarschuwing bij overbezetting teamlid',
+	weekly_summary: 'Wekelijks overzicht van alle projecten'
+};
+
+// =============================================================================
 // AUDIT ACTIONS
 // =============================================================================
 

@@ -21,7 +21,9 @@ import type {
 	KnowledgeBaseRequirement,
 	TimeEntry,
 	TimeEntryWithProject,
-	Milestone
+	Milestone,
+	Notification,
+	NotificationPreference
 } from './database.js';
 import type {
 	OrganizationRole,
@@ -34,7 +36,8 @@ import type {
 	ActivityStatus,
 	CorrespondenceStatus,
 	EvaluationStatus,
-	TimeEntryActivityType
+	TimeEntryActivityType,
+	NotificationType
 } from './enums.js';
 
 // =============================================================================
@@ -850,4 +853,56 @@ export interface OrganizationPlanningOverview {
 		on_track: number;
 		critical_deadlines: number;
 	};
+}
+
+// =============================================================================
+// NOTIFICATIONS — Sprint 8 (Notificaties & Integraties)
+// =============================================================================
+
+export interface NotificationListQuery {
+	unread_only?: boolean;
+	project_id?: string;
+	notification_type?: NotificationType;
+	limit?: number;
+	offset?: number;
+}
+
+export interface NotificationListResponse {
+	notifications: Notification[];
+	unread_count: number;
+	total: number;
+}
+
+export interface MarkNotificationsReadRequest {
+	notification_ids: string[];
+}
+
+export interface UpdateNotificationPreferenceRequest {
+	notification_type: NotificationType;
+	in_app?: boolean;
+	email?: boolean;
+	days_before_deadline?: number;
+}
+
+export type NotificationPreferenceListResponse = NotificationPreference[];
+
+// =============================================================================
+// PLANNING EXPORT — Sprint 8 (iCal / CSV)
+// =============================================================================
+
+export interface PlanningExportQuery {
+	phase?: string;
+	include_activities?: boolean;
+	include_milestones?: boolean;
+}
+
+// =============================================================================
+// WEEKLY SUMMARY — Sprint 8 (AI samenvatting)
+// =============================================================================
+
+export interface WeeklySummaryResponse {
+	summary: string;
+	generated_at: string;
+	project_count: number;
+	warnings: string[];
 }
