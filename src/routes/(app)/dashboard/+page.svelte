@@ -14,7 +14,20 @@
 	$: metrics = data.metrics as DashboardMetrics;
 	$: recentProjects = data.recentProjects as DashboardRecentProject[];
 	$: upcomingDeadlines = data.upcomingDeadlines as DashboardRecentProject[];
+	$: combinedDeadlines = (data.combinedDeadlines ?? []) as {
+		id: string;
+		type: string;
+		title: string;
+		date: string;
+		project_id: string;
+		project_name: string;
+		phase: string;
+		status: string;
+		is_critical: boolean;
+		days_remaining: number;
+	}[];
 	$: monthlyData = data.monthlyData as MonthlyProjectData[];
+	$: hasCombinedDeadlines = combinedDeadlines.length > 0;
 
 	const SECTION_STATUS_LABELS: Record<string, string> = {
 		draft: 'Concept',
@@ -231,16 +244,68 @@
 					{/if}
 				</div>
 
-				<!-- Right: Upcoming deadlines -->
+				<!-- Right: Upcoming deadlines (milestones + activities combined) -->
 				<div class="rounded-card bg-white p-6 shadow-card">
-					<h2 class="text-base font-semibold text-gray-900">Deadlines deze week</h2>
-					{#if upcomingDeadlines.length === 0}
+					<div class="flex items-center justify-between">
+						<h2 class="text-base font-semibold text-gray-900">Deadlines deze week</h2>
+						{#if hasCombinedDeadlines}
+							<span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
+								{combinedDeadlines.length}
+							</span>
+						{/if}
+					</div>
+					{#if !hasCombinedDeadlines && upcomingDeadlines.length === 0}
 						<div class="mt-6 flex flex-col items-center justify-center py-8 text-center">
 							<svg class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 							</svg>
 							<p class="mt-3 text-sm text-gray-500">Geen deadlines deze week</p>
 						</div>
+					{:else if hasCombinedDeadlines}
+						<div class="mt-4 space-y-2">
+							{#each combinedDeadlines.slice(0, 6) as deadline (deadline.id)}
+								<a
+									href="/projects/{deadline.project_id}/planning"
+									class="flex items-center gap-3 rounded-lg border border-gray-100 p-3 transition-colors hover:bg-gray-50"
+								>
+									<span class="inline-block h-2 w-2 shrink-0 rounded-full
+										{deadline.days_remaining <= 0 ? 'bg-red-500' : deadline.days_remaining <= 3 ? 'bg-orange-500' : 'bg-green-500'}">
+									</span>
+									<div class="min-w-0 flex-1">
+										<div class="flex items-center gap-1.5">
+											{#if deadline.is_critical}
+												<svg class="h-3.5 w-3.5 shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20" aria-label="Kritiek">
+													<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+												</svg>
+											{/if}
+											<p class="truncate text-sm font-medium text-gray-900">{deadline.title}</p>
+										</div>
+										<p class="truncate text-xs text-gray-500">
+											{deadline.project_name} · {deadline.type === 'milestone' ? 'Milestone' : 'Activiteit'}
+										</p>
+									</div>
+									<span class="shrink-0 rounded-badge px-2 py-1 text-xs font-medium
+										{deadline.days_remaining <= 0 ? 'bg-error-100 text-error-700' : deadline.days_remaining <= 1 ? 'bg-warning-100 text-warning-700' : 'bg-primary-100 text-primary-700'}">
+										{#if deadline.days_remaining === 0}
+											Vandaag
+										{:else if deadline.days_remaining === 1}
+											Morgen
+										{:else if deadline.days_remaining < 0}
+											{Math.abs(deadline.days_remaining)}d verlopen
+										{:else}
+											Nog {deadline.days_remaining}d
+										{/if}
+									</span>
+								</a>
+							{/each}
+						</div>
+						{#if combinedDeadlines.length > 6}
+							<div class="mt-3 border-t border-gray-100 pt-3">
+								<a href="/planning" class="text-sm font-medium text-primary-600 hover:text-primary-700">
+									Alle deadlines bekijken →
+								</a>
+							</div>
+						{/if}
 					{:else}
 						<div class="mt-4 space-y-3">
 							{#each upcomingDeadlines as project (project.id)}

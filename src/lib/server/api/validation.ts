@@ -1,7 +1,7 @@
 // Zod validation schemas for API endpoints
 
 import { z } from 'zod';
-import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES, MARKET_RESEARCH_ACTIVITY_TYPES, TIME_ENTRY_ACTIVITY_TYPES } from '$types';
+import { ORGANIZATION_ROLES, PROCEDURE_TYPES, PROJECT_ROLES, PROJECT_STATUSES, ARTIFACT_STATUSES, REVIEW_STATUSES, AUDIT_ACTIONS, DOCUMENT_CATEGORIES, REQUIREMENT_TYPES, REQUIREMENT_CATEGORIES, SCORING_METHODOLOGIES, CRITERION_TYPES, CONTRACT_TYPES, GENERAL_CONDITIONS_TYPES, UEA_PARTS, PROJECT_PHASES, ACTIVITY_STATUSES, CORRESPONDENCE_STATUSES, EVALUATION_STATUSES, MARKET_RESEARCH_ACTIVITY_TYPES, TIME_ENTRY_ACTIVITY_TYPES, MILESTONE_TYPES, DEPENDENCY_TYPES } from '$types';
 
 // =============================================================================
 // AUTH
@@ -638,4 +638,65 @@ export const timeEntryQuerySchema = z.object({
 	from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
 	to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
 	project_id: z.string().uuid('Ongeldig project-ID').optional()
+});
+
+// =============================================================================
+// MILESTONES — Planning Sprint 1
+// =============================================================================
+
+export const createMilestoneSchema = z.object({
+	milestone_type: z.enum(MILESTONE_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig milestonetype' })
+	}),
+	title: z.string().min(1, 'Titel is verplicht').max(300),
+	description: z.string().max(2000).optional().default(''),
+	target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn'),
+	actual_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').nullable().optional(),
+	phase: z.enum(PROJECT_PHASES, {
+		errorMap: () => ({ message: 'Ongeldige projectfase' })
+	}).nullable().optional(),
+	is_critical: z.boolean().optional().default(false),
+	status: z.enum(ACTIVITY_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional().default('not_started'),
+	sort_order: z.number().int().min(0).optional().default(0),
+	metadata: z.record(z.unknown()).optional().default({})
+});
+
+export const updateMilestoneSchema = z.object({
+	milestone_type: z.enum(MILESTONE_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig milestonetype' })
+	}).optional(),
+	title: z.string().min(1).max(300).optional(),
+	description: z.string().max(2000).optional(),
+	target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').optional(),
+	actual_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum moet in formaat YYYY-MM-DD zijn').nullable().optional(),
+	phase: z.enum(PROJECT_PHASES, {
+		errorMap: () => ({ message: 'Ongeldige projectfase' })
+	}).nullable().optional(),
+	is_critical: z.boolean().optional(),
+	status: z.enum(ACTIVITY_STATUSES, {
+		errorMap: () => ({ message: 'Ongeldige status' })
+	}).optional(),
+	sort_order: z.number().int().min(0).optional(),
+	metadata: z.record(z.unknown()).optional()
+});
+
+// =============================================================================
+// ACTIVITY DEPENDENCIES — Planning Sprint 1
+// =============================================================================
+
+export const createDependencySchema = z.object({
+	source_type: z.enum(['activity', 'milestone'] as const, {
+		errorMap: () => ({ message: 'Brontype moet activity of milestone zijn' })
+	}),
+	source_id: z.string().uuid('Ongeldig bron-ID'),
+	target_type: z.enum(['activity', 'milestone'] as const, {
+		errorMap: () => ({ message: 'Doeltype moet activity of milestone zijn' })
+	}),
+	target_id: z.string().uuid('Ongeldig doel-ID'),
+	dependency_type: z.enum(DEPENDENCY_TYPES, {
+		errorMap: () => ({ message: 'Ongeldig afhankelijkheidstype' })
+	}).optional().default('finish_to_start'),
+	lag_days: z.number().int().min(-365).max(365).optional().default(0)
 });

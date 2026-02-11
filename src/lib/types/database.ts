@@ -21,7 +21,9 @@ import type {
 	ActivityStatus,
 	CorrespondenceStatus,
 	EvaluationStatus,
-	TimeEntryActivityType
+	TimeEntryActivityType,
+	MilestoneType,
+	DependencyType
 } from './enums.js';
 
 // =============================================================================
@@ -411,6 +413,11 @@ export interface ProjectProfile {
 	nuts_codes: string[];
 	timeline_start: string | null;
 	timeline_end: string | null;
+	planning_generated_at: string | null;
+	planning_approved: boolean;
+	planning_approved_at: string | null;
+	planning_approved_by: string | null;
+	planning_metadata: Record<string, unknown>;
 	metadata: Record<string, unknown>;
 	created_at: string;
 	updated_at: string;
@@ -433,6 +440,12 @@ export interface PhaseActivity {
 	assigned_to: string | null;
 	due_date: string | null;
 	completed_at: string | null;
+	planned_start: string | null;
+	planned_end: string | null;
+	actual_start: string | null;
+	actual_end: string | null;
+	estimated_hours: number | null;
+	progress_percentage: number;
 	metadata: Record<string, unknown>;
 	created_at: string;
 	updated_at: string;
@@ -589,4 +602,44 @@ export interface HarvestLog {
 	errors: unknown[];
 	metadata: Record<string, unknown>;
 	created_at: string;
+}
+
+// =============================================================================
+// MILESTONES — Planning Sprint 1
+// =============================================================================
+
+export interface Milestone {
+	id: string;
+	project_id: string;
+	milestone_type: MilestoneType;
+	title: string;
+	description: string;
+	target_date: string;
+	actual_date: string | null;
+	phase: ProjectPhase | null;
+	is_critical: boolean;
+	status: ActivityStatus;
+	sort_order: number;
+	metadata: Record<string, unknown>;
+	created_by: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at: string | null;
+}
+
+// =============================================================================
+// ACTIVITY DEPENDENCIES — Planning Sprint 1
+// =============================================================================
+
+export interface ActivityDependency {
+	id: string;
+	project_id: string;
+	source_type: 'activity' | 'milestone';
+	source_id: string;
+	target_type: 'activity' | 'milestone';
+	target_id: string;
+	dependency_type: DependencyType;
+	lag_days: number;
+	created_at: string;
+	updated_at: string;
 }

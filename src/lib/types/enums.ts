@@ -322,6 +322,54 @@ export const TIME_ENTRY_ACTIVITY_TYPE_LABELS: Record<TimeEntryActivityType, stri
 };
 
 // =============================================================================
+// MILESTONES — Planning Sprint 1
+// =============================================================================
+
+export const MILESTONE_TYPES = [
+	'phase_start',
+	'phase_end',
+	'publication',
+	'submission_deadline',
+	'nota_van_inlichtingen',
+	'award_decision',
+	'standstill_end',
+	'contract_signed',
+	'custom'
+] as const;
+export type MilestoneType = (typeof MILESTONE_TYPES)[number];
+
+export const MILESTONE_TYPE_LABELS: Record<MilestoneType, string> = {
+	phase_start: 'Fase start',
+	phase_end: 'Fase einde',
+	publication: 'Publicatie',
+	submission_deadline: 'Inschrijfdeadline',
+	nota_van_inlichtingen: 'Nota van Inlichtingen',
+	award_decision: 'Gunningsbesluit',
+	standstill_end: 'Einde standstill',
+	contract_signed: 'Contract getekend',
+	custom: 'Aangepast'
+};
+
+// =============================================================================
+// DEPENDENCIES — Planning Sprint 1
+// =============================================================================
+
+export const DEPENDENCY_TYPES = [
+	'finish_to_start',
+	'start_to_start',
+	'finish_to_finish',
+	'start_to_finish'
+] as const;
+export type DependencyType = (typeof DEPENDENCY_TYPES)[number];
+
+export const DEPENDENCY_TYPE_LABELS: Record<DependencyType, string> = {
+	finish_to_start: 'Einde \u2192 Start',
+	start_to_start: 'Start \u2192 Start',
+	finish_to_finish: 'Einde \u2192 Einde',
+	start_to_finish: 'Start \u2192 Einde'
+};
+
+// =============================================================================
 // AUDIT ACTIONS
 // =============================================================================
 

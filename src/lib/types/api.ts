@@ -725,3 +725,35 @@ export interface TimeEntryReportData {
 	by_activity: { activity_type: TimeEntryActivityType; label: string; hours: number; percentage: number }[];
 	by_week: { week: string; label: string; hours: number }[];
 }
+
+// =============================================================================
+// DEADLINE TRACKER — Planning Sprint 2
+// =============================================================================
+
+export interface DeadlineItem {
+	id: string;
+	type: 'milestone' | 'activity';
+	title: string;
+	date: string;
+	project_id: string;
+	project_name: string;
+	phase: ProjectPhase;
+	status: ActivityStatus;
+	is_critical: boolean;
+	assigned_to: string | null;
+	assigned_to_name: string | null;
+	days_remaining: number;
+	is_overdue: boolean;
+}
+
+export interface DeadlineSummary {
+	total: number;
+	overdue: number;
+	this_week: number;
+	critical: number;
+}
+
+export interface DeadlineResponse {
+	items: DeadlineItem[];
+	summary: DeadlineSummary;
+}

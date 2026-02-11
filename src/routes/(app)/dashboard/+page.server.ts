@@ -103,11 +103,96 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		};
 	});
 
-	// Upcoming deadlines
+	// Upcoming deadlines — combine milestones + activities via stored procedure
+	// Also keep project-level deadlines as fallback
 	const today = new Date();
 	const nextWeek = new Date();
 	nextWeek.setDate(nextWeek.getDate() + DEADLINE_DAYS_AHEAD);
 
+	// Try to get organization-wide deadlines from milestones + activities
+	let combinedDeadlines: {
+		id: string;
+		type: string;
+		title: string;
+		date: string;
+		project_id: string;
+		project_name: string;
+		phase: string;
+		status: string;
+		is_critical: boolean;
+		days_remaining: number;
+	}[] = [];
+
+	// Load milestones directly (more reliable than RPC if org_id not available)
+	const { data: milestonesData } = await supabase
+		.from('milestones')
+		.select('id, title, target_date, phase, status, is_critical, project_id, projects!inner(name)')
+		.is('deleted_at', null)
+		.neq('status', 'completed')
+		.gte('target_date', today.toISOString().split('T')[0])
+		.lte('target_date', new Date(today.getTime() + DEADLINE_DAYS_AHEAD * 86400000).toISOString().split('T')[0])
+		.order('target_date')
+		.limit(10);
+
+	// Load activities with due dates
+	const { data: activitiesWithDueDate } = await supabase
+		.from('phase_activities')
+		.select('id, title, due_date, phase, status, project_id, projects!inner(name)')
+		.is('deleted_at', null)
+		.not('due_date', 'is', null)
+		.not('status', 'in', '("completed","skipped")')
+		.gte('due_date', today.toISOString().split('T')[0])
+		.lte('due_date', new Date(today.getTime() + DEADLINE_DAYS_AHEAD * 86400000).toISOString().split('T')[0])
+		.order('due_date')
+		.limit(10);
+
+	const todayMs = today.getTime();
+	const dayMs = 86400000;
+
+	if (milestonesData) {
+		combinedDeadlines.push(
+			...milestonesData.map((m) => {
+				const projectData = m.projects as unknown as { name: string };
+				return {
+					id: m.id,
+					type: 'milestone',
+					title: m.title,
+					date: m.target_date,
+					project_id: m.project_id,
+					project_name: projectData?.name ?? '',
+					phase: m.phase ?? '',
+					status: m.status,
+					is_critical: m.is_critical,
+					days_remaining: Math.ceil((new Date(m.target_date).getTime() - todayMs) / dayMs)
+				};
+			})
+		);
+	}
+
+	if (activitiesWithDueDate) {
+		combinedDeadlines.push(
+			...activitiesWithDueDate.map((a) => {
+				const projectData = a.projects as unknown as { name: string };
+				return {
+					id: a.id,
+					type: 'activity',
+					title: a.title,
+					date: a.due_date,
+					project_id: a.project_id,
+					project_name: projectData?.name ?? '',
+					phase: a.phase ?? '',
+					status: a.status,
+					is_critical: false,
+					days_remaining: Math.ceil((new Date(a.due_date).getTime() - todayMs) / dayMs)
+				};
+			})
+		);
+	}
+
+	// Sort combined deadlines by date
+	combinedDeadlines.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+	// Fallback: project-level deadlines
 	const upcomingDeadlines: DashboardRecentProject[] = allProjects
 		.filter(p => p.deadline_date && new Date(p.deadline_date) >= today && new Date(p.deadline_date) <= nextWeek)
 		.sort((a, b) => new Date(a.deadline_date!).getTime() - new Date(b.deadline_date!).getTime())
@@ -159,6 +244,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		metrics,
 		recentProjects,
 		upcomingDeadlines,
+		combinedDeadlines,
 		monthlyData
 	};
 };
