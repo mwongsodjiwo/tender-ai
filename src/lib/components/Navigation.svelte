@@ -2,13 +2,16 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import type { SupabaseClient } from '@supabase/supabase-js';
-	import type { Profile, ProjectStatus } from '$types';
+	import type { Profile, ProjectStatus, Notification } from '$types';
 	import { lastProjectId } from '$lib/stores/lastProject';
+	import NotificationBell from '$lib/components/notifications/NotificationBell.svelte';
 
 	export let supabase: SupabaseClient;
 	export let profile: Profile | null;
 	export let isSuperadmin: boolean = false;
 	export let projects: { id: string; name: string; status: ProjectStatus; updated_at: string }[] = [];
+	export let notifications: Notification[] = [];
+	export let unreadNotificationCount: number = 0;
 
 	let mobileOpen = false;
 
@@ -46,6 +49,22 @@
 		{ path: '/team', label: 'Team', icon: 'users' }
 	];
 
+	async function handleMarkAllRead() {
+		await fetch('/api/notifications', {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ mark_all_read: true })
+		});
+		unreadNotificationCount = 0;
+		notifications = notifications.map((n) => ({ ...n, is_read: true }));
+	}
+
+	function handleNotificationClick(n: Notification) {
+		if (n.project_id) {
+			goto(`/projects/${n.project_id}/planning`);
+		}
+	}
+
 	async function handleLogout() {
 		await supabase.auth.signOut();
 		goto('/login');
@@ -62,12 +81,20 @@
 		<img src="/logo.png" alt="Tendermanager logo" class="h-7 w-7 rounded-full" />
 		Tendermanager
 	</a>
-	<button
-		on:click={() => (mobileOpen = !mobileOpen)}
-		class="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-		aria-label="Menu openen"
-		aria-expanded={mobileOpen}
-	>
+	<div class="flex items-center gap-1">
+		<NotificationBell
+			unreadCount={unreadNotificationCount}
+			{notifications}
+			onMarkAllRead={handleMarkAllRead}
+			onViewAll={() => goto('/notifications')}
+			onNotificationClick={handleNotificationClick}
+		/>
+		<button
+			on:click={() => (mobileOpen = !mobileOpen)}
+			class="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+			aria-label="Menu openen"
+			aria-expanded={mobileOpen}
+		>
 		{#if mobileOpen}
 			<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -78,6 +105,7 @@
 			</svg>
 		{/if}
 	</button>
+	</div>
 </div>
 
 <!-- Mobile overlay -->
@@ -258,6 +286,20 @@
 			</a>
 		</div>
 	</nav>
+
+	<!-- Notification bell (desktop sidebar) -->
+	<div class="hidden shrink-0 border-t border-gray-200 px-3 py-2 lg:block">
+		<div class="flex items-center gap-2">
+			<NotificationBell
+				unreadCount={unreadNotificationCount}
+				{notifications}
+				onMarkAllRead={handleMarkAllRead}
+				onViewAll={() => goto('/notifications')}
+				onNotificationClick={handleNotificationClick}
+			/>
+			<span class="text-xs text-gray-500">Notificaties</span>
+		</div>
+	</div>
 
 	<!-- User section at bottom -->
 	<div class="shrink-0 border-t border-gray-200 p-3">
