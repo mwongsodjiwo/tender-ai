@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import type { PageData } from './$types';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -14,13 +12,10 @@
 	} from '$types';
 	import type { Correspondence, ProjectPhase, CorrespondenceStatus } from '$types';
 
-	export let data: PageData;
+	export let projectId: string;
+	export let letters: Correspondence[] = [];
+	export let currentPhase: ProjectPhase = 'tendering';
 
-	$: project = data.project;
-	$: letters = (data.letters ?? []) as Correspondence[];
-	$: evaluations = data.evaluations ?? [];
-
-	// Letter type definitions (duplicated from correspondence-prompts for client-side)
 	const LETTER_TYPE_LABELS: Record<string, string> = {
 		invitation_rfi: 'Uitnodiging RFI',
 		invitation_consultation: 'Uitnodiging marktconsultatie',
@@ -49,47 +44,34 @@
 		cover_letter: ['contracting']
 	};
 
-	// Filter state
 	let searchQuery = '';
 	let phaseFilter = '';
 	let statusFilter = '';
 	let typeFilter = '';
 
-	// New letter dialog state
 	let showNewLetterDialog = false;
 	let selectedLetterType = '';
 	let creating = false;
 	let createError = '';
 
-	// Filter config for FilterBar
 	$: filterConfig = [
 		{
 			key: 'phase',
 			label: 'Fase',
-			options: PROJECT_PHASES.map((p) => ({
-				value: p,
-				label: PROJECT_PHASE_LABELS[p]
-			}))
+			options: PROJECT_PHASES.map((p) => ({ value: p, label: PROJECT_PHASE_LABELS[p] }))
 		},
 		{
 			key: 'type',
 			label: 'Type',
-			options: Object.entries(LETTER_TYPE_LABELS).map(([value, label]) => ({
-				value,
-				label
-			}))
+			options: Object.entries(LETTER_TYPE_LABELS).map(([value, label]) => ({ value, label }))
 		},
 		{
 			key: 'status',
 			label: 'Status',
-			options: CORRESPONDENCE_STATUSES.map((s) => ({
-				value: s,
-				label: CORRESPONDENCE_STATUS_LABELS[s]
-			}))
+			options: CORRESPONDENCE_STATUSES.map((s) => ({ value: s, label: CORRESPONDENCE_STATUS_LABELS[s] }))
 		}
 	];
 
-	// Filtered letters
 	$: filteredLetters = letters.filter((l) => {
 		if (phaseFilter && l.phase !== phaseFilter) return false;
 		if (statusFilter && l.status !== statusFilter) return false;
@@ -105,24 +87,16 @@
 		return true;
 	});
 
-	// Available letter types filtered by current project phase
-	$: currentPhase = (project?.status ?? 'tendering') as ProjectPhase;
 	$: availableLetterTypes = Object.entries(LETTER_TYPE_PHASES)
 		.filter(([, phases]) => phases.includes(currentPhase))
-		.map(([key]) => ({
-			value: key,
-			label: LETTER_TYPE_LABELS[key] ?? key
-		}));
+		.map(([key]) => ({ value: key, label: LETTER_TYPE_LABELS[key] ?? key }));
 
-	// Show all types if none match the current phase
 	$: displayLetterTypes =
 		availableLetterTypes.length > 0
 			? availableLetterTypes
 			: Object.entries(LETTER_TYPE_LABELS).map(([value, label]) => ({ value, label }));
 
-	function handleSearch(query: string) {
-		searchQuery = query;
-	}
+	function handleSearch(query: string) { searchQuery = query; }
 
 	function handleFilter(key: string, value: string) {
 		if (key === 'phase') phaseFilter = value;
@@ -140,16 +114,13 @@
 
 	async function createNewLetter() {
 		if (!selectedLetterType) return;
-
 		creating = true;
 		createError = '';
 
 		try {
-			// Determine the phase for this letter type
 			const phases = LETTER_TYPE_PHASES[selectedLetterType] ?? ['tendering'];
 			const phase = phases[0];
-
-			const response = await fetch(`/api/projects/${project.id}/correspondence`, {
+			const response = await fetch(`/api/projects/${projectId}/correspondence`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -172,64 +143,43 @@
 			showNewLetterDialog = false;
 			selectedLetterType = '';
 			creating = false;
-
-			// Navigate to the new letter editor
-			window.location.href = `/projects/${project.id}/correspondence/${result.data.id}`;
+			window.location.href = `/projects/${projectId}/correspondence/${result.data.id}`;
 			return;
 		} catch {
 			createError = 'Netwerkfout bij het aanmaken van de brief.';
 		}
-
 		creating = false;
 	}
 </script>
 
-<svelte:head>
-	<title>Correspondentie — {project.name} — Tendermanager</title>
-</svelte:head>
-
 <div class="space-y-6">
-	<!-- Page header -->
+	<!-- Header with new letter button -->
 	<div class="flex items-start justify-between">
 		<div>
-			<h1 class="text-2xl font-bold text-gray-900">Correspondentie</h1>
-			<p class="mt-1 text-sm text-gray-500">
-				Beheer brieven en documenten voor dit aanbestedingsproject.
-			</p>
+			<p class="text-sm text-gray-500">Beheer brieven en documenten voor dit project.</p>
 		</div>
 		<button
 			type="button"
-			on:click={() => {
-				showNewLetterDialog = true;
-				createError = '';
-			}}
+			on:click={() => { showNewLetterDialog = true; createError = ''; }}
 			class="rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 		>
 			+ Nieuwe brief
 		</button>
 	</div>
 
-	<!-- New letter type selection dialog -->
+	<!-- New letter dialog -->
 	{#if showNewLetterDialog}
 		<div class="rounded-card bg-white p-6 shadow-card">
 			<h3 class="text-base font-semibold text-gray-900">Kies een brieftype</h3>
-			<p class="mt-1 text-sm text-gray-500">
-				Selecteer het type brief dat u wilt aanmaken.
-			</p>
-
+			<p class="mt-1 text-sm text-gray-500">Selecteer het type brief dat u wilt aanmaken.</p>
 			{#if createError}
-				<div class="mt-3">
-					<ErrorAlert message={createError} />
-				</div>
+				<div class="mt-3"><ErrorAlert message={createError} /></div>
 			{/if}
-
 			<div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
 				{#each displayLetterTypes as letterType}
 					<button
 						type="button"
-						on:click={() => {
-							selectedLetterType = letterType.value;
-						}}
+						on:click={() => { selectedLetterType = letterType.value; }}
 						class="rounded-card border px-4 py-3 text-left text-sm transition-colors
 							{selectedLetterType === letterType.value
 								? 'border-primary-500 bg-primary-50 text-primary-700'
@@ -244,14 +194,10 @@
 					</button>
 				{/each}
 			</div>
-
 			<div class="mt-4 flex items-center justify-end gap-2">
 				<button
 					type="button"
-					on:click={() => {
-						showNewLetterDialog = false;
-						selectedLetterType = '';
-					}}
+					on:click={() => { showNewLetterDialog = false; selectedLetterType = ''; }}
 					class="rounded-card border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
 				>
 					Annuleren
@@ -262,11 +208,7 @@
 					disabled={!selectedLetterType || creating}
 					class="rounded-card bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
 				>
-					{#if creating}
-						<LoadingSpinner />
-					{:else}
-						Brief aanmaken
-					{/if}
+					{#if creating}<LoadingSpinner />{:else}Brief aanmaken{/if}
 				</button>
 			</div>
 		</div>
@@ -303,7 +245,6 @@
 	<!-- Letters table -->
 	{#if filteredLetters.length > 0}
 		<div class="rounded-card bg-white shadow-card overflow-hidden">
-			<!-- Table header -->
 			<table class="w-full">
 				<thead>
 					<tr class="border-b border-gray-200">
@@ -318,12 +259,12 @@
 					{#each filteredLetters as letter (letter.id)}
 						<tr class="group transition-colors hover:bg-gray-50">
 							<td class="px-6 py-4">
-								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
 									<StatusBadge status={letter.phase} />
 								</a>
 							</td>
 							<td class="px-6 py-4">
-								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block min-w-0">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block min-w-0">
 									<span class="text-sm font-medium text-gray-900">
 										{LETTER_TYPE_LABELS[letter.letter_type] ?? letter.letter_type}
 									</span>
@@ -337,12 +278,12 @@
 								</a>
 							</td>
 							<td class="px-6 py-4">
-								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
 									<StatusBadge status={letter.status} />
 								</a>
 							</td>
 							<td class="px-6 py-4">
-								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
 									{#if letter.recipient}
 										<span class="text-sm text-gray-700">{letter.recipient}</span>
 									{:else}
@@ -351,7 +292,7 @@
 								</a>
 							</td>
 							<td class="px-6 py-4 text-right">
-								<a href="/projects/{project.id}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
 									<span class="text-sm text-gray-500">{formatDate(letter.created_at)}</span>
 								</a>
 							</td>

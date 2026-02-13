@@ -45,7 +45,6 @@
 		{ path: '/profile', label: 'Projectprofiel', icon: 'clipboard-list' },
 		{ path: '/planning', label: 'Planning', icon: 'calendar-clock' },
 		{ path: '/documents', label: 'Documenten', icon: 'file-text' },
-		{ path: '/correspondence', label: 'Correspondentie', icon: 'mail' },
 		{ path: '/team', label: 'Team', icon: 'users' }
 	];
 
@@ -254,11 +253,6 @@
 									<line x1="16" y1="17" x2="8" y2="17" stroke-linecap="round" />
 									<line x1="10" y1="9" x2="8" y2="9" stroke-linecap="round" />
 								</svg>
-							{:else if subLink.icon === 'mail'}
-								<!-- Lucide: Folder -->
-								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-									<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
-								</svg>
 							{:else if subLink.icon === 'users'}
 								<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 									<path d="M18 21a8 8 0 0 0-16 0" />
@@ -289,16 +283,13 @@
 
 	<!-- Notification bell (desktop sidebar) -->
 	<div class="hidden shrink-0 border-t border-gray-200 px-3 py-2 lg:block">
-		<div class="flex items-center gap-2">
-			<NotificationBell
-				unreadCount={unreadNotificationCount}
-				{notifications}
-				onMarkAllRead={handleMarkAllRead}
-				onViewAll={() => goto('/notifications')}
-				onNotificationClick={handleNotificationClick}
-			/>
-			<span class="text-xs text-gray-500">Notificaties</span>
-		</div>
+		<NotificationBell
+			unreadCount={unreadNotificationCount}
+			{notifications}
+			onMarkAllRead={handleMarkAllRead}
+			onViewAll={() => goto('/notifications')}
+			onNotificationClick={handleNotificationClick}
+		/>
 	</div>
 
 	<!-- User section at bottom -->

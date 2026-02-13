@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import AuditLog from '$components/AuditLog.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 
 	export let data: PageData;
 
@@ -13,10 +13,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<Breadcrumbs items={[
-		{ label: project.name, href: `/projects/${project.id}` },
-		{ label: 'Audit log' }
-	]} />
+	<BackButton />
 
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Audit log</h1>

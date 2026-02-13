@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import TeamManager from '$components/TeamManager.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ReviewerInvite from '$components/ReviewerInvite.svelte';
 
 	export let data: PageData;
@@ -32,11 +31,6 @@
 </svelte:head>
 
 <div class="space-y-8">
-	<Breadcrumbs items={[
-		{ label: project.name, href: `/projects/${project.id}` },
-		{ label: 'Team' }
-	]} />
-
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Team</h1>
 		<p class="mt-1 text-sm text-gray-500">Beheer teamleden en kennishouders voor {project.name}</p>

@@ -3,7 +3,16 @@
 		label: string;
 		status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
 		href: string | null;
+		dueDate?: string | null;
+		assignedToName?: string | null;
 	}[];
+
+	function formatDueDate(dateStr: string): string {
+		return new Date(dateStr).toLocaleDateString('nl-NL', {
+			day: 'numeric',
+			month: 'short'
+		});
+	}
 
 	const STATUS_ICONS: Record<string, { class: string; symbol: 'check' | 'progress' | 'skip' | 'empty' }> = {
 		completed: { class: 'bg-success-100 text-success-600', symbol: 'check' },
@@ -46,10 +55,19 @@
 							<div class="h-2.5 w-2.5 rounded-full bg-gray-200"></div>
 						{/if}
 					</div>
-					<span class="flex-1 text-sm {activity.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-700'}">
-						{activity.label}
-					</span>
-					<span class="text-xs text-gray-400">{STATUS_LABELS[activity.status]}</span>
+					<div class="min-w-0 flex-1">
+						<span class="text-sm {activity.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-700'}">
+							{activity.label}
+						</span>
+						{#if activity.dueDate || activity.assignedToName}
+							<p class="mt-0.5 text-xs text-gray-400">
+								{#if activity.assignedToName}{activity.assignedToName}{/if}
+								{#if activity.dueDate && activity.assignedToName} &middot; {/if}
+								{#if activity.dueDate}{formatDueDate(activity.dueDate)}{/if}
+							</p>
+						{/if}
+					</div>
+					<span class="shrink-0 text-xs text-gray-400">{STATUS_LABELS[activity.status]}</span>
 					<svg class="h-4 w-4 shrink-0 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
 					</svg>
@@ -69,10 +87,19 @@
 							<div class="h-2.5 w-2.5 rounded-full bg-gray-200"></div>
 						{/if}
 					</div>
-					<span class="flex-1 text-sm {activity.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-700'}">
-						{activity.label}
-					</span>
-					<span class="text-xs text-gray-400">{STATUS_LABELS[activity.status]}</span>
+					<div class="min-w-0 flex-1">
+						<span class="text-sm {activity.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-700'}">
+							{activity.label}
+						</span>
+						{#if activity.dueDate || activity.assignedToName}
+							<p class="mt-0.5 text-xs text-gray-400">
+								{#if activity.assignedToName}{activity.assignedToName}{/if}
+								{#if activity.dueDate && activity.assignedToName} &middot; {/if}
+								{#if activity.dueDate}{formatDueDate(activity.dueDate)}{/if}
+							</p>
+						{/if}
+					</div>
+					<span class="shrink-0 text-xs text-gray-400">{STATUS_LABELS[activity.status]}</span>
 				</div>
 			{/if}
 		</li>

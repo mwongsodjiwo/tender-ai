@@ -9,7 +9,7 @@
 		CRITERION_TYPE_LABELS
 	} from '$types';
 	import MetricCard from '$lib/components/MetricCard.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
@@ -189,11 +189,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<!-- Breadcrumbs -->
-	<Breadcrumbs items={[
-		{ label: project.name, href: `/projects/${project.id}` },
-		{ label: 'Beoordelingen' }
-	]} />
+	<BackButton />
 
 	<!-- Header -->
 	<div class="flex items-center justify-between">

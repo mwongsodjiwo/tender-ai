@@ -45,7 +45,7 @@
 <div class="notification-bell-wrapper">
 	<button
 		class="notification-bell"
-		aria-label="Notificaties ({unreadCount} ongelezen)"
+		aria-label="Meldingen ({unreadCount} ongelezen)"
 		on:click|stopPropagation={toggleDropdown}
 	>
 		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -61,9 +61,9 @@
 	</button>
 
 	{#if isOpen}
-		<div class="notification-dropdown" role="dialog" aria-label="Notificaties">
+		<div class="notification-dropdown" role="dialog" aria-label="Meldingen">
 			<div class="dropdown-header">
-				<h3>Notificaties</h3>
+				<h3>Meldingen</h3>
 				{#if unreadCount > 0}
 					<button class="mark-all-btn" on:click={handleMarkAllRead}>
 						Alles gelezen
@@ -79,7 +79,7 @@
 
 			<div class="dropdown-footer">
 				<button class="view-all-btn" on:click={handleViewAll}>
-					Alle notificaties bekijken
+					Alle meldingen bekijken
 				</button>
 			</div>
 		</div>
@@ -127,8 +127,8 @@
 
 	.notification-dropdown {
 		position: absolute;
-		top: 100%;
-		right: 0;
+		bottom: 100%;
+		left: 0;
 		width: 22rem;
 		max-height: 28rem;
 		overflow-y: auto;

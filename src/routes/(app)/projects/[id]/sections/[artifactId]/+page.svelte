@@ -4,7 +4,7 @@
 	import TiptapEditor from '$components/TiptapEditor.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -205,10 +205,7 @@
 	<!-- Header -->
 	<div class="mb-4 flex items-center justify-between">
 		<div>
-			<Breadcrumbs items={[
-				{ label: project.name, href: `/projects/${project.id}` },
-				{ label: artifact.title }
-			]} />
+			<BackButton />
 			<h1 class="mt-1 text-xl font-bold text-gray-900">{artifact.title}</h1>
 			<p class="text-sm text-gray-500">
 				{(artifact as Record<string, unknown>).document_type

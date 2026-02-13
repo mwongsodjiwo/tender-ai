@@ -3,7 +3,7 @@
 	import type { UeaPart } from '$types/enums';
 	import { UEA_PARTS, UEA_PART_TITLES, UEA_PART_ROMAN } from '$types';
 	import MetricCard from '$lib/components/MetricCard.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
@@ -151,11 +151,7 @@
 </svelte:head>
 
 <div class="space-y-8">
-	<!-- Breadcrumbs -->
-	<Breadcrumbs items={[
-		{ label: project.name, href: `/projects/${project.id}` },
-		{ label: 'UEA' }
-	]} />
+	<BackButton />
 
 	<!-- Page header -->
 	<div class="flex items-start justify-between">

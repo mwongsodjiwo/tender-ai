@@ -7,7 +7,7 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 	import {
 		CORRESPONDENCE_STATUS_LABELS,
 		PROJECT_PHASE_LABELS
@@ -208,14 +208,12 @@
 {:else}
 <div class="space-y-6">
 	<!-- Header -->
-	<div class="flex items-start justify-between">
+	<div class="flex items-start gap-4">
+		<div class="pt-1">
+			<BackButton />
+		</div>
 		<div>
-			<Breadcrumbs items={[
-				{ label: project.name, href: `/projects/${project.id}` },
-				{ label: 'Correspondentie', href: `/projects/${project.id}/correspondence` },
-				{ label: LETTER_TYPE_LABELS[letter.letter_type] ?? letter.letter_type }
-			]} />
-			<div class="mt-1 flex items-center gap-3">
+			<div class="flex items-center gap-3">
 				<h1 class="text-2xl font-bold text-gray-900">
 					{LETTER_TYPE_LABELS[letter.letter_type] ?? letter.letter_type}
 				</h1>
@@ -232,12 +230,6 @@
 				{/if}
 			</p>
 		</div>
-		<a
-			href="/projects/{project.id}/correspondence"
-			class="text-sm font-medium text-primary-600 hover:text-primary-700"
-		>
-			&larr; Terug naar overzicht
-		</a>
 	</div>
 
 	<!-- Metadata bar -->

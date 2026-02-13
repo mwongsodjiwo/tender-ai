@@ -4,7 +4,6 @@
 	import type { ProjectProfile, Document } from '$types';
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 
 	export let data: PageData;
@@ -233,11 +232,6 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="space-y-6">
-	<Breadcrumbs items={[
-		{ label: project.name, href: `/projects/${project.id}` },
-		{ label: 'Projectprofiel' }
-	]} />
-
 	<!-- Simplified page header -->
 	<h1 class="text-xl font-bold text-gray-900">Projectprofiel</h1>
 

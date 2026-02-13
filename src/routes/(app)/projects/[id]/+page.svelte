@@ -19,7 +19,7 @@
 
 	$: project = data.project;
 	$: artifacts = data.artifacts;
-	$: members = data.members as { id: string; profile: { first_name: string; last_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
+	$: members = data.members as { id: string; profile_id: string; profile: { first_name: string; last_name: string; email: string }; roles: { role: import('$types').ProjectRole }[] }[];
 	$: projectMetrics = data.projectMetrics as {
 		totalSections: number;
 		approvedSections: number;
@@ -118,11 +118,19 @@
 		return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 	}
 
+	function getMemberName(profileId: string): string {
+		const member = members.find((m) => m.profile_id === profileId);
+		if (!member?.profile) return '';
+		return `${member.profile.first_name ?? ''} ${member.profile.last_name ?? ''}`.trim();
+	}
+
 	// Phase-specific fallback activities (used when no DB activities exist for a phase)
 	type ActivityItem = {
 		label: string;
 		status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
 		href: string | null;
+		dueDate?: string | null;
+		assignedToName?: string | null;
 	};
 
 	const FALLBACK_PHASE_ACTIVITIES: Record<ProjectPhase, (projectId: string) => ActivityItem[]> = {
@@ -183,6 +191,28 @@
 		]
 	};
 
+	// Resolve activity title to a navigable href
+	const TITLE_ROUTE_MAP: [RegExp, (pid: string) => string][] = [
+		[/programma van eisen/i, (pid) => `/projects/${pid}/requirements`],
+		[/aanbestedingsleidraad/i, (pid) => leidraadDocTypeId ? `/projects/${pid}/documents/${leidraadDocTypeId}` : `/projects/${pid}/documents`],
+		[/conceptovereenkomst/i, (pid) => `/projects/${pid}/contract`],
+		[/uniform europees|uea/i, (pid) => `/projects/${pid}/uea`],
+		[/nota van inlichtingen/i, (pid) => `/projects/${pid}/correspondence`],
+		[/selectieleidraad/i, (pid) => `/projects/${pid}/documents`],
+		[/gunningscriteria|emvi/i, (pid) => `/projects/${pid}/emvi`],
+		[/marktverkenning|deskresearch|rfi|marktconsultatie/i, (pid) => `/projects/${pid}/marktverkenning`],
+		[/briefing/i, (pid) => `/projects/${pid}/briefing`],
+		[/profiel/i, (pid) => `/projects/${pid}/profile`],
+		[/team/i, (pid) => `/projects/${pid}/team`]
+	];
+
+	function getActivityHref(title: string): string | null {
+		for (const [pattern, resolver] of TITLE_ROUTE_MAP) {
+			if (pattern.test(title)) return resolver(project.id);
+		}
+		return null;
+	}
+
 	// Build activities per phase: use DB activities if available, else fallback
 	function getActivitiesForPhase(phase: ProjectPhase): ActivityItem[] {
 		const dbForPhase = dbActivities.filter((a) => a.phase === phase);
@@ -190,7 +220,9 @@
 			return dbForPhase.map((a) => ({
 				label: a.title,
 				status: a.status,
-				href: null
+				href: getActivityHref(a.title),
+				dueDate: a.due_date ?? null,
+				assignedToName: a.assigned_to ? getMemberName(a.assigned_to) : null
 			}));
 		}
 		return FALLBACK_PHASE_ACTIVITIES[phase](project.id);

@@ -39,12 +39,12 @@
 	const { ROW_HEIGHT, PHASE_ROW_HEIGHT, HEADER_HEIGHT, LEFT_PANEL_WIDTH } = GANTT_CONSTANTS;
 
 	let viewMode: ViewMode = 'week';
-	let collapsedPhases: Set<string> = new Set();
+	let expandedPhases: Set<string> = new Set();
 	let depDragSourceId: string | null = null;
 
 	$: phaseGroups = groupByPhase(activities, milestones).map((g) => ({
 		...g,
-		collapsed: collapsedPhases.has(g.phase)
+		collapsed: !expandedPhases.has(g.phase)
 	}));
 	$: bounds = calculateTimelineBounds(activities, milestones, timelineStart, timelineEnd);
 	$: timeScale = createTimeScale(bounds.start, bounds.end, viewMode);
@@ -76,10 +76,10 @@
 	}
 
 	function togglePhase(phase: string): void {
-		const newSet = new Set(collapsedPhases);
+		const newSet = new Set(expandedPhases);
 		if (newSet.has(phase)) newSet.delete(phase);
 		else newSet.add(phase);
-		collapsedPhases = newSet;
+		expandedPhases = newSet;
 	}
 
 	function scrollToToday(): void {

@@ -1,9 +1,13 @@
-// Documents sub-page — load all document types, artifacts grouped by type, EMVI + uploads
+// Documents sub-page — load all document types, artifacts grouped by type, EMVI + correspondence
 
 import type { PageServerLoad } from './$types';
+import type { Correspondence, Evaluation } from '$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, url }) => {
 	const { supabase } = locals;
+
+	// Determine active tab from URL query parameter
+	const activeTab = url.searchParams.get('tab') ?? 'documents';
 
 	// Load all active document types
 	const { data: documentTypes } = await supabase
@@ -36,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		artifactsByType[key].push(artifact);
 	}
 
-	// Build product blocks for each document type (including those without artifacts)
+	// Build product blocks for each document type
 	const productBlocks = allDocTypes.map((dt) => {
 		const items = artifactsByType[dt.id] ?? [];
 		const total = items.length;
@@ -53,7 +57,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		};
 	});
 
-	// Load EMVI criteria count for EMVI product card
+	// Load EMVI criteria count
 	const { data: emviCriteria } = await supabase
 		.from('emvi_criteria')
 		.select('id')
@@ -70,10 +74,33 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.is('deleted_at', null)
 		.order('created_at', { ascending: false });
 
+	// Load correspondence for this project
+	const { data: lettersData } = await supabase
+		.from('correspondence')
+		.select('*')
+		.eq('project_id', params.id)
+		.is('deleted_at', null)
+		.order('created_at', { ascending: false });
+
+	const letters: Correspondence[] = (lettersData ?? []) as Correspondence[];
+
+	// Load evaluations (for context with rejection letters)
+	const { data: evaluationsData } = await supabase
+		.from('evaluations')
+		.select('*')
+		.eq('project_id', params.id)
+		.is('deleted_at', null)
+		.order('ranking', { ascending: true });
+
+	const evaluations: Evaluation[] = (evaluationsData ?? []) as Evaluation[];
+
 	return {
+		activeTab,
 		artifacts: allArtifacts,
 		productBlocks,
 		emviCount,
-		uploadedDocuments: uploadedDocuments ?? []
+		uploadedDocuments: uploadedDocuments ?? [],
+		letters,
+		evaluations
 	};
 };

@@ -8,12 +8,13 @@
 		MILESTONE_TYPE_LABELS,
 		ACTIVITY_STATUS_LABELS
 	} from '$types';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import MetricCard from '$lib/components/MetricCard.svelte';
+	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import DeadlineList from '$lib/components/planning/DeadlineList.svelte';
 	import DeadlineCalendar from '$lib/components/planning/DeadlineCalendar.svelte';
 	import GanttChart from '$lib/components/planning/GanttChart.svelte';
 	import PlanningWizard from '$lib/components/planning/PlanningWizard.svelte';
+	import DocumentDetailDrawer from '$lib/components/planning/DocumentDetailDrawer.svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -21,13 +22,30 @@
 
 	export let data: PageData;
 
+	interface PlanningDocument {
+		id: string;
+		name: string;
+		slug: string;
+		description: string | null;
+		status: string;
+		phase: string;
+		deadline: string | null;
+		daysRemaining: number | null;
+		total: number;
+		approved: number;
+		progress: number;
+		assignedTo: string | null;
+	}
+
 	$: project = data.project;
 	$: milestones = (data.milestones ?? []) as Milestone[];
 	$: deadlineItems = (data.deadlineItems ?? []) as DeadlineItem[];
 	$: activities = (data.activities ?? []) as PhaseActivity[];
 	$: dependencies = (data.dependencies ?? []) as ActivityDependency[];
 	$: projectProfile = data.projectProfile;
+	$: members = data.members ?? [];
 	$: metrics = data.planningMetrics;
+	$: planningDocuments = (data.planningDocuments ?? []) as PlanningDocument[];
 
 	// Critical path state
 	let criticalPathIds: Set<string> = new Set();
@@ -87,20 +105,124 @@
 	}
 
 	// Tab state — support ?tab= query parameter
-	type PlanningTab = 'deadlines' | 'timeline' | 'ai';
+	type PlanningTab = 'documents' | 'deadlines' | 'timeline' | 'ai';
 	$: tabParam = $page.url.searchParams.get('tab') as PlanningTab | null;
-	let activeTab: PlanningTab = 'deadlines';
+	let activeTab: PlanningTab = 'documents';
 
 	// Initialize from query parameter
-	$: if (tabParam && ['deadlines', 'timeline', 'ai'].includes(tabParam)) {
+	$: if (tabParam && ['documents', 'deadlines', 'timeline', 'ai'].includes(tabParam)) {
 		activeTab = tabParam;
 	}
 
 	const TABS: { id: PlanningTab; label: string; disabled: boolean }[] = [
+		{ id: 'documents', label: 'Documenten', disabled: false },
 		{ id: 'deadlines', label: 'Deadlines', disabled: false },
 		{ id: 'timeline', label: 'Tijdlijn', disabled: false },
 		{ id: 'ai', label: 'AI Suggesties', disabled: false }
 	];
+
+	// Document drawer state
+	let selectedDocument: PlanningDocument | null = null;
+
+	function handleDocumentClick(doc: PlanningDocument): void {
+		selectedDocument = doc;
+	}
+
+	function closeDocumentDrawer(): void {
+		selectedDocument = null;
+	}
+
+	let drawerSaveError: string = '';
+
+	async function handleDocumentSave(docId: string, deadline: string | null, assignedTo: string | null): Promise<void> {
+		drawerSaveError = '';
+		const doc = planningDocuments.find((d) => d.id === docId);
+		if (!doc) return;
+
+		// Find or create a matching activity for this document
+		const matchingActivity = activities.find(
+			(a) => a.title.toLowerCase().includes(doc.name.toLowerCase())
+				|| doc.name.toLowerCase().includes(a.title.toLowerCase())
+		);
+
+		if (matchingActivity) {
+			// Update existing activity
+			try {
+				const response = await fetch(`/api/projects/${project.id}/activities/${matchingActivity.id}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						due_date: deadline,
+						assigned_to: assignedTo
+					})
+				});
+				if (!response.ok) {
+					const err = await response.json();
+					drawerSaveError = err.message ?? 'Fout bij opslaan.';
+					return;
+				}
+			} catch {
+				drawerSaveError = 'Netwerkfout bij opslaan.';
+				return;
+			}
+		} else if (deadline || assignedTo) {
+			// Create new activity for this document via REST API
+			const body: Record<string, string> = {
+				title: doc.name,
+				phase: doc.phase,
+				activity_type: 'custom',
+				description: `Planning activiteit voor ${doc.name}`
+			};
+			if (deadline) body.due_date = deadline;
+			if (assignedTo) body.assigned_to = assignedTo;
+
+			try {
+				const response = await fetch(`/api/projects/${project.id}/activities`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(body)
+				});
+				if (!response.ok) {
+					const err = await response.json();
+					drawerSaveError = err.message ?? 'Fout bij aanmaken activiteit.';
+					return;
+				}
+			} catch {
+				drawerSaveError = 'Netwerkfout bij aanmaken activiteit.';
+				return;
+			}
+		}
+
+		selectedDocument = null;
+		await invalidateAll();
+	}
+
+	function getDocActivities(doc: PlanningDocument): { id: string; title: string; status: string }[] {
+		return activities
+			.filter((a) =>
+				a.title.toLowerCase().includes(doc.name.toLowerCase())
+				|| doc.name.toLowerCase().includes(a.title.toLowerCase())
+			)
+			.map((a) => ({ id: a.id, title: a.title, status: a.status }));
+	}
+
+	function getAssignedName(profileId: string | null): string {
+		if (!profileId) return '';
+		const member = members.find(
+			(m: { profile_id: string }) => m.profile_id === profileId
+		);
+		if (!member?.profile) return '';
+		const p = member.profile as { first_name?: string; last_name?: string };
+		return `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim();
+	}
+
+	function formatDocDate(dateStr: string): string {
+		return new Date(dateStr).toLocaleDateString('nl-NL', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		});
+	}
 
 	// Gantt chart: activity update handler (drag-and-drop)
 	let ganttUpdateError: string = '';
@@ -138,6 +260,7 @@
 	let showMilestoneModal: boolean = false;
 	let milestoneFormError: string = '';
 	let milestoneFormSubmitting: boolean = false;
+	let isMilestone: boolean = false;
 
 	// Export dropdown
 	let showExportMenu: boolean = false;
@@ -157,21 +280,36 @@
 	// Milestone management panel
 	let showMilestonePanel: boolean = false;
 
-	// Phase groups for overview
-	$: phaseGroups = activities.reduce(
-		(acc: Record<string, PhaseActivity[]>, activity: PhaseActivity) => {
-			if (!acc[activity.phase]) {
-				acc[activity.phase] = [];
-			}
-			acc[activity.phase].push(activity);
-			return acc;
-		},
-		{} as Record<string, PhaseActivity[]>
-	);
-
 	function handleDeadlineClick(item: DeadlineItem): void {
 		if (item.type === 'milestone') {
 			showMilestonePanel = true;
+		}
+	}
+
+	let dateUpdateError: string = '';
+
+	async function handleDateChange(item: DeadlineItem, newDate: string): Promise<void> {
+		dateUpdateError = '';
+		const url = item.type === 'milestone'
+			? `/api/projects/${project.id}/milestones/${item.id}`
+			: `/api/projects/${project.id}/activities/${item.id}`;
+		const body = item.type === 'milestone'
+			? { target_date: newDate }
+			: { due_date: newDate };
+		try {
+			const response = await fetch(url, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			if (!response.ok) {
+				const err = await response.json();
+				dateUpdateError = err.message ?? 'Fout bij opslaan datum.';
+				return;
+			}
+			await invalidateAll();
+		} catch {
+			dateUpdateError = 'Netwerkfout bij opslaan datum.';
 		}
 	}
 
@@ -193,25 +331,63 @@
 	function closeMilestoneModal(): void {
 		showMilestoneModal = false;
 		milestoneFormError = '';
+		isMilestone = false;
+	}
+
+	// Context menu state
+	let contextMenu: { x: number; y: number; activityId: string; title: string } | null = null;
+
+	function handleContextMenu(e: MouseEvent, doc: PlanningDocument): void {
+		e.preventDefault();
+		const matchingActivity = activities.find(
+			(a) => a.title.toLowerCase().includes(doc.name.toLowerCase())
+				|| doc.name.toLowerCase().includes(a.title.toLowerCase())
+		);
+		if (!matchingActivity) return;
+		contextMenu = { x: e.clientX, y: e.clientY, activityId: matchingActivity.id, title: doc.name };
+	}
+
+	function handleDeadlineContextMenu(e: MouseEvent, item: DeadlineItem): void {
+		e.preventDefault();
+		if (item.type !== 'activity') return;
+		contextMenu = { x: e.clientX, y: e.clientY, activityId: item.id, title: item.title };
+	}
+
+	function closeContextMenu(): void {
+		contextMenu = null;
+	}
+
+	let deleteError: string = '';
+
+	async function handleDeleteActivity(): Promise<void> {
+		if (!contextMenu) return;
+		deleteError = '';
+		const { activityId } = contextMenu;
+		contextMenu = null;
+
+		try {
+			const response = await fetch(`/api/projects/${project.id}/activities/${activityId}`, {
+				method: 'DELETE'
+			});
+			if (!response.ok) {
+				const err = await response.json();
+				deleteError = err.message ?? 'Fout bij verwijderen.';
+				return;
+			}
+			await invalidateAll();
+		} catch {
+			deleteError = 'Netwerkfout bij verwijderen.';
+		}
 	}
 </script>
 
-<svelte:window on:click={closeExportMenu} />
+<svelte:window on:click={(e) => { closeContextMenu(); closeExportMenu(e); }} />
 
 <svelte:head>
 	<title>Planning — {project.name} — Tendermanager</title>
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-	<!-- Breadcrumbs -->
-	<Breadcrumbs
-		items={[
-			{ label: 'Projecten', href: '/projects' },
-			{ label: project.name, href: `/projects/${project.id}` },
-			{ label: 'Planning' }
-		]}
-	/>
-
 	<!-- Header -->
 	<div class="mt-4 flex items-center justify-between">
 		<div>
@@ -251,17 +427,10 @@
 			</div>
 			<button
 				type="button"
-				on:click={() => { showMilestonePanel = !showMilestonePanel; }}
-				class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-			>
-				Milestones ({milestones.length})
-			</button>
-			<button
-				type="button"
 				on:click={() => { showMilestoneModal = true; }}
 				class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
 			>
-				+ Milestone toevoegen
+				+ Toevoegen
 			</button>
 		</div>
 	</div>
@@ -324,7 +493,66 @@
 
 	<!-- Tab content -->
 	<div class="mt-6">
-		{#if activeTab === 'deadlines'}
+		{#if activeTab === 'documents'}
+			<!-- Documents table -->
+			{#if planningDocuments.length === 0}
+				<div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+					<svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+					</svg>
+					<h3 class="mt-4 text-sm font-medium text-gray-900">Geen documenten</h3>
+					<p class="mt-1 text-sm text-gray-500">
+						Er zijn nog geen documenttypes geconfigureerd.
+					</p>
+				</div>
+			{:else}
+				<div class="rounded-card bg-white shadow-card overflow-hidden">
+					<table class="w-full">
+						<thead>
+							<tr class="border-b border-gray-200">
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Titel</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Toegewezen aan</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Deadline</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100">
+							{#each planningDocuments as doc (doc.id)}
+								<tr
+									class="group cursor-pointer transition-colors hover:bg-gray-50"
+									on:click={() => handleDocumentClick(doc)}
+									on:contextmenu={(e) => handleContextMenu(e, doc)}
+									role="button"
+									tabindex="0"
+									on:keydown={(e) => { if (e.key === 'Enter') handleDocumentClick(doc); }}
+								>
+									<td class="px-6 py-4">
+										<span class="text-sm font-medium text-gray-900">{doc.name}</span>
+									</td>
+									<td class="px-6 py-4">
+										<StatusBadge status={doc.status} />
+									</td>
+									<td class="px-6 py-4">
+										{#if doc.assignedTo}
+											<span class="text-sm text-gray-700">{getAssignedName(doc.assignedTo)}</span>
+										{:else}
+											<span class="text-sm text-gray-400">—</span>
+										{/if}
+									</td>
+									<td class="px-6 py-4">
+										{#if doc.deadline}
+											<span class="text-sm text-gray-700">{formatDocDate(doc.deadline)}</span>
+										{:else}
+											<span class="text-sm text-gray-400">—</span>
+										{/if}
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+		{:else if activeTab === 'deadlines'}
 			<!-- View toggle -->
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5">
@@ -355,6 +583,20 @@
 				</div>
 			</div>
 
+			<!-- Date update error -->
+			{#if dateUpdateError}
+				<div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+					{dateUpdateError}
+					<button
+						type="button"
+						on:click={() => { dateUpdateError = ''; }}
+						class="ml-2 font-medium text-red-800 underline hover:text-red-900"
+					>
+						Sluiten
+					</button>
+				</div>
+			{/if}
+
 			<!-- Deadline view -->
 			{#if deadlineView === 'list'}
 				<DeadlineList
@@ -362,58 +604,14 @@
 					view="detailed"
 					showProjectName={false}
 					onItemClick={handleDeadlineClick}
+					onDateChange={handleDateChange}
+					onContextMenu={handleDeadlineContextMenu}
 				/>
 			{:else}
 				<DeadlineCalendar
 					items={deadlineItems}
 					onItemClick={handleDeadlineClick}
 				/>
-			{/if}
-
-			<!-- Phase overview (mini-tijdlijn preview) -->
-			{#if Object.keys(phaseGroups).length > 0}
-				<div class="mt-8">
-					<h2 class="text-sm font-semibold text-gray-700">Fase-overzicht</h2>
-					<div class="mt-3 space-y-3">
-						{#each Object.entries(phaseGroups) as [phase, phaseActivities] (phase)}
-							{@const completed = phaseActivities.filter((a) => a.status === 'completed').length}
-							{@const total = phaseActivities.length}
-							{@const pct = total > 0 ? Math.round((completed / total) * 100) : 0}
-							<div>
-								<div class="flex items-center justify-between text-sm">
-									<span class="font-medium text-gray-700">{PROJECT_PHASE_LABELS[phase as ProjectPhase]}</span>
-									<span class="text-gray-500">{completed}/{total} ({pct}%)</span>
-								</div>
-								<div class="mt-1 h-2 overflow-hidden rounded-full bg-gray-100">
-									<div
-										class="h-full rounded-full bg-primary-500 transition-all duration-300"
-										style="width: {pct}%"
-									></div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			<!-- Timeline info -->
-			{#if projectProfile?.timeline_start || projectProfile?.timeline_end}
-				<div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-					<p class="text-sm text-gray-600">
-						<span class="font-medium">Projectperiode:</span>
-						{#if projectProfile.timeline_start}
-							{formatDate(projectProfile.timeline_start)}
-						{:else}
-							<span class="italic text-gray-400">niet ingesteld</span>
-						{/if}
-						—
-						{#if projectProfile.timeline_end}
-							{formatDate(projectProfile.timeline_end)}
-						{:else}
-							<span class="italic text-gray-400">niet ingesteld</span>
-						{/if}
-					</p>
-				</div>
 			{/if}
 		{:else if activeTab === 'timeline'}
 			<!-- Gantt update error -->
@@ -444,14 +642,14 @@
 					</svg>
 					<h3 class="mt-4 text-sm font-medium text-gray-900">Geen planningsdata</h3>
 					<p class="mt-1 text-sm text-gray-500">
-						Voeg milestones of activiteiten toe om de tijdlijn te zien.
+						Voeg activiteiten of milestones toe om de tijdlijn te zien.
 					</p>
 					<button
 						type="button"
 						on:click={() => { showMilestoneModal = true; }}
 						class="mt-4 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
 					>
-						Eerste milestone toevoegen
+						Eerste item toevoegen
 					</button>
 				</div>
 			{:else}
@@ -534,7 +732,7 @@
 								on:click={() => { showMilestoneModal = true; showMilestonePanel = false; }}
 								class="mt-3 text-sm font-medium text-primary-600 hover:text-primary-700"
 							>
-								Eerste milestone toevoegen
+								Eerste item toevoegen
 							</button>
 						</div>
 					{:else}
@@ -602,9 +800,70 @@
 		</div>
 	{/if}
 
-	<!-- Create milestone modal -->
+	<!-- Document detail drawer -->
+	<DocumentDetailDrawer
+		document={selectedDocument}
+		projectId={project.id}
+		{members}
+		activities={selectedDocument ? getDocActivities(selectedDocument) : []}
+		onClose={closeDocumentDrawer}
+		onSave={handleDocumentSave}
+	/>
+
+	{#if drawerSaveError}
+		<div class="fixed bottom-4 right-4 z-50 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-lg">
+			{drawerSaveError}
+			<button
+				type="button"
+				on:click={() => { drawerSaveError = ''; }}
+				class="ml-2 font-medium text-red-800 underline hover:text-red-900"
+			>
+				Sluiten
+			</button>
+		</div>
+	{/if}
+
+	{#if deleteError}
+		<div class="fixed bottom-4 right-4 z-50 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-lg">
+			{deleteError}
+			<button
+				type="button"
+				on:click={() => { deleteError = ''; }}
+				class="ml-2 font-medium text-red-800 underline hover:text-red-900"
+			>
+				Sluiten
+			</button>
+		</div>
+	{/if}
+
+	<!-- Context menu -->
+	{#if contextMenu}
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div
+			class="fixed z-50 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-xl"
+			style="left: {contextMenu.x}px; top: {contextMenu.y}px;"
+			on:contextmenu|preventDefault
+		>
+			<div class="px-3 py-1.5 text-xs font-medium text-gray-400 truncate max-w-[200px]">
+				{contextMenu.title}
+			</div>
+			<hr class="my-1 border-gray-100" />
+			<button
+				type="button"
+				on:click={handleDeleteActivity}
+				class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+			>
+				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+				</svg>
+				Verwijderen
+			</button>
+		</div>
+	{/if}
+
+	<!-- Create item modal (milestone or activity) -->
 	{#if showMilestoneModal}
-		<div class="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Milestone toevoegen">
+		<div class="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Item toevoegen">
 			<!-- Backdrop -->
 			<button
 				type="button"
@@ -616,7 +875,9 @@
 			<!-- Modal -->
 			<div class="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-2xl">
 				<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-					<h2 class="text-lg font-semibold text-gray-900">Milestone toevoegen</h2>
+					<h2 class="text-lg font-semibold text-gray-900">
+						{isMilestone ? 'Milestone toevoegen' : 'Activiteit toevoegen'}
+					</h2>
 					<button
 						type="button"
 						on:click={closeMilestoneModal}
@@ -631,7 +892,7 @@
 
 				<form
 					method="POST"
-					action="?/createMilestone"
+					action={isMilestone ? '?/createMilestone' : '?/createActivity'}
 					use:enhance={() => {
 						milestoneFormSubmitting = true;
 						milestoneFormError = '';
@@ -639,7 +900,6 @@
 							milestoneFormSubmitting = false;
 							if (result.type === 'success') {
 								closeMilestoneModal();
-								// Page will reload via SvelteKit invalidation
 							} else if (result.type === 'error') {
 								milestoneFormError = 'Er is een fout opgetreden bij het aanmaken.';
 							}
@@ -653,47 +913,61 @@
 						</div>
 					{/if}
 
+					<!-- Milestone toggle -->
+					<div class="mb-4">
+						<label class="flex items-center gap-2">
+							<input
+								type="checkbox"
+								bind:checked={isMilestone}
+								class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+							/>
+							<span class="text-sm font-medium text-gray-700">Dit is een milestone</span>
+						</label>
+					</div>
+
 					<!-- Title -->
 					<div>
-						<label for="milestone-title" class="block text-sm font-medium text-gray-700">
+						<label for="item-title" class="block text-sm font-medium text-gray-700">
 							Titel <span class="text-red-500">*</span>
 						</label>
 						<input
-							id="milestone-title"
+							id="item-title"
 							name="title"
 							type="text"
 							required
 							maxlength="300"
-							placeholder="bijv. Publicatie op TenderNed"
+							placeholder={isMilestone ? 'bijv. Publicatie op TenderNed' : 'bijv. Programma van Eisen opstellen'}
 							class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
 						/>
 					</div>
 
-					<!-- Type -->
-					<div class="mt-4">
-						<label for="milestone-type" class="block text-sm font-medium text-gray-700">
-							Type <span class="text-red-500">*</span>
-						</label>
-						<select
-							id="milestone-type"
-							name="milestone_type"
-							required
-							class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-						>
-							{#each MILESTONE_TYPES as mt (mt)}
-								<option value={mt}>{MILESTONE_TYPE_LABELS[mt]}</option>
-							{/each}
-						</select>
-					</div>
+					{#if isMilestone}
+						<!-- Milestone type -->
+						<div class="mt-4">
+							<label for="milestone-type" class="block text-sm font-medium text-gray-700">
+								Type <span class="text-red-500">*</span>
+							</label>
+							<select
+								id="milestone-type"
+								name="milestone_type"
+								required
+								class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+							>
+								{#each MILESTONE_TYPES as mt (mt)}
+									<option value={mt}>{MILESTONE_TYPE_LABELS[mt]}</option>
+								{/each}
+							</select>
+						</div>
+					{/if}
 
-					<!-- Target date -->
+					<!-- Date -->
 					<div class="mt-4">
-						<label for="milestone-date" class="block text-sm font-medium text-gray-700">
-							Doeldatum <span class="text-red-500">*</span>
+						<label for="item-date" class="block text-sm font-medium text-gray-700">
+							{isMilestone ? 'Doeldatum' : 'Deadline'} <span class="text-red-500">*</span>
 						</label>
 						<input
-							id="milestone-date"
-							name="target_date"
+							id="item-date"
+							name={isMilestone ? 'target_date' : 'due_date'}
 							type="date"
 							required
 							class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -702,28 +976,52 @@
 
 					<!-- Phase -->
 					<div class="mt-4">
-						<label for="milestone-phase" class="block text-sm font-medium text-gray-700">
-							Fase (optioneel)
+						<label for="item-phase" class="block text-sm font-medium text-gray-700">
+							Fase {#if !isMilestone}<span class="text-red-500">*</span>{:else}(optioneel){/if}
 						</label>
 						<select
-							id="milestone-phase"
+							id="item-phase"
 							name="phase"
+							required={!isMilestone}
 							class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
 						>
-							<option value="">Geen fase</option>
+							{#if isMilestone}
+								<option value="">Geen fase</option>
+							{/if}
 							{#each PROJECT_PHASES as phase (phase)}
 								<option value={phase}>{PROJECT_PHASE_LABELS[phase]}</option>
 							{/each}
 						</select>
 					</div>
 
+					{#if !isMilestone}
+						<!-- Assigned to (activities only) -->
+						<div class="mt-4">
+							<label for="item-assigned" class="block text-sm font-medium text-gray-700">
+								Toegewezen aan (optioneel)
+							</label>
+							<select
+								id="item-assigned"
+								name="assigned_to"
+								class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+							>
+								<option value="">Niemand</option>
+								{#each members as member (member.profile_id)}
+									<option value={member.profile_id}>
+										{member.profile?.first_name ?? ''} {member.profile?.last_name ?? ''}
+									</option>
+								{/each}
+							</select>
+						</div>
+					{/if}
+
 					<!-- Description -->
 					<div class="mt-4">
-						<label for="milestone-desc" class="block text-sm font-medium text-gray-700">
+						<label for="item-desc" class="block text-sm font-medium text-gray-700">
 							Beschrijving (optioneel)
 						</label>
 						<textarea
-							id="milestone-desc"
+							id="item-desc"
 							name="description"
 							rows="2"
 							maxlength="2000"
@@ -732,18 +1030,20 @@
 						></textarea>
 					</div>
 
-					<!-- Critical -->
-					<div class="mt-4">
-						<label class="flex items-center gap-2">
-							<input
-								type="checkbox"
-								name="is_critical"
-								value="true"
-								class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-							/>
-							<span class="text-sm text-gray-700">Kritieke milestone (blokkeert andere milestones)</span>
-						</label>
-					</div>
+					{#if isMilestone}
+						<!-- Critical (milestones only) -->
+						<div class="mt-4">
+							<label class="flex items-center gap-2">
+								<input
+									type="checkbox"
+									name="is_critical"
+									value="true"
+									class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+								/>
+								<span class="text-sm text-gray-700">Kritieke milestone (blokkeert andere milestones)</span>
+							</label>
+						</div>
+					{/if}
 
 					<!-- Actions -->
 					<div class="mt-6 flex items-center justify-end gap-3">
@@ -762,7 +1062,7 @@
 							{#if milestoneFormSubmitting}
 								Opslaan...
 							{:else}
-								Milestone toevoegen
+								Toevoegen
 							{/if}
 						</button>
 					</div>
