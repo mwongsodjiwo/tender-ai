@@ -166,7 +166,7 @@
 		</div>
 		<div class="flex items-center gap-2">
 			<div class="flex items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 p-0.5">
-				{#each ([{ mode: 'day', label: 'Dag' }, { mode: 'week', label: 'Week' }, { mode: 'month', label: 'Maand' }]) as item (item.mode)}
+				{#each ([{ mode: 'day' as ViewMode, label: 'Dag' }, { mode: 'week' as ViewMode, label: 'Week' }, { mode: 'month' as ViewMode, label: 'Maand' }]) as item (item.mode)}
 					<button
 						type="button"
 						on:click={() => { viewMode = item.mode; }}

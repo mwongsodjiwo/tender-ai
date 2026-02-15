@@ -4,7 +4,10 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { TeamWorkloadResponse } from '$types';
-import type { PhaseActivity, TimeEntry, Profile } from '$types';
+import type {
+	PhaseActivity, TimeEntry,
+	OrgMemberWithProfile, RoleWithProjectMember
+} from '$types';
 import {
 	buildMemberWorkload,
 	buildMemberInfoList,
@@ -35,7 +38,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		supabase
 			.from('organization_members')
 			.select('profile_id, profiles!inner(id, first_name, last_name, avatar_url)')
-			.limit(200),
+			.limit(200)
+			.returns<OrgMemberWithProfile[]>(),
 		supabase
 			.from('projects')
 			.select('id, name')
@@ -80,6 +84,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			.from('project_member_roles')
 			.select('project_members!inner(profile_id), role')
 			.in('project_members.profile_id', profileIds)
+			.returns<RoleWithProjectMember[]>()
 	]);
 
 	if (activitiesRes.error) {
@@ -93,16 +98,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const allTimeEntries = (timeEntriesRes.data ?? []) as TimeEntry[];
 
 	// Build role mappings from joined query
-	const roleMappings = (rolesRes.data ?? []).map((r) => {
-		const pm = r.project_members as unknown as { profile_id: string };
-		return { profile_id: pm.profile_id, role: r.role };
-	});
+	const roleMappings = (rolesRes.data ?? []).map((r) => ({
+		profile_id: r.project_members.profile_id,
+		role: r.role
+	}));
 
 	// Build profile list from org members with joined profile data
-	const profiles = orgMembers.map((m) => {
-		const p = m.profiles as unknown as Profile;
-		return p;
-	}).filter((p): p is Profile => p !== null);
+	const profiles = orgMembers.map((m) => m.profiles)
+		.filter((p): p is OrgMemberWithProfile['profiles'] => p !== null);
 
 	const memberInfoList = buildMemberInfoList(orgMembers, profiles, roleMappings);
 

@@ -24,8 +24,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	for (const artifact of artifacts ?? []) {
 		const dtId = artifact.document_type_id;
 		if (!docTypeMap.has(dtId)) {
+			const dt = artifact.document_type;
+			const docType = Array.isArray(dt) ? dt[0] : dt;
 			docTypeMap.set(dtId, {
-				document_type: artifact.document_type as Record<string, unknown>,
+				document_type: docType as Record<string, unknown>,
 				artifact_count: 0
 			});
 		}

@@ -28,19 +28,19 @@ const STATUS_LABEL_MAP = {
  * Get progress percentage for artifact status
  */
 export function getProgressPercentage(status: string): number {
-	return PROGRESS_MAP[status] ?? 0;
+	return PROGRESS_MAP[status as keyof typeof PROGRESS_MAP] ?? 0;
 }
 
 /**
  * Get CSS classes for status badge color
  */
 export function getStatusColor(status: string): string {
-	return STATUS_COLOR_MAP[status] ?? 'bg-gray-100 text-gray-700';
+	return STATUS_COLOR_MAP[status as keyof typeof STATUS_COLOR_MAP] ?? 'bg-gray-100 text-gray-700';
 }
 
 /**
  * Get Dutch label for artifact status
  */
 export function getStatusLabel(status: string): string {
-	return STATUS_LABEL_MAP[status] ?? status;
+	return STATUS_LABEL_MAP[status as keyof typeof STATUS_LABEL_MAP] ?? status;
 }

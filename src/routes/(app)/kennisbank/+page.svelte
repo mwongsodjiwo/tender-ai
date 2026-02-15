@@ -70,7 +70,7 @@
 				<button
 					role="tab"
 					aria-selected={activeTab === tab.id}
-					on:click={() => (activeTab = tab.id)}
+					on:click={() => (activeTab = tab.id as typeof activeTab)}
 					class="shrink-0 px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors {activeTab === tab.id
 						? 'rounded-full bg-gray-800 text-white'
 						: 'text-gray-400 hover:text-gray-600'}"

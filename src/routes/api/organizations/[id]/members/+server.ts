@@ -85,6 +85,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		);
 	}
 
+	if (!user) {
+		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+	}
+
 	await logAudit(supabase, {
 		organizationId: params.id,
 		actorId: user.id,

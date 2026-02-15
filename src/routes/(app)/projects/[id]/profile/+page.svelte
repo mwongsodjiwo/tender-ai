@@ -603,7 +603,7 @@
 								<div class="flex items-center justify-between px-6 py-4">
 									<dt class="text-sm text-gray-500">Procedure</dt>
 									<dd class="text-sm text-gray-900">
-										{project.procedure_type ? (PROCEDURE_TYPE_LABELS[project.procedure_type] ?? project.procedure_type) : '—'}
+										{project.procedure_type ? (PROCEDURE_TYPE_LABELS[project.procedure_type as keyof typeof PROCEDURE_TYPE_LABELS] ?? project.procedure_type) : '—'}
 									</dd>
 								</div>
 								<div class="flex items-center justify-between px-6 py-4">
@@ -675,7 +675,7 @@
 
 					{#if project.procedure_type}
 						<p class="mt-4 text-sm font-medium text-gray-500">Procedure</p>
-						<p class="mt-1 text-sm text-gray-900">{PROCEDURE_TYPE_LABELS[project.procedure_type] ?? project.procedure_type}</p>
+						<p class="mt-1 text-sm text-gray-900">{PROCEDURE_TYPE_LABELS[project.procedure_type as keyof typeof PROCEDURE_TYPE_LABELS] ?? project.procedure_type}</p>
 					{/if}
 
 					{#if profile?.estimated_value}

@@ -1,6 +1,7 @@
 // RAG pipeline — processes uploads, generates embeddings, enables semantic search
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DocumentChunkWithDocument, TenderNedChunkWithItem } from '$types';
 import { generateEmbedding, generateEmbeddings } from './embeddings.js';
 import { EMBEDDING_CONFIG } from './config.js';
 
@@ -161,16 +162,15 @@ async function fallbackTextSearch(
 		docQuery = docQuery.eq('documents.project_id', projectId);
 	}
 
-	const { data: docChunks } = await docQuery;
+	const { data: docChunks } = await docQuery.returns<DocumentChunkWithDocument[]>();
 
 	for (const chunk of docChunks ?? []) {
-		const doc = chunk.documents as unknown as { name: string; deleted_at: string | null };
-		if (doc?.deleted_at) continue;
+		if (chunk.documents?.deleted_at) continue;
 
 		results.push({
 			source: 'document',
 			id: chunk.document_id,
-			title: doc?.name ?? 'Onbekend document',
+			title: chunk.documents?.name ?? 'Onbekend document',
 			snippet: extractSnippet(chunk.content, query),
 			relevance: calculateTextRelevance(chunk.content, query),
 			chunkId: chunk.id
@@ -182,14 +182,14 @@ async function fallbackTextSearch(
 		.from('tenderned_chunks')
 		.select('id, tenderned_item_id, content, tenderned_items!inner(title)')
 		.ilike('content', `%${query}%`)
-		.limit(limit);
+		.limit(limit)
+		.returns<TenderNedChunkWithItem[]>();
 
 	for (const chunk of tenderChunks ?? []) {
-		const item = chunk.tenderned_items as unknown as { title: string };
 		results.push({
 			source: 'tenderned',
 			id: chunk.tenderned_item_id,
-			title: item?.title ?? 'Onbekende aanbesteding',
+			title: chunk.tenderned_items?.title ?? 'Onbekende aanbesteding',
 			snippet: extractSnippet(chunk.content, query),
 			relevance: calculateTextRelevance(chunk.content, query),
 			chunkId: chunk.id

@@ -67,6 +67,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		);
 	}
 
+	if (!user) {
+		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+	}
+
 	// Add creator as owner
 	const { error: memberError } = await supabase.from('organization_members').insert({
 		organization_id: org.id,

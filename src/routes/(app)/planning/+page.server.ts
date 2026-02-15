@@ -4,7 +4,10 @@
 
 import type { PageServerLoad } from './$types';
 import type { OrganizationPlanningOverview, DeadlineItem, TeamWorkloadResponse } from '$types';
-import type { Milestone, PhaseActivity, TimeEntry, Profile } from '$types';
+import type {
+	Milestone, PhaseActivity, TimeEntry, Profile,
+	OrgMemberWithProfile, RoleWithProjectMember
+} from '$types';
 import {
 	buildProjectPlanning,
 	buildCapacity,
@@ -54,6 +57,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		supabase.from('organization_members')
 			.select('profile_id, profiles!inner(id, first_name, last_name, avatar_url)')
 			.limit(200)
+			.returns<OrgMemberWithProfile[]>()
 	]);
 
 	const profiles = profilesRes.data ?? [];
@@ -106,7 +110,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 async function buildWorkloadData(
 	supabase: App.Locals['supabase'],
-	orgMembers: { profile_id: string; profiles: unknown }[],
+	orgMembers: OrgMemberWithProfile[],
 	allActivities: PhaseActivity[],
 	activeProjects: { id: string; name: string }[],
 	from: string,
@@ -125,16 +129,17 @@ async function buildWorkloadData(
 		supabase.from('project_member_roles')
 			.select('project_members!inner(profile_id), role')
 			.in('project_members.profile_id', profileIds)
+			.returns<RoleWithProjectMember[]>()
 	]);
 
 	const allTimeEntries = (timeEntriesRes.data ?? []) as TimeEntry[];
-	const roleMappings = (rolesRes.data ?? []).map((r) => {
-		const pm = r.project_members as unknown as { profile_id: string };
-		return { profile_id: pm.profile_id, role: r.role };
-	});
+	const roleMappings = (rolesRes.data ?? []).map((r) => ({
+		profile_id: r.project_members.profile_id,
+		role: r.role
+	}));
 
-	const memberProfiles = orgMembers.map((m) => m.profiles as unknown as Profile)
-		.filter((p): p is Profile => p !== null);
+	const memberProfiles = orgMembers.map((m) => m.profiles)
+		.filter((p): p is OrgMemberWithProfile['profiles'] => p !== null);
 	const memberInfoList = buildMemberInfoList(orgMembers, memberProfiles, roleMappings);
 
 	const memberWorkloads = memberInfoList.map((member) =>

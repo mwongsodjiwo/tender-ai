@@ -3,7 +3,12 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { DeadlineItem, DeadlineResponse } from '$types';
+import type {
+	DeadlineItem,
+	DeadlineResponse,
+	MilestoneWithProjectName,
+	ActivityWithProjectAndProfile
+} from '$types';
 
 const RANGE_DAYS: Record<string, number> = {
 	week: 7,
@@ -74,8 +79,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	}
 
 	const [milestonesResult, activitiesResult] = await Promise.all([
-		milestonesQuery,
-		activitiesQuery
+		milestonesQuery.returns<MilestoneWithProjectName[]>(),
+		activitiesQuery.returns<ActivityWithProjectAndProfile[]>()
 	]);
 
 	if (milestonesResult.error) {
@@ -91,7 +96,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const milestoneItems: DeadlineItem[] = (milestonesResult.data ?? []).map((m) => {
 		const targetMs = new Date(m.target_date).getTime();
 		const daysRemaining = Math.ceil((targetMs - todayMs) / DAYS_MS);
-		const projectData = m.projects as unknown as { name: string };
 
 		return {
 			id: m.id,
@@ -99,8 +103,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			title: m.title,
 			date: m.target_date,
 			project_id: m.project_id,
-			project_name: projectData?.name ?? '',
-			phase: m.phase,
+			project_name: m.projects?.name ?? '',
+			phase: m.phase ?? 'preparing',
 			status: m.status,
 			is_critical: m.is_critical,
 			assigned_to: null,
@@ -110,29 +114,29 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		};
 	});
 
-	// Map activities to DeadlineItem
-	const activityItems: DeadlineItem[] = (activitiesResult.data ?? []).map((a) => {
-		const dueMs = new Date(a.due_date).getTime();
-		const daysRemaining = Math.ceil((dueMs - todayMs) / DAYS_MS);
-		const projectData = a.projects as unknown as { name: string };
-		const profileData = a.profiles as unknown as { full_name: string } | null;
+	// Map activities to DeadlineItem (filter out activities without due dates)
+	const activityItems: DeadlineItem[] = (activitiesResult.data ?? [])
+		.filter((a) => a.due_date !== null)
+		.map((a) => {
+			const dueMs = new Date(a.due_date!).getTime();
+			const daysRemaining = Math.ceil((dueMs - todayMs) / DAYS_MS);
 
-		return {
-			id: a.id,
-			type: 'activity' as const,
-			title: a.title,
-			date: a.due_date,
-			project_id: a.project_id,
-			project_name: projectData?.name ?? '',
-			phase: a.phase,
-			status: a.status,
-			is_critical: false,
-			assigned_to: a.assigned_to,
-			assigned_to_name: profileData?.full_name ?? null,
-			days_remaining: daysRemaining,
-			is_overdue: daysRemaining < 0
-		};
-	});
+			return {
+				id: a.id,
+				type: 'activity' as const,
+				title: a.title,
+				date: a.due_date!,
+				project_id: a.project_id,
+				project_name: a.projects?.name ?? '',
+				phase: a.phase,
+				status: a.status,
+				is_critical: false,
+				assigned_to: a.assigned_to,
+				assigned_to_name: a.profiles?.full_name ?? null,
+				days_remaining: daysRemaining,
+				is_overdue: daysRemaining < 0
+			};
+		});
 
 	// Combine and sort by date
 	const items = [...milestoneItems, ...activityItems].sort((a, b) => {

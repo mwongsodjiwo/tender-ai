@@ -6,6 +6,7 @@ import type { RequestHandler } from './$types';
 import { createDependencySchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
 import { wouldCreateCycle } from '$server/planning/critical-path';
+import type { ActivityDependency } from '$types';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
@@ -79,7 +80,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.select('source_id, target_id')
 		.eq('project_id', params.id);
 
-	if (existingDeps && wouldCreateCycle(existingDeps, parsed.data.source_id, parsed.data.target_id)) {
+	if (existingDeps && wouldCreateCycle(existingDeps as ActivityDependency[], parsed.data.source_id, parsed.data.target_id)) {
 		return json(
 			{ message: 'Deze afhankelijkheid zou een circulaire keten veroorzaken', code: 'CIRCULAR_DEPENDENCY', status: 400 },
 			{ status: 400 }

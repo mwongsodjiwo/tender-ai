@@ -1,5 +1,6 @@
 // AI requirements generation — generates concept requirements from briefing data
 
+import { z } from 'zod';
 import { chat } from './client.js';
 import { AI_CONFIG } from './config.js';
 import type { RequirementType, RequirementCategory } from '$types';
@@ -111,6 +112,14 @@ Genereer een passende set eisen (knock-out) en wensen voor dit project.`;
 	};
 }
 
+const requirementItemSchema = z.object({
+	title: z.string().max(500),
+	description: z.string().max(5000).optional().default(''),
+	requirement_type: z.enum(['eis', 'wens']),
+	category: z.enum(['functional', 'technical', 'process', 'quality', 'sustainability']),
+	priority: z.coerce.number().min(1).max(5).optional().default(3)
+});
+
 function parseRequirementsJson(content: string): GeneratedRequirement[] {
 	// Extract JSON array from response
 	const jsonMatch = content.match(/\[[\s\S]*\]/);
@@ -119,28 +128,20 @@ function parseRequirementsJson(content: string): GeneratedRequirement[] {
 	}
 
 	try {
-		const parsed = JSON.parse(jsonMatch[0]) as unknown[];
+		const rawParsed: unknown = JSON.parse(jsonMatch[0]);
+		if (!Array.isArray(rawParsed)) return [];
 
-		const validTypes = new Set(['eis', 'wens']);
-		const validCategories = new Set(['functional', 'technical', 'process', 'quality', 'sustainability']);
-
-		return parsed
-			.filter((item): item is Record<string, unknown> =>
-				typeof item === 'object' && item !== null
+		return rawParsed
+			.map((item) => requirementItemSchema.safeParse(item))
+			.filter((result): result is z.SafeParseSuccess<z.infer<typeof requirementItemSchema>> =>
+				result.success
 			)
-			.filter((item) =>
-				typeof item.title === 'string' &&
-				typeof item.requirement_type === 'string' &&
-				validTypes.has(item.requirement_type) &&
-				typeof item.category === 'string' &&
-				validCategories.has(item.category)
-			)
-			.map((item) => ({
-				title: String(item.title).slice(0, 500),
-				description: String(item.description ?? '').slice(0, 5000),
-				requirement_type: item.requirement_type as RequirementType,
-				category: item.category as RequirementCategory,
-				priority: Math.max(1, Math.min(5, Math.round(Number(item.priority) || 3)))
+			.map((result) => ({
+				title: result.data.title,
+				description: result.data.description,
+				requirement_type: result.data.requirement_type,
+				category: result.data.category,
+				priority: Math.max(1, Math.min(5, Math.round(result.data.priority)))
 			}));
 	} catch {
 		return [];

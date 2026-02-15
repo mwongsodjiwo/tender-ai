@@ -105,7 +105,7 @@
 		on:drop={handleDrop}
 		on:dragover={handleDragOver}
 		on:dragleave={handleDragLeave}
-		on:keydown={(e) => { if (e.key === 'Enter') document.querySelector('input[type="file"]')?.click(); }}
+		on:keydown={(e) => { if (e.key === 'Enter') (document.querySelector('input[type="file"]') as HTMLElement)?.click(); }}
 		aria-label="Sleep een bestand hierheen of klik om te selecteren"
 	>
 		<div class="text-center">

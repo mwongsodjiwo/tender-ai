@@ -17,8 +17,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.eq('profile_id', user.id);
 
 	const organizations = (memberships ?? [])
-		.map((m) => m.organization as { id: string; name: string; slug: string })
-		.filter(Boolean);
+		.map((m) => {
+			const org = m.organization;
+			if (Array.isArray(org)) return org[0] as { id: string; name: string; slug: string } | undefined;
+			return org as { id: string; name: string; slug: string } | undefined;
+		})
+		.filter((o): o is { id: string; name: string; slug: string } => o != null);
 
 	const selectedOrgId = url.searchParams.get('organization_id') ?? organizations[0]?.id ?? null;
 

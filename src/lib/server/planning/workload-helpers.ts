@@ -154,7 +154,7 @@ function getISOWeek(dateStr: string): string {
 
 export function buildMemberInfoList(
 	orgMembers: { profile_id: string }[],
-	profiles: Profile[],
+	profiles: Pick<Profile, 'id' | 'first_name' | 'last_name' | 'avatar_url'>[],
 	projectMemberRoles: { profile_id: string; role: string }[]
 ): MemberInfo[] {
 	const profileMap = new Map(profiles.map((p) => [p.id, p]));

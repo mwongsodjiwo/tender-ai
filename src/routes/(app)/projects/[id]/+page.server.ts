@@ -1,7 +1,7 @@
 // Project overview page — load artifacts, activities, metrics, and recent activity
 
 import type { PageServerLoad } from './$types';
-import type { PhaseActivity } from '$types';
+import type { PhaseActivity, ArtifactWithDocType } from '$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
@@ -11,7 +11,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.from('artifacts')
 		.select('*, document_type:document_types(id, name, slug)')
 		.eq('project_id', params.id)
-		.order('sort_order');
+		.order('sort_order')
+		.returns<ArtifactWithDocType[]>();
 
 	const allArtifacts = artifacts ?? [];
 	const artifactIds = allArtifacts.map((a) => a.id);
@@ -82,24 +83,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 	// Group artifacts by document type
-	type ArtifactWithType = (typeof allArtifacts)[number];
 	const documentBlocks = allArtifacts.reduce<
 		Record<
 			string,
 			{
 				docType: { id: string; name: string; slug: string };
-				items: ArtifactWithType[];
+				items: ArtifactWithDocType[];
 				total: number;
 				approved: number;
 				progress: number;
 			}
 		>
 	>((acc, artifact) => {
-		const docType = (artifact as Record<string, unknown>).document_type as {
-			id: string;
-			name: string;
-			slug: string;
-		} | null;
+		const docType = artifact.document_type;
 		const key = docType?.id ?? 'unknown';
 		if (!acc[key]) {
 			acc[key] = {

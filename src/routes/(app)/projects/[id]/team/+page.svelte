@@ -11,7 +11,13 @@
 		profile: { first_name: string; last_name: string; email: string };
 		roles: { role: import('$types').ProjectRole }[];
 	}[];
-	$: organizationMembers = data.organizationMembers as {
+	$: organizationMembers = (data.organizationMembers as {
+		profile_id: string;
+		profile: { first_name: string; last_name: string; email: string } | { first_name: string; last_name: string; email: string }[];
+	}[]).map((m) => ({
+		profile_id: m.profile_id,
+		profile: Array.isArray(m.profile) ? m.profile[0] : m.profile
+	})) as {
 		profile_id: string;
 		profile: { first_name: string; last_name: string; email: string };
 	}[];

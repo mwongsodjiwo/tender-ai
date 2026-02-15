@@ -62,7 +62,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		);
 	}
 
-	const orgData = project.organizations as { name: string } | null;
+	const rawOrg = project.organizations;
+	const orgData = (Array.isArray(rawOrg) ? rawOrg[0] : rawOrg) as { name: string } | null;
 	const exportParams = {
 		documentType,
 		artifacts,
@@ -101,7 +102,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { format, document_type: documentType.name }
 	});
 
-	return new Response(fileBuffer, {
+	return new Response(new Uint8Array(fileBuffer), {
 		headers: {
 			'Content-Type': contentType,
 			'Content-Disposition': `attachment; filename="${fileName}"`,

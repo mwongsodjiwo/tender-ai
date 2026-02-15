@@ -4,7 +4,9 @@ import type { PageServerLoad } from './$types';
 import type {
 	DashboardMetrics,
 	DashboardRecentProject,
-	MonthlyProjectData
+	MonthlyProjectData,
+	MilestoneWithProjectName,
+	ActivityWithProjectName
 } from '$types';
 
 const ACTIVE_STATUSES = ['draft', 'briefing', 'generating', 'review'];
@@ -132,7 +134,8 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		.gte('target_date', today.toISOString().split('T')[0])
 		.lte('target_date', new Date(today.getTime() + DEADLINE_DAYS_AHEAD * 86400000).toISOString().split('T')[0])
 		.order('target_date')
-		.limit(10);
+		.limit(10)
+		.returns<MilestoneWithProjectName[]>();
 
 	// Load activities with due dates
 	const { data: activitiesWithDueDate } = await supabase
@@ -144,7 +147,8 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		.gte('due_date', today.toISOString().split('T')[0])
 		.lte('due_date', new Date(today.getTime() + DEADLINE_DAYS_AHEAD * 86400000).toISOString().split('T')[0])
 		.order('due_date')
-		.limit(10);
+		.limit(10)
+		.returns<ActivityWithProjectName[]>();
 
 	const todayMs = today.getTime();
 	const dayMs = 86400000;
@@ -152,14 +156,13 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 	if (milestonesData) {
 		combinedDeadlines.push(
 			...milestonesData.map((m) => {
-				const projectData = m.projects as unknown as { name: string };
 				return {
 					id: m.id,
 					type: 'milestone',
 					title: m.title,
 					date: m.target_date,
 					project_id: m.project_id,
-					project_name: projectData?.name ?? '',
+					project_name: m.projects?.name ?? '',
 					phase: m.phase ?? '',
 					status: m.status,
 					is_critical: m.is_critical,
@@ -171,21 +174,22 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 
 	if (activitiesWithDueDate) {
 		combinedDeadlines.push(
-			...activitiesWithDueDate.map((a) => {
-				const projectData = a.projects as unknown as { name: string };
-				return {
-					id: a.id,
-					type: 'activity',
-					title: a.title,
-					date: a.due_date,
-					project_id: a.project_id,
-					project_name: projectData?.name ?? '',
-					phase: a.phase ?? '',
-					status: a.status,
-					is_critical: false,
-					days_remaining: Math.ceil((new Date(a.due_date).getTime() - todayMs) / dayMs)
-				};
-			})
+			...activitiesWithDueDate
+				.filter((a) => a.due_date !== null)
+				.map((a) => {
+					return {
+						id: a.id,
+						type: 'activity',
+						title: a.title,
+						date: a.due_date!,
+						project_id: a.project_id,
+						project_name: a.projects?.name ?? '',
+						phase: a.phase ?? '',
+						status: a.status,
+						is_critical: false,
+						days_remaining: Math.ceil((new Date(a.due_date!).getTime() - todayMs) / dayMs)
+					};
+				})
 		);
 	}
 

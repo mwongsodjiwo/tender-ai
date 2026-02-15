@@ -1,6 +1,6 @@
 // Document text extraction — parses PDF and Word files into plain text
 
-import type { Buffer } from 'node:buffer';
+import { Buffer } from 'node:buffer';
 
 const PDF_MIME = 'application/pdf';
 const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';

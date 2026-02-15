@@ -59,9 +59,10 @@ async function findApproachingMilestones(
 		.gte('target_date', today)
 		.lte('target_date', futureDate)
 		.neq('status', 'completed')
-		.is('deleted_at', null);
+		.is('deleted_at', null)
+		.returns<MilestoneWithProject[]>();
 
-	return (data as unknown as MilestoneWithProject[]) ?? [];
+	return data ?? [];
 }
 
 async function findOverdueMilestones(
@@ -77,9 +78,10 @@ async function findOverdueMilestones(
 		`)
 		.lt('target_date', today)
 		.neq('status', 'completed')
-		.is('deleted_at', null);
+		.is('deleted_at', null)
+		.returns<MilestoneWithProject[]>();
 
-	return (data as unknown as MilestoneWithProject[]) ?? [];
+	return data ?? [];
 }
 
 function buildApproachingNotifications(

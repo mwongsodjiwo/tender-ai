@@ -318,7 +318,7 @@
 
 		<div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
 			{#if project.procedure_type}
-				<span>Procedure: {PROCEDURE_TYPE_LABELS[project.procedure_type] ?? project.procedure_type}</span>
+				<span>Procedure: {PROCEDURE_TYPE_LABELS[project.procedure_type as keyof typeof PROCEDURE_TYPE_LABELS] ?? project.procedure_type}</span>
 			{/if}
 			{#if project.estimated_value}
 				<span>Waarde: &euro;{project.estimated_value.toLocaleString('nl-NL')}</span>
