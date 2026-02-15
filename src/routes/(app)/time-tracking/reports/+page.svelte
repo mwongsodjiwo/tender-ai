@@ -313,7 +313,7 @@
 									class="w-full rounded-t-md bg-primary-500 transition-all duration-500"
 									style="height: {(week.hours / maxWeekHours) * 140}px; min-height: 4px;"
 								></div>
-								<span class="text-xs text-gray-400">{week.label}</span>
+								<span class="text-xs text-gray-500">{week.label}</span>
 							</div>
 						{/each}
 					</div>

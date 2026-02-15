@@ -124,7 +124,7 @@
 						pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
 					/>
-					<p class="mt-1 text-xs text-gray-400">Alleen kleine letters, cijfers en koppeltekens.</p>
+					<p class="mt-1 text-xs text-gray-500">Alleen kleine letters, cijfers en koppeltekens.</p>
 				</div>
 				<div>
 					<label for="org-description" class="block text-sm font-medium text-gray-700">Beschrijving</label>
@@ -134,7 +134,7 @@
 						maxlength={1000}
 						rows="2"
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-					/>
+					></textarea>
 				</div>
 			</div>
 

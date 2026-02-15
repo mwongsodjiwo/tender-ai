@@ -3,8 +3,9 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { supabase } = locals;
+	await parent(); // Auth guard vanuit layout
 
 	const { data: project, error: projectError } = await supabase
 		.from('projects')

@@ -1,14 +1,14 @@
 // GET /api/tenderned — Search TenderNed items
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { tenderNedSearchSchema } from '$server/api/validation';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const parsed = tenderNedSearchSchema.safeParse({
@@ -20,10 +20,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	});
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { query, procedure_type, cpv_code, limit, offset } = parsed.data;
@@ -49,13 +46,11 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const { data, count, error: dbError } = await dbQuery;
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({
-		data: {
-			items: data ?? [],
-			total: count ?? 0
-		}
+	return apiSuccess({
+		items: data ?? [],
+		total: count ?? 0
 	});
 };

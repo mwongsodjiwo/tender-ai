@@ -1,26 +1,23 @@
 // POST /api/briefing/start — Start a briefing conversation for a project
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { briefingStartSchema } from '$server/api/validation';
 import { conductBriefing } from '$server/ai/briefing';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = briefingStartSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { project_id } = parsed.data;
@@ -34,10 +31,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (projectError || !project) {
-		return json(
-			{ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	// Update project status to briefing
@@ -59,7 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (convError) {
-		return json({ message: convError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', convError.message);
 	}
 
 	// Generate first AI message (opening question)
@@ -73,7 +67,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		]);
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'AI-fout';
-		return json({ message: `AI-fout: ${errorMessage}`, code: 'AI_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${errorMessage}`);
 	}
 
 	// Save system context message (hidden)
@@ -102,11 +96,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		entityId: conversation.id
 	});
 
-	return json({
-		data: {
-			conversation_id: conversation.id,
-			content: aiResponse.content,
-			briefing_complete: false
-		}
+	return apiSuccess({
+		conversation_id: conversation.id,
+		content: aiResponse.content,
+		briefing_complete: false
 	});
 };

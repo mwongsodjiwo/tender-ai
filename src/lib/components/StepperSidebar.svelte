@@ -23,7 +23,7 @@
 	const STATUS_LABEL_CLASSES = {
 		completed: 'text-gray-700',
 		active: 'text-primary-700 font-semibold',
-		pending: 'text-gray-400'
+		pending: 'text-gray-500'
 	} as const;
 </script>
 

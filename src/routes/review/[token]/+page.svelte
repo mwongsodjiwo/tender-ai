@@ -204,7 +204,7 @@
 							<!-- Chat messages -->
 							<div class="flex-1 overflow-y-auto px-4 py-3">
 								{#if chatMessages.length === 0}
-									<p class="text-center text-sm text-gray-400">
+									<p class="text-center text-sm text-gray-500">
 										Stel een vraag over deze sectie aan de AI-assistent.
 									</p>
 								{/if}

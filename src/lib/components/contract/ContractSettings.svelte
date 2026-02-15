@@ -54,7 +54,7 @@
 		{/each}
 	</select>
 	{#if generalConditions && generalConditions !== 'custom'}
-		<p class="mt-1 text-[10px] text-gray-400">
+		<p class="mt-1 text-[10px] text-gray-500">
 			{GENERAL_CONDITIONS_DESCRIPTIONS[generalConditions] ?? ''}
 		</p>
 	{/if}

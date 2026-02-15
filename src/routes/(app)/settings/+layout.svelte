@@ -46,7 +46,7 @@
 						aria-current={active ? 'page' : undefined}
 					>
 						<svg
-							class="mr-3 h-5 w-5 flex-shrink-0 {active ? 'text-primary-500' : 'text-gray-400'}"
+							class="mr-3 h-5 w-5 flex-shrink-0 {active ? 'text-primary-500' : 'text-gray-500'}"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"

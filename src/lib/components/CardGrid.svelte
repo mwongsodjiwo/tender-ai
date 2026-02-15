@@ -9,6 +9,6 @@
 	} as const;
 </script>
 
-<div class="grid gap-4 {COLUMN_CLASSES[columns]}">
+<section class="grid gap-4 {COLUMN_CLASSES[columns]}">
 	<slot />
-</div>
+</section>

@@ -28,6 +28,7 @@
 	}[];
 	$: monthlyData = data.monthlyData as MonthlyProjectData[];
 	$: hasCombinedDeadlines = combinedDeadlines.length > 0;
+	$: deadlineError = data.deadlineError as boolean;
 
 	const SECTION_STATUS_LABELS: Record<string, string> = {
 		draft: 'Concept',
@@ -116,7 +117,7 @@
 							<span>+{metrics.in_review_trend} deze week</span>
 						</div>
 					{:else}
-						<p class="mt-3 text-sm text-gray-400">Geen wijzigingen deze week</p>
+						<p class="mt-3 text-sm text-gray-500">Geen wijzigingen deze week</p>
 					{/if}
 					<div class="mt-4 grid w-full grid-cols-2 gap-3 border-t border-gray-100 pt-4">
 						<div class="text-center">
@@ -188,7 +189,7 @@
 					<p class="mt-1 text-sm text-gray-500">Gemiddeld percentage afgerond</p>
 					<div class="mt-6 flex items-center justify-center">
 						<div class="relative h-36 w-36">
-							<svg viewBox="0 0 120 120" class="h-full w-full -rotate-90" role="img" aria-label="Voortgang {metrics.average_progress}%">
+							<svg viewBox="0 0 120 120" class="h-full w-full -rotate-90" role="progressbar" aria-label="Voortgang {metrics.average_progress}%" aria-valuemin={0} aria-valuemax={100} aria-valuenow={metrics.average_progress}>
 								<circle
 									cx="60" cy="60" r="50"
 									fill="none"
@@ -254,7 +255,15 @@
 							</span>
 						{/if}
 					</div>
-					{#if !hasCombinedDeadlines && upcomingDeadlines.length === 0}
+					{#if deadlineError}
+						<div class="mt-6 flex flex-col items-center justify-center py-8 text-center" role="alert">
+							<svg class="h-10 w-10 text-error-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+							</svg>
+							<p class="mt-3 text-sm text-error-600">Kon deadlines niet laden</p>
+							<p class="mt-1 text-xs text-gray-500">Probeer de pagina te vernieuwen</p>
+						</div>
+					{:else if !hasCombinedDeadlines && upcomingDeadlines.length === 0}
 						<div class="mt-6 flex flex-col items-center justify-center py-8 text-center">
 							<svg class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -268,9 +277,11 @@
 									href="/projects/{deadline.project_id}/planning"
 									class="flex items-center gap-3 rounded-lg border border-gray-100 p-3 transition-colors hover:bg-gray-50"
 								>
-									<span class="inline-block h-2 w-2 shrink-0 rounded-full
-										{deadline.days_remaining <= 0 ? 'bg-red-500' : deadline.days_remaining <= 3 ? 'bg-orange-500' : 'bg-green-500'}">
-									</span>
+									<span
+									class="inline-block h-2 w-2 shrink-0 rounded-full
+										{deadline.days_remaining <= 0 ? 'bg-red-500' : deadline.days_remaining <= 3 ? 'bg-orange-500' : 'bg-green-500'}"
+									aria-hidden="true"
+								></span>
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center gap-1.5">
 											{#if deadline.is_critical}

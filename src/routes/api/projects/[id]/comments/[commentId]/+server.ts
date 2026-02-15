@@ -1,33 +1,28 @@
 // PATCH /api/projects/:id/comments/:commentId — Update/resolve comment
 // DELETE /api/projects/:id/comments/:commentId — Soft delete comment
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { updateDocumentCommentSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	let body: unknown;
 	try {
 		body = await request.json();
 	} catch {
-		return json({ message: 'Ongeldige JSON', code: 'INVALID_JSON', status: 400 }, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Ongeldige JSON');
 	}
 
 	const parsed = updateDocumentCommentSchema.safeParse(body);
 	if (!parsed.success) {
-		return json({
-			message: 'Validatiefout',
-			code: 'VALIDATION_ERROR',
-			status: 400,
-			errors: parsed.error.flatten().fieldErrors
-		}, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Validatiefout');
 	}
 
 	const updates: Record<string, unknown> = {};
@@ -48,7 +43,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	if (Object.keys(updates).length === 0) {
-		return json({ message: 'Geen wijzigingen opgegeven', code: 'NO_CHANGES', status: 400 }, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Geen wijzigingen opgegeven');
 	}
 
 	const { data, error: updateError } = await supabase
@@ -61,7 +56,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (updateError || !data) {
-		return json({ message: 'Opmerking niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Opmerking niet gevonden');
 	}
 
 	const auditAction = parsed.data.resolved ? 'approve' : 'update';
@@ -74,14 +69,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		changes: { resolved: parsed.data.resolved }
 	});
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Soft delete
@@ -95,7 +90,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (deleteError || !data) {
-		return json({ message: 'Opmerking niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Opmerking niet gevonden');
 	}
 
 	await logAudit(supabase, {
@@ -106,5 +101,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		actorId: user.id
 	});
 
-	return json({ message: 'Opmerking verwijderd' });
+	return apiSuccess({ message: 'Opmerking verwijderd' });
 };

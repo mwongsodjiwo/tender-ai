@@ -1,27 +1,24 @@
 // POST /api/projects/:id/regenerate — Regenerate an artifact section with AI
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { regenerateSectionSchema } from '$server/api/validation';
 import { regenerateSection } from '$server/ai/generation';
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = regenerateSectionSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { artifact_id, instructions } = parsed.data;
@@ -35,7 +32,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (artError || !artifact) {
-		return json({ message: 'Sectie niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Sectie niet gevonden');
 	}
 
 	// Get document type
@@ -46,7 +43,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (!documentType) {
-		return json({ message: 'Documenttype niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Documenttype niet gevonden');
 	}
 
 	// Get project briefing data
@@ -102,7 +99,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		});
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Generatiefout';
-		return json({ message: `AI-fout: ${errorMessage}`, code: 'AI_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${errorMessage}`);
 	}
 
 	// Update artifact with new content
@@ -118,7 +115,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (updateError) {
-		return json({ message: updateError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', updateError.message);
 	}
 
 	await logAudit(supabase, {
@@ -137,12 +134,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 	});
 
-	return json({
-		data: {
-			artifact: updated,
-			previous_version: previousVersion,
-			context_used: contextSnippets.length
-		}
+	return apiSuccess({
+		artifact: updated,
+		previous_version: previousVersion,
+		context_used: contextSnippets.length
 	});
 };
 

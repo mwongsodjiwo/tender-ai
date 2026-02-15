@@ -198,7 +198,7 @@
 						class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm"
 						aria-describedby="email-help"
 					/>
-					<p id="email-help" class="mt-1 text-xs text-gray-400">
+					<p id="email-help" class="mt-1 text-xs text-gray-500">
 						Het e-mailadres kan niet worden gewijzigd.
 					</p>
 				</div>

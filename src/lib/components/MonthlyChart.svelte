@@ -56,7 +56,7 @@
 		</div>
 
 		<!-- Y-axis labels -->
-		<div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-2 text-xs text-gray-400">
+		<div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-2 text-xs text-gray-500">
 			<span>0</span>
 			<span>{Math.ceil(maxValue / 2)}</span>
 			<span>{maxValue}</span>

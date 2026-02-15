@@ -1,16 +1,16 @@
 // POST /api/projects/:id/market-research/save — Save market research content to phase_activities metadata
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { saveMarketResearchSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
 import { MARKET_RESEARCH_ACTIVITY_TYPE_LABELS } from '$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -21,17 +21,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const body = await request.json();
 	const parsed = saveMarketResearchSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { activity_type, content, metadata } = parsed.data;
@@ -62,7 +59,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			.single();
 
 		if (updateError) {
-			return json({ message: updateError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+			return apiError(500, 'DB_ERROR', updateError.message);
 		}
 		activity = updated;
 	} else {
@@ -83,7 +80,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			.single();
 
 		if (createError) {
-			return json({ message: createError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+			return apiError(500, 'DB_ERROR', createError.message);
 		}
 		activity = created;
 	}
@@ -99,5 +96,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { activity_type, content_length: content.length }
 	});
 
-	return json({ data: activity }, { status: existing ? 200 : 201 });
+	return apiSuccess(activity, existing ? 200 : 201);
 };

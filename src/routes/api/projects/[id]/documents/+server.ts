@@ -1,15 +1,15 @@
 // GET /api/projects/:id/documents — List document types with artifact counts
 // POST /api/projects/:id/documents — Assemble a complete document from artifacts
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { assembleDocumentSchema } from '$server/api/validation';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Get all document types that have artifacts for this project
@@ -35,24 +35,21 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		if (entry) entry.artifact_count++;
 	}
 
-	return json({ data: Array.from(docTypeMap.values()) });
+	return apiSuccess(Array.from(docTypeMap.values()));
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = assembleDocumentSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { document_type_id } = parsed.data;
@@ -65,7 +62,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dtError || !documentType) {
-		return json({ message: 'Documenttype niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Documenttype niet gevonden');
 	}
 
 	// Get artifacts for this document type in this project
@@ -81,11 +78,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.map((a) => `# ${a.title}\n\n${a.content}`)
 		.join('\n\n---\n\n');
 
-	return json({
-		data: {
-			document_type: documentType,
-			artifacts: artifacts ?? [],
-			assembled_content: assembledContent
-		}
+	return apiSuccess({
+		document_type: documentType,
+		artifacts: artifacts ?? [],
+		assembled_content: assembledContent
 	});
 };

@@ -440,7 +440,7 @@
 								? 'bg-success-100 text-success-600'
 								: selectedStatus === 'current'
 									? 'bg-primary-600 text-white ring-4 ring-primary-100'
-									: 'bg-gray-100 text-gray-400'}"
+									: 'bg-gray-100 text-gray-500'}"
 					>
 						{#if selectedStatus === 'completed'}
 							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -452,7 +452,7 @@
 					</div>
 
 					<div class="flex-1 min-w-0">
-						<h2 class="text-base font-semibold {selectedStatus === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}">
+						<h2 class="text-base font-semibold {selectedStatus === 'upcoming' ? 'text-gray-500' : 'text-gray-900'}">
 							{PROJECT_PHASE_LABELS[effectiveSelectedPhase]}
 						</h2>
 					</div>
@@ -575,7 +575,7 @@
 								>
 									<div class="flex items-start justify-between">
 										<h3 class="font-medium text-gray-900">{block.docType.name}</h3>
-										<span class="text-xs text-gray-400">{block.total} secties</span>
+										<span class="text-xs text-gray-500">{block.total} secties</span>
 									</div>
 									<div class="mt-3">
 										<ProgressBar value={block.approved} max={block.total || 1} size="sm" label="" />
@@ -593,7 +593,7 @@
 							>
 								<div class="flex items-start justify-between">
 									<h3 class="font-medium text-gray-900">Gunningscriteria (EMVI)</h3>
-									<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+									<svg class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
 									</svg>
 								</div>
@@ -621,7 +621,7 @@
 								{#if section.reviewerName}
 									<p class="mt-1 text-xs text-gray-500">Reviewer: {section.reviewerName}</p>
 								{/if}
-								<p class="mt-1 text-xs text-gray-400">{timeAgo(section.waitingSince)}</p>
+								<p class="mt-1 text-xs text-gray-500">{timeAgo(section.waitingSince)}</p>
 							</div>
 						{/each}
 					</div>
@@ -658,7 +658,7 @@
 							</div>
 						{/each}
 						{#if members.length > 5}
-							<p class="text-xs text-gray-400">+{members.length - 5} meer</p>
+							<p class="text-xs text-gray-500">+{members.length - 5} meer</p>
 						{/if}
 					</div>
 				{/if}
@@ -686,7 +686,7 @@
 											<span class="text-gray-500"> — {entry.entity_type}</span>
 										{/if}
 									</p>
-									<p class="text-xs text-gray-400">
+									<p class="text-xs text-gray-500">
 										{entry.actor_email ? `${entry.actor_email} · ` : ''}{timeAgo(entry.created_at)}
 									</p>
 								</div>

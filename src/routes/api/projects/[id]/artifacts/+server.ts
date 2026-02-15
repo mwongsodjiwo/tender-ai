@@ -1,16 +1,16 @@
 // GET /api/projects/:id/artifacts — List project artifacts
 // POST /api/projects/:id/artifacts — Create an artifact
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createArtifactSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const documentTypeId = url.searchParams.get('document_type_id');
@@ -28,27 +28,24 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { data, error: dbError } = await query;
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = createArtifactSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { document_type_id, section_key, title, content, sort_order, metadata } = parsed.data;
@@ -70,7 +67,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	const { data: project } = await supabase
@@ -90,5 +87,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { section_key, title }
 	});
 
-	return json({ data: artifact }, { status: 201 });
+	return apiSuccess(artifact, 201);
 };

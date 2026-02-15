@@ -268,7 +268,7 @@
 								<div>{criterion.name}</div>
 								<div class="mt-0.5 font-normal normal-case">
 									<StatusBadge status={criterion.criterion_type} />
-									<span class="ml-1 text-gray-400">{Number(criterion.weight_percentage)}%</span>
+									<span class="ml-1 text-gray-500">{Number(criterion.weight_percentage)}%</span>
 								</div>
 							</th>
 						{/each}
@@ -320,7 +320,7 @@
 										{evaluation.ranking}
 									</span>
 								{:else}
-									<span class="text-sm text-gray-400">—</span>
+									<span class="text-sm text-gray-500">—</span>
 								{/if}
 							</td>
 							<td class="px-3 py-3 text-center">
@@ -330,7 +330,7 @@
 								<div class="flex items-center justify-end gap-1">
 									<a
 										href="/projects/{project.id}/evaluations/{evaluation.id}"
-										class="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+										class="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600"
 										aria-label="Bekijk {evaluation.tenderer_name}"
 									>
 										<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -341,7 +341,7 @@
 									<button
 										type="button"
 										on:click={() => deleteTenderer(evaluation.id)}
-										class="rounded-md p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-600"
+										class="rounded-md p-1.5 text-gray-500 hover:bg-error-50 hover:text-error-600"
 										aria-label="Verwijder {evaluation.tenderer_name}"
 									>
 										<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

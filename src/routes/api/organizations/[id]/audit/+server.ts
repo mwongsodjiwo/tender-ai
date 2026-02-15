@@ -1,14 +1,14 @@
 // GET /api/organizations/:id/audit — Query audit log for an organization
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { auditLogQuerySchema } from '$server/api/validation';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals, url }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const queryParams = {
@@ -22,10 +22,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 	const parsed = auditLogQuerySchema.safeParse(queryParams);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { page, per_page, action, entity_type, actor_id } = parsed.data;
@@ -53,15 +50,13 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 	const { data: entries, error: dbError, count } = await query;
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({
-		data: {
-			entries: entries ?? [],
-			total: count ?? 0,
-			page,
-			per_page
-		}
+	return apiSuccess({
+		entries: entries ?? [],
+		total: count ?? 0,
+		page,
+		per_page
 	});
 };

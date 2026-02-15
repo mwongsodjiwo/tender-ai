@@ -1,29 +1,39 @@
 // Documents sub-page — load all document types, artifacts grouped by type, EMVI + correspondence
 
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { Correspondence, Evaluation } from '$types';
 
-export const load: PageServerLoad = async ({ params, locals, url }) => {
+export const load: PageServerLoad = async ({ params, locals, url, parent }) => {
 	const { supabase } = locals;
+	await parent(); // Auth guard vanuit layout
 
 	// Determine active tab from URL query parameter
 	const activeTab = url.searchParams.get('tab') ?? 'documents';
 
 	// Load all active document types
-	const { data: documentTypes } = await supabase
+	const { data: documentTypes, error: dtError } = await supabase
 		.from('document_types')
 		.select('id, name, slug, description, sort_order')
 		.eq('is_active', true)
 		.order('sort_order');
 
+	if (dtError) {
+		throw error(500, 'Kon documenttypes niet laden');
+	}
+
 	const allDocTypes = documentTypes ?? [];
 
 	// Load all artifacts for this project
-	const { data: artifacts } = await supabase
+	const { data: artifacts, error: artifactError } = await supabase
 		.from('artifacts')
 		.select('*, document_type:document_types(id, name, slug)')
 		.eq('project_id', params.id)
 		.order('sort_order');
+
+	if (artifactError) {
+		throw error(500, 'Kon documenten niet laden');
+	}
 
 	const allArtifacts = artifacts ?? [];
 

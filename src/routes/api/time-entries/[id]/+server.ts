@@ -1,33 +1,28 @@
 // PUT /api/time-entries/:id — Update a time entry
 // DELETE /api/time-entries/:id — Delete a time entry
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { updateTimeEntrySchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	let body: unknown;
 	try {
 		body = await request.json();
 	} catch {
-		return json({ message: 'Ongeldige JSON', code: 'INVALID_JSON', status: 400 }, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Ongeldige JSON');
 	}
 
 	const parsed = updateTimeEntrySchema.safeParse(body);
 	if (!parsed.success) {
-		return json({
-			message: 'Validatiefout',
-			code: 'VALIDATION_ERROR',
-			status: 400,
-			errors: parsed.error.flatten().fieldErrors
-		}, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Validatiefout');
 	}
 
 	// Verify the entry belongs to the user
@@ -39,7 +34,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (fetchError || !existing) {
-		return json({ message: 'Urenregistratie niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Urenregistratie niet gevonden');
 	}
 
 	// If project_id is being updated, verify it exists and get organization_id
@@ -54,7 +49,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 			.single();
 
 		if (projectError || !project) {
-			return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+			return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 		}
 
 		updateData.organization_id = project.organization_id;
@@ -69,7 +64,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (updateError) {
-		return json({ message: 'Fout bij bijwerken urenregistratie', code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', 'Fout bij bijwerken urenregistratie');
 	}
 
 	await logAudit(supabase, {
@@ -80,14 +75,14 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 		changes: parsed.data
 	});
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Verify the entry belongs to the user
@@ -99,7 +94,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (fetchError || !existing) {
-		return json({ message: 'Urenregistratie niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Urenregistratie niet gevonden');
 	}
 
 	const { error: deleteError } = await supabase
@@ -109,7 +104,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.eq('user_id', user.id);
 
 	if (deleteError) {
-		return json({ message: 'Fout bij verwijderen urenregistratie', code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', 'Fout bij verwijderen urenregistratie');
 	}
 
 	await logAudit(supabase, {
@@ -120,5 +115,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		changes: { project_id: existing.project_id, date: existing.date, hours: existing.hours }
 	});
 
-	return json({ success: true });
+	return apiSuccess({ success: true });
 };

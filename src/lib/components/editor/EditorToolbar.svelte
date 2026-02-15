@@ -106,20 +106,25 @@
 	<span class="toolbar-divider"></span>
 
 	<div class="relative">
-		<button on:click={() => { if (isInTable) showTableMenu = !showTableMenu; else cmd('insertTable'); }} class="toolbar-btn" class:active={isInTable} title={isInTable ? 'Tabelopties' : 'Tabel invoegen'} aria-label={isInTable ? 'Tabelopties' : 'Tabel invoegen'} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" /></svg></button>
+		<button on:click={() => { if (isInTable) showTableMenu = !showTableMenu; else cmd('insertTable'); }} class="toolbar-btn" class:active={isInTable} title={isInTable ? 'Tabelopties' : 'Tabel invoegen'} aria-label={isInTable ? 'Tabelopties' : 'Tabel invoegen'} aria-expanded={isInTable ? showTableMenu : undefined} aria-haspopup={isInTable ? 'menu' : undefined} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" /></svg></button>
 		{#if showTableMenu && isInTable}
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg" on:mouseleave={() => { showTableMenu = false; }}>
-				<button on:click={() => { cmd('addColBefore'); showTableMenu = false; }} class="table-menu-btn" type="button">Kolom links invoegen</button>
-				<button on:click={() => { cmd('addColAfter'); showTableMenu = false; }} class="table-menu-btn" type="button">Kolom rechts invoegen</button>
-				<button on:click={() => { cmd('deleteCol'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button">Kolom verwijderen</button>
+			<div
+				class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+				role="menu"
+				tabindex="-1"
+				aria-label="Tabelopties"
+				on:mouseleave={() => { showTableMenu = false; }}
+				on:keydown={(e) => { if (e.key === 'Escape') { showTableMenu = false; } }}
+			>
+				<button on:click={() => { cmd('addColBefore'); showTableMenu = false; }} class="table-menu-btn" type="button" role="menuitem">Kolom links invoegen</button>
+				<button on:click={() => { cmd('addColAfter'); showTableMenu = false; }} class="table-menu-btn" type="button" role="menuitem">Kolom rechts invoegen</button>
+				<button on:click={() => { cmd('deleteCol'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button" role="menuitem">Kolom verwijderen</button>
 				<hr class="my-1 border-gray-200">
-				<button on:click={() => { cmd('addRowBefore'); showTableMenu = false; }} class="table-menu-btn" type="button">Rij boven invoegen</button>
-				<button on:click={() => { cmd('addRowAfter'); showTableMenu = false; }} class="table-menu-btn" type="button">Rij onder invoegen</button>
-				<button on:click={() => { cmd('deleteRow'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button">Rij verwijderen</button>
+				<button on:click={() => { cmd('addRowBefore'); showTableMenu = false; }} class="table-menu-btn" type="button" role="menuitem">Rij boven invoegen</button>
+				<button on:click={() => { cmd('addRowAfter'); showTableMenu = false; }} class="table-menu-btn" type="button" role="menuitem">Rij onder invoegen</button>
+				<button on:click={() => { cmd('deleteRow'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button" role="menuitem">Rij verwijderen</button>
 				<hr class="my-1 border-gray-200">
-				<button on:click={() => { cmd('deleteTable'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button">Tabel verwijderen</button>
+				<button on:click={() => { cmd('deleteTable'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button" role="menuitem">Tabel verwijderen</button>
 			</div>
 		{/if}
 	</div>

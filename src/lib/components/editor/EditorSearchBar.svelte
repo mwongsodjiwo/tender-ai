@@ -153,7 +153,7 @@
 
 <div class="flex shrink-0 items-center gap-2 border-b border-gray-200 bg-gray-50 px-6 py-2">
 	<div class="relative flex items-center">
-		<svg class="pointer-events-none absolute left-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+		<svg class="pointer-events-none absolute left-2.5 h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
 		<input bind:this={searchInput} bind:value={searchQuery} on:keydown={handleKeydown} on:input={performSearch} type="text" placeholder="Zoeken in document..." class="h-8 w-64 rounded-md border border-gray-300 bg-white pl-8 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" aria-label="Zoekterm invoeren" />
 	</div>
 	{#if hasReplace}
@@ -162,7 +162,7 @@
 	{#if searchResults.length > 0}
 		<span class="text-xs text-gray-500">{currentSearchResult + 1} van {searchResults.length}</span>
 	{:else if searchQuery.trim()}
-		<span class="text-xs text-gray-400">Geen resultaten</span>
+		<span class="text-xs text-gray-500">Geen resultaten</span>
 	{/if}
 	<button on:click={prevResult} class="srch-btn" title="Vorige (Shift+Enter)" aria-label="Vorig resultaat" type="button" disabled={searchResults.length === 0}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg></button>
 	<button on:click={nextResult} class="srch-btn" title="Volgende (Enter)" aria-label="Volgend resultaat" type="button" disabled={searchResults.length === 0}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></button>

@@ -206,12 +206,12 @@
 						aria-expanded={!group.collapsed}
 						aria-label="{group.collapsed ? 'Uitklappen' : 'Inklappen'}: {group.label}"
 					>
-						<svg class="h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform {group.collapsed ? '' : 'rotate-90'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+						<svg class="h-3.5 w-3.5 shrink-0 text-gray-500 transition-transform {group.collapsed ? '' : 'rotate-90'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 						</svg>
 						<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: {PHASE_COLORS[group.phase]};"></span>
 						<span class="truncate text-xs font-semibold text-gray-700">{group.label}</span>
-						<span class="ml-auto text-[10px] text-gray-400">{group.activities.length + group.milestones.length}</span>
+						<span class="ml-auto text-[10px] text-gray-500">{group.activities.length + group.milestones.length}</span>
 					</button>
 					{#if !group.collapsed}
 						{#each group.activities as activity (activity.id)}
@@ -224,7 +224,7 @@
 						{/each}
 						{#each group.milestones as milestone (milestone.id)}
 							<div class="flex items-center gap-1.5 border-b border-gray-50 px-3 pl-9" style="height: {ROW_HEIGHT}px;">
-								<svg class="h-3 w-3 shrink-0 text-gray-400" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+								<svg class="h-3 w-3 shrink-0 text-gray-500" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
 									<polygon points="8,1 15,8 8,15 1,8" />
 								</svg>
 								<span class="truncate text-[11px] text-gray-600" title={milestone.title}>{milestone.title}</span>
@@ -291,7 +291,7 @@
 
 	<!-- Footer legend -->
 	<div class="flex items-center gap-4 border-t border-gray-200 px-4 py-2">
-		<span class="text-[10px] text-gray-400">Legenda:</span>
+		<span class="text-[10px] text-gray-500">Legenda:</span>
 		{#each phaseGroups as group (group.phase)}
 			<span class="flex items-center gap-1">
 				<span class="h-2 w-4 rounded-sm" style="background-color: {PHASE_COLORS[group.phase]}; opacity: 0.6;"></span>
@@ -299,7 +299,7 @@
 			</span>
 		{/each}
 		<span class="flex items-center gap-1">
-			<svg class="h-3 w-3 text-gray-400" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><polygon points="8,1 15,8 8,15 1,8" /></svg>
+			<svg class="h-3 w-3 text-gray-500" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><polygon points="8,1 15,8 8,15 1,8" /></svg>
 			<span class="text-[10px] text-gray-500">Milestone</span>
 		</span>
 		<span class="flex items-center gap-1">

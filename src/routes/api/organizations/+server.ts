@@ -1,17 +1,17 @@
 // GET /api/organizations — List user's organizations
 // POST /api/organizations — Create a new organization
 
-import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createOrganizationSchema } from '$server/api/validation';
 import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error: dbError } = await supabase
@@ -21,13 +21,10 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.order('name');
 
 	if (dbError) {
-		return json(
-			{ message: dbError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -40,10 +37,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const parsed = createOrganizationSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { name, slug, description } = parsed.data;
@@ -56,19 +50,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (orgError) {
 		if (orgError.code === '23505') {
-			return json(
-				{ message: 'Deze slug is al in gebruik', code: 'DUPLICATE_SLUG', status: 409 },
-				{ status: 409 }
-			);
+			return apiError(409, 'DUPLICATE', 'Deze slug is al in gebruik');
 		}
-		return json(
-			{ message: orgError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', orgError.message);
 	}
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Add creator as owner
@@ -79,10 +67,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	if (memberError) {
-		return json(
-			{ message: memberError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', memberError.message);
 	}
 
 	await logAudit(supabase, {
@@ -95,5 +80,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		changes: { name, slug }
 	});
 
-	return json({ data: org }, { status: 201 });
+	return apiSuccess(org, 201);
 };

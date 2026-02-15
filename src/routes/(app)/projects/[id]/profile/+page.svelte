@@ -378,14 +378,14 @@
 									<input id="cpv_codes" type="text" bind:value={form.cpv_codes}
 										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
 										placeholder="72000000-5, 72200000-7" />
-									<p class="mt-1 text-xs text-gray-400">Kommagescheiden CPV-codes</p>
+									<p class="mt-1 text-xs text-gray-500">Kommagescheiden CPV-codes</p>
 								</div>
 								<div>
 									<label for="nuts_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.nuts_codes}</label>
 									<input id="nuts_codes" type="text" bind:value={form.nuts_codes}
 										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
 										placeholder="NL329" />
-									<p class="mt-1 text-xs text-gray-400">Kommagescheiden NUTS-codes</p>
+									<p class="mt-1 text-xs text-gray-500">Kommagescheiden NUTS-codes</p>
 								</div>
 							</div>
 						{:else if activeTab === 'planning'}
@@ -482,11 +482,11 @@
 									<table class="w-full">
 										<thead>
 											<tr class="border-b border-gray-200">
-												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Categorie</th>
-												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Naam</th>
-												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Type</th>
-												<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Grootte</th>
-												<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
+												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Categorie</th>
+												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Naam</th>
+												<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Type</th>
+												<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500">Grootte</th>
+												<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500">Datum</th>
 											</tr>
 										</thead>
 										<tbody class="divide-y divide-gray-100">
@@ -714,18 +714,27 @@
 
 <!-- Upload popup modal -->
 {#if showUploadPopup}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-		on:click|self={() => (showUploadPopup = false)}
+		class="fixed inset-0 z-50 flex items-center justify-center"
+		role="dialog"
+		tabindex="-1"
+		aria-modal="true"
+		aria-label="Document uploaden"
+		on:keydown={(e) => { if (e.key === 'Escape') showUploadPopup = false; }}
 	>
+		<button
+			type="button"
+			class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+			on:click={() => (showUploadPopup = false)}
+			aria-label="Sluiten"
+			tabindex="-1"
+		></button>
 		<div class="relative w-full max-w-lg mx-4 animate-in">
 			<!-- Close button -->
 			<button
 				type="button"
 				on:click={() => (showUploadPopup = false)}
-				class="absolute -top-3 -right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-400 shadow-md hover:text-gray-600 transition-colors"
+				class="absolute -top-3 -right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-500 shadow-md hover:text-gray-600 transition-colors"
 				aria-label="Sluiten"
 			>
 				<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">

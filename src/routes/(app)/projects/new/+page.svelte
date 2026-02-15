@@ -101,7 +101,7 @@
 		<div>
 			<label for="description" class="block text-sm font-medium text-gray-700">
 				Korte beschrijving
-				<span class="font-normal text-gray-400">(optioneel)</span>
+				<span class="font-normal text-gray-500">(optioneel)</span>
 			</label>
 			<textarea
 				id="description"
@@ -115,7 +115,7 @@
 		<div>
 			<label for="procedure" class="block text-sm font-medium text-gray-700">
 				Aanbestedingsprocedure
-				<span class="font-normal text-gray-400">(optioneel, kan later worden gekozen)</span>
+				<span class="font-normal text-gray-500">(optioneel, kan later worden gekozen)</span>
 			</label>
 		<select
 			id="procedure"

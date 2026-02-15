@@ -1,16 +1,16 @@
 // GET /api/projects/:id/uploads/:documentId — Get document metadata
 // DELETE /api/projects/:id/uploads/:documentId — Soft delete document
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { logAudit } from '$server/db/audit';
 import { createServiceClient } from '$server/db/client';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error: dbError } = await supabase
@@ -22,20 +22,17 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (dbError || !data) {
-		return json(
-			{ message: 'Document niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Document niet gevonden');
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Get document to find organization_id and file_path
@@ -48,10 +45,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (fetchError || !document) {
-		return json(
-			{ message: 'Document niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Document niet gevonden');
 	}
 
 	const serviceClient = createServiceClient();
@@ -63,7 +57,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.eq('id', params.documentId);
 
 	if (deleteError) {
-		return json({ message: deleteError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', deleteError.message);
 	}
 
 	// Delete associated chunks
@@ -83,5 +77,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		changes: { name: document.name }
 	});
 
-	return json({ data: { message: 'Document verwijderd' } });
+	return apiSuccess({ message: 'Document verwijderd' });
 };

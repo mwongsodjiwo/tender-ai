@@ -1,8 +1,8 @@
 // POST /api/auth/logout — Sign out
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ locals }) => {
 	const { supabase, user } = locals;
@@ -19,11 +19,8 @@ export const POST: RequestHandler = async ({ locals }) => {
 	const { error } = await supabase.auth.signOut();
 
 	if (error) {
-		return json(
-			{ message: error.message, code: 'AUTH_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'AUTH_ERROR', error.message);
 	}
 
-	return json({ data: { message: 'Uitgelogd' } });
+	return apiSuccess({ message: 'Uitgelogd' });
 };

@@ -1,16 +1,16 @@
 // POST /api/projects/:id/market-research/deskresearch — Search knowledge base based on project profile
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { deskresearchSchema } from '$server/api/validation';
 import { deskresearch } from '$server/ai/market-research';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -21,17 +21,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const body = await request.json();
 	const parsed = deskresearchSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	// Load project profile for CPV codes and scope
@@ -43,10 +40,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.maybeSingle();
 
 	if (!profile) {
-		return json(
-			{ message: 'Projectprofiel niet gevonden. Vul eerst het projectprofiel in.', code: 'PROFILE_REQUIRED', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', 'Projectprofiel niet gevonden. Vul eerst het projectprofiel in.');
 	}
 
 	// Override CPV codes if provided in request
@@ -67,9 +61,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			changes: { results_count: result.total }
 		});
 
-		return json({ data: result });
+		return apiSuccess(result);
 	} catch (err) {
 		const message = err instanceof Error ? err.message : 'Deskresearch mislukt';
-		return json({ message, code: 'AI_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'INTERNAL_ERROR', message);
 	}
 };

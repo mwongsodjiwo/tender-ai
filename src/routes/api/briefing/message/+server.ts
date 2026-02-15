@@ -1,12 +1,12 @@
 // POST /api/briefing/message — Send a message in briefing conversation
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { briefingMessageSchema } from '$server/api/validation';
 import { conductBriefing, generateArtifacts } from '$server/ai/briefing';
 import { logAudit } from '$server/db/audit';
 import { createServiceClient } from '$server/db/client';
 import type { DocumentType } from '$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 /**
  * Background artifact generation — runs after the HTTP response is sent.
@@ -101,17 +101,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = briefingMessageSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { project_id, conversation_id, message } = parsed.data;
@@ -125,10 +122,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (convError || !conversation) {
-		return json(
-			{ message: 'Gesprek niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Gesprek niet gevonden');
 	}
 
 	// Save user message
@@ -158,7 +152,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		);
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'AI-fout';
-		return json({ message: `AI-fout: ${errorMessage}`, code: 'AI_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${errorMessage}`);
 	}
 
 	// Save AI response
@@ -193,13 +187,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		).catch((err) => console.error('Unhandled background generation error:', err));
 	}
 
-	return json({
-		data: {
-			message_id: aiMsg?.id ?? '',
-			content: aiResponse.content,
-			conversation_id,
-			briefing_complete: aiResponse.isComplete,
-			artifacts_generated: 0
-		}
+	return apiSuccess({
+		message_id: aiMsg?.id ?? '',
+		content: aiResponse.content,
+		conversation_id,
+		briefing_complete: aiResponse.isComplete,
+		artifacts_generated: 0
 	});
 };

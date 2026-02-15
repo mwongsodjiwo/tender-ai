@@ -467,7 +467,7 @@
 					</h3>
 					<button
 						on:click={() => { viewingVersion = null; }}
-						class="text-gray-400 hover:text-gray-600"
+						class="text-gray-500 hover:text-gray-600"
 						aria-label="Sluiten"
 					>
 						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

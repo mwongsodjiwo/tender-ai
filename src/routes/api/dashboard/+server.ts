@@ -1,6 +1,5 @@
 // GET /api/dashboard — Dashboard metrics and data
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type {
 	DashboardResponse,
@@ -8,6 +7,7 @@ import type {
 	DashboardMetrics,
 	MonthlyProjectData
 } from '$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 const ACTIVE_STATUSES = ['draft', 'briefing', 'generating', 'review'];
 const COMPLETED_STATUSES = ['approved', 'published'];
@@ -19,7 +19,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Load all projects (non-deleted)
@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.order('updated_at', { ascending: false });
 
 	if (projectsError) {
-		return json({ message: projectsError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', projectsError.message);
 	}
 
 	const allProjects = projects ?? [];
@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.select('id, status, project_id, updated_at');
 
 	if (artifactsError) {
-		return json({ message: artifactsError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', artifactsError.message);
 	}
 
 	const allArtifacts = artifacts ?? [];
@@ -53,7 +53,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.is('deleted_at', null);
 
 	if (activitiesError) {
-		return json({ message: activitiesError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', activitiesError.message);
 	}
 
 	const allActivities = activities ?? [];
@@ -178,5 +178,5 @@ export const GET: RequestHandler = async ({ locals }) => {
 		monthly_data: monthlyData
 	};
 
-	return json({ data: response });
+	return apiSuccess(response);
 };

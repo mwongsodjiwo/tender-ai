@@ -318,7 +318,7 @@
 	{#if requirements.length === 0}
 		<div class="rounded-card bg-white p-8 text-center shadow-card">
 			<div class="mx-auto max-w-md">
-				<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+				<svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 				</svg>
 				<h3 class="mt-4 text-lg font-semibold text-gray-900">Nog geen eisen</h3>
@@ -466,7 +466,7 @@
 			>
 				<div class="flex items-center gap-3">
 					<svg
-						class="h-5 w-5 text-gray-400 transition-transform {expandedCategories.has(group.category) ? 'rotate-90' : ''}"
+						class="h-5 w-5 text-gray-500 transition-transform {expandedCategories.has(group.category) ? 'rotate-90' : ''}"
 						fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
 					>
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -549,14 +549,14 @@
 										</div>
 										<div class="min-w-0">
 											<div class="flex flex-wrap items-center gap-2">
-												<span class="text-xs font-mono text-gray-400">{req.requirement_number}</span>
+												<span class="text-xs font-mono text-gray-500">{req.requirement_number}</span>
 												<StatusBadge status={TYPE_BADGE_MAP[req.requirement_type] ?? 'concept'} />
 											</div>
 											<h3 class="mt-1 text-sm font-medium text-gray-900">{req.title}</h3>
 											{#if req.description}
 												<p class="mt-1 text-sm text-gray-500 line-clamp-2">{req.description}</p>
 											{/if}
-											<div class="mt-2 flex items-center gap-4 text-xs text-gray-400">
+											<div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
 												<span class="text-warning-500" title="Prioriteit {req.priority}/5" aria-label="Prioriteit {req.priority} van 5">
 													{renderStars(req.priority)}
 												</span>
@@ -568,7 +568,7 @@
 										<button
 											type="button"
 											on:click={() => startEdit(req)}
-											class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+											class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600"
 											title="Bewerken"
 											aria-label="Eis bewerken"
 										>
@@ -579,7 +579,7 @@
 										<button
 											type="button"
 											on:click={() => duplicateRequirement(req)}
-											class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+											class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600"
 											title="Kopiëren"
 											aria-label="Eis kopiëren"
 										>
@@ -590,7 +590,7 @@
 										<button
 											type="button"
 											on:click={() => deleteRequirement(req.id)}
-											class="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-600"
+											class="rounded p-1.5 text-gray-500 hover:bg-error-50 hover:text-error-600"
 											title="Verwijderen"
 											aria-label="Eis verwijderen"
 										>

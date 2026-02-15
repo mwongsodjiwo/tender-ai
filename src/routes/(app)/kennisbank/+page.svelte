@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { navigating } from '$app/stores';
 	import type { PageData } from './$types';
 	import TenderNedSearch from '$components/TenderNedSearch.svelte';
 	import DocumentList from '$components/DocumentList.svelte';
 	import DocumentUpload from '$components/DocumentUpload.svelte';
 	import MetricCard from '$lib/components/MetricCard.svelte';
 	import CardGrid from '$lib/components/CardGrid.svelte';
+	import PageSkeleton from '$lib/components/PageSkeleton.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import type { Document } from '$types';
 
 	export let data: PageData;
@@ -13,6 +16,7 @@
 	$: selectedOrgId = data.selectedOrgId as string | null;
 	$: documents = data.documents as Document[];
 	$: tenderNedCount = data.tenderNedCount as number;
+	$: isLoading = $navigating?.to?.url.pathname === '/kennisbank';
 
 	let activeTab: 'documents' | 'tenderned' = 'documents';
 
@@ -25,6 +29,23 @@
 	<title>Kennisbank — Tendermanager</title>
 </svelte:head>
 
+{#if isLoading}
+	<PageSkeleton showHeader showCards />
+{:else if organizations.length === 0}
+	<div class="space-y-6">
+		<div>
+			<h1 class="text-2xl font-bold text-gray-900">Kennisbank</h1>
+			<p class="mt-1 text-gray-600">
+				Beheer organisatiedocumenten en doorzoek TenderNed-data.
+			</p>
+		</div>
+		<EmptyState
+			title="Geen organisaties"
+			description="Je bent nog niet gekoppeld aan een organisatie. Neem contact op met de beheerder."
+			icon="folder"
+		/>
+	</div>
+{:else}
 <div class="space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Kennisbank</h1>
@@ -73,7 +94,7 @@
 					on:click={() => (activeTab = tab.id as typeof activeTab)}
 					class="shrink-0 px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors {activeTab === tab.id
 						? 'rounded-full bg-gray-800 text-white'
-						: 'text-gray-400 hover:text-gray-600'}"
+						: 'text-gray-500 hover:text-gray-600'}"
 				>
 					{tab.label}
 				</button>
@@ -112,3 +133,4 @@
 		<TenderNedSearch />
 	{/if}
 </div>
+{/if}

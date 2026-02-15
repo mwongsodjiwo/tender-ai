@@ -240,7 +240,7 @@
 				<!-- Day number -->
 				<span
 					class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs
-						{day.isToday ? 'bg-primary-600 font-bold text-white' : day.isCurrentMonth ? 'font-medium text-gray-900' : 'text-gray-400'}"
+						{day.isToday ? 'bg-primary-600 font-bold text-white' : day.isCurrentMonth ? 'font-medium text-gray-900' : 'text-gray-500'}"
 				>
 					{day.date.getDate()}
 				</span>

@@ -37,7 +37,7 @@
 	</div>
 	
 	<!-- Extra metadata -->
-	<div class="mt-3 flex items-center justify-between text-xs text-gray-400">
+	<div class="mt-3 flex items-center justify-between text-xs text-gray-500">
 		<span>Versie {artifact.version}</span>
 		<span class="truncate">{artifact.section_key}</span>
 	</div>

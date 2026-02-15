@@ -126,7 +126,9 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 	}[] = [];
 
 	// Load milestones directly (more reliable than RPC if org_id not available)
-	const { data: milestonesData } = await supabase
+	let deadlineError = false;
+
+	const { data: milestonesData, error: milestoneError } = await supabase
 		.from('milestones')
 		.select('id, title, target_date, phase, status, is_critical, project_id, projects!inner(name)')
 		.is('deleted_at', null)
@@ -137,8 +139,12 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		.limit(10)
 		.returns<MilestoneWithProjectName[]>();
 
+	if (milestoneError) {
+		deadlineError = true;
+	}
+
 	// Load activities with due dates
-	const { data: activitiesWithDueDate } = await supabase
+	const { data: activitiesWithDueDate, error: activityError } = await supabase
 		.from('phase_activities')
 		.select('id, title, due_date, phase, status, project_id, projects!inner(name)')
 		.is('deleted_at', null)
@@ -149,6 +155,10 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		.order('due_date')
 		.limit(10)
 		.returns<ActivityWithProjectName[]>();
+
+	if (activityError) {
+		deadlineError = true;
+	}
 
 	const todayMs = today.getTime();
 	const dayMs = 86400000;
@@ -249,6 +259,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		recentProjects,
 		upcomingDeadlines,
 		combinedDeadlines,
-		monthlyData
+		monthlyData,
+		deadlineError
 	};
 };

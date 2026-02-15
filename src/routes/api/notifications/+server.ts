@@ -1,26 +1,23 @@
 // GET /api/notifications — List notifications for current user
 // PATCH /api/notifications — Mark notifications as read
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { notificationListQuerySchema, markNotificationsReadSchema } from '$server/api/validation';
 import { markAsRead, markAllAsRead, getUnreadCount } from '$server/notifications/notification-service';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const queryParams = Object.fromEntries(url.searchParams.entries());
 	const parsed = notificationListQuerySchema.safeParse(queryParams);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	let query = supabase
@@ -43,17 +40,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const { data, count, error } = await query;
 
 	if (error) {
-		return json({ message: error.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', error.message);
 	}
 
 	const unreadCount = await getUnreadCount(supabase, user.id);
 
-	return json({
-		data: {
-			notifications: data ?? [],
-			unread_count: unreadCount,
-			total: count ?? 0
-		}
+	return apiSuccess({
+		notifications: data ?? [],
+		unread_count: unreadCount,
+		total: count ?? 0
 	});
 };
 
@@ -61,26 +56,23 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 
 	if (body.mark_all_read) {
 		const count = await markAllAsRead(supabase, user.id);
-		return json({ data: { marked_read: count } });
+		return apiSuccess({ marked_read: count });
 	}
 
 	const parsed = markNotificationsReadSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const count = await markAsRead(supabase, user.id, parsed.data.notification_ids);
 
-	return json({ data: { marked_read: count } });
+	return apiSuccess({ marked_read: count });
 };

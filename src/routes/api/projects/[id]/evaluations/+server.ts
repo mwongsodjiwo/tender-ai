@@ -1,16 +1,16 @@
 // GET /api/projects/:id/evaluations — List evaluations (filter ?status=)
 // POST /api/projects/:id/evaluations — Create evaluation
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createEvaluationSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	let query = supabase
@@ -39,17 +39,17 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { data, error: dbError } = await query;
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data: data ?? [] });
+	return apiSuccess(data ?? []);
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -60,17 +60,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const body = await request.json();
 	const parsed = createEvaluationSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { data: evaluation, error: dbError } = await supabase
@@ -80,7 +77,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	await logAudit(supabase, {
@@ -94,5 +91,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: parsed.data
 	});
 
-	return json({ data: evaluation }, { status: 201 });
+	return apiSuccess(evaluation, 201);
 };

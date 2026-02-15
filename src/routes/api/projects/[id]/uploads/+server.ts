@@ -1,7 +1,6 @@
 // GET /api/projects/:id/uploads — List uploaded documents for a project
 // POST /api/projects/:id/uploads — Upload a document to project
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { uploadDocumentSchema, uploadFileValidation } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
@@ -10,6 +9,7 @@ import { extractText, isTextExtractable } from '$server/ai/parser';
 import { processDocumentChunks } from '$server/ai/rag';
 import { validateFileSignature } from '$server/ai/file-validator';
 import { sanitizeDocumentText } from '$server/ai/sanitizer';
+import { apiError, apiSuccess } from '$server/api/response';
 
 const STORAGE_BUCKET = 'documents';
 
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const category = url.searchParams.get('category') ?? undefined;
@@ -36,27 +36,24 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 	const { data, error: dbError } = await query;
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data: data ?? [] });
+	return apiSuccess(data ?? []);
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const formData = await request.formData();
 	const file = formData.get('file') as File | null;
 
 	if (!file) {
-		return json(
-			{ message: 'Geen bestand meegegeven', code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', 'Geen bestand meegegeven');
 	}
 
 	// Validate file
@@ -66,19 +63,13 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	});
 
 	if (!fileValidation.success) {
-		return json(
-			{ message: fileValidation.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', fileValidation.error.errors[0].message);
 	}
 
 	// Validate file signature (magic bytes) matches claimed MIME type
 	const signatureCheck = await validateFileSignature(file, file.type);
 	if (!signatureCheck.valid) {
-		return json(
-			{ message: signatureCheck.reason ?? 'Ongeldig bestand', code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', signatureCheck.reason ?? 'Ongeldig bestand');
 	}
 
 	// Parse metadata from form
@@ -90,10 +81,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	});
 
 	if (!metaValidation.success) {
-		return json(
-			{ message: metaValidation.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', metaValidation.error.errors[0].message);
 	}
 
 	const meta = metaValidation.data;
@@ -111,10 +99,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		});
 
 	if (uploadError) {
-		return json(
-			{ message: 'Fout bij uploaden van bestand', code: 'UPLOAD_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'INTERNAL_ERROR', 'Fout bij uploaden van bestand');
 	}
 
 	// Extract text content from PDF, Word, TXT, CSV
@@ -162,7 +147,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	if (dbError) {
 		// Clean up uploaded file on DB error
 		await serviceClient.storage.from(STORAGE_BUCKET).remove([filePath]);
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	await logAudit(serviceClient, {
@@ -193,5 +178,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			});
 	}
 
-	return json({ data: document }, { status: 201 });
+	return apiSuccess(document, 201);
 };

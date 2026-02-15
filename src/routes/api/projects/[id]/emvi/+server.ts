@@ -1,16 +1,16 @@
 // GET /api/projects/:id/emvi — Get scoring methodology + all criteria
 // POST /api/projects/:id/emvi — Create a new EMVI criterion
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createEmviCriterionSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Load project scoring methodology
@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	// Load all active criteria
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.order('sort_order', { ascending: true });
 
 	if (critError) {
-		return json({ message: critError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', critError.message);
 	}
 
 	// Calculate total weight
@@ -42,13 +42,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		0
 	);
 
-	return json({
-		data: {
-			scoring_methodology: project.scoring_methodology,
-			criteria: criteria ?? [],
-			total_weight: Math.round(totalWeight * 100) / 100,
-			is_valid: Math.abs(totalWeight - 100) < 0.01
-		}
+	return apiSuccess({
+		scoring_methodology: project.scoring_methodology,
+		criteria: criteria ?? [],
+		total_weight: Math.round(totalWeight * 100) / 100,
+		is_valid: Math.abs(totalWeight - 100) < 0.01
 	});
 };
 
@@ -56,17 +54,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = createEmviCriterionSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { name, description, criterion_type, weight_percentage, sort_order } = parsed.data;
@@ -101,7 +96,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	const { data: project } = await supabase
@@ -121,5 +116,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { name, criterion_type, weight_percentage }
 	});
 
-	return json({ data: criterion }, { status: 201 });
+	return apiSuccess(criterion, 201);
 };

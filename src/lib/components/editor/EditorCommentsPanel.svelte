@@ -82,24 +82,25 @@
 		{#if activeComments.length === 0 && resolvedComments.length === 0}
 			<div class="flex flex-col items-center justify-center px-4 py-12">
 				<svg class="mb-3 h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
-				<p class="text-center text-xs text-gray-400">Nog geen opmerkingen.<br/>Selecteer tekst in het document om een opmerking toe te voegen.</p>
+				<p class="text-center text-xs text-gray-500">Nog geen opmerkingen.<br/>Selecteer tekst in het document om een opmerking toe te voegen.</p>
 			</div>
 		{:else}
 			{#if activeComments.length > 0}
 				<div class="px-3 pt-3">
-					<p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Open ({activeComments.length})</p>
+					<p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">Open ({activeComments.length})</p>
 				</div>
 				<div class="space-y-0.5">
 					{#each activeComments as comment (comment.id)}
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<!-- svelte-ignore a11y-no-static-element-interactions -->
 						<div
-							class="cursor-pointer border-l-2 px-3 py-2.5 transition-colors hover:bg-gray-50 {activeCommentId === comment.id ? 'border-l-amber-500 bg-amber-50/50' : 'border-l-transparent'}"
+							role="button"
+							tabindex="0"
+							class="w-full cursor-pointer border-l-2 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 {activeCommentId === comment.id ? 'border-l-amber-500 bg-amber-50/50' : 'border-l-transparent'}"
 							on:click={() => { activeCommentId = comment.id; dispatch('scrollToSection', comment.artifact_id); }}
+							on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activeCommentId = comment.id; dispatch('scrollToSection', comment.artifact_id); } }}
 						>
 							<div class="mb-1 flex items-start justify-between gap-1">
 								<span class="text-[10px] font-medium text-amber-600">{getTitle(comment.artifact_id)}</span>
-								<span class="shrink-0 text-[10px] text-gray-400">{formatTime(comment.created_at)}</span>
+								<span class="shrink-0 text-[10px] text-gray-500">{formatTime(comment.created_at)}</span>
 							</div>
 							<p class="mb-1 line-clamp-2 text-[11px] italic text-gray-500">"{comment.selected_text}"</p>
 							<p class="text-xs text-gray-800">{comment.comment_text}</p>
@@ -108,7 +109,7 @@
 									<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
 									Oplossen
 								</button>
-								<button on:click|stopPropagation={() => dispatch('deleteComment', comment.id)} class="flex items-center gap-0.5 text-[10px] text-gray-400 hover:text-error-600" type="button">
+								<button on:click|stopPropagation={() => dispatch('deleteComment', comment.id)} class="flex items-center gap-0.5 text-[10px] text-gray-500 hover:text-error-600" type="button">
 									<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 									Verwijderen
 								</button>
@@ -120,19 +121,19 @@
 
 			{#if resolvedComments.length > 0}
 				<div class="px-3 pt-4">
-					<p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Opgelost ({resolvedComments.length})</p>
+					<p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">Opgelost ({resolvedComments.length})</p>
 				</div>
 				<div class="space-y-0.5 opacity-60">
 					{#each resolvedComments as comment (comment.id)}
 						<div class="border-l-2 border-l-transparent px-3 py-2">
 							<div class="mb-1 flex items-start justify-between gap-1">
-								<span class="text-[10px] font-medium text-gray-400">{getTitle(comment.artifact_id)}</span>
-								<span class="shrink-0 text-[10px] text-gray-400">{formatTime(comment.created_at)}</span>
+								<span class="text-[10px] font-medium text-gray-500">{getTitle(comment.artifact_id)}</span>
+								<span class="shrink-0 text-[10px] text-gray-500">{formatTime(comment.created_at)}</span>
 							</div>
-							<p class="line-clamp-1 text-[11px] italic text-gray-400">"{comment.selected_text}"</p>
+							<p class="line-clamp-1 text-[11px] italic text-gray-500">"{comment.selected_text}"</p>
 							<p class="text-xs text-gray-500 line-through">{comment.comment_text}</p>
 							<div class="mt-1">
-								<button on:click={() => dispatch('deleteComment', comment.id)} class="text-[10px] text-gray-400 hover:text-error-600" type="button">Verwijderen</button>
+								<button on:click={() => dispatch('deleteComment', comment.id)} class="text-[10px] text-gray-500 hover:text-error-600" type="button">Verwijderen</button>
 							</div>
 						</div>
 					{/each}

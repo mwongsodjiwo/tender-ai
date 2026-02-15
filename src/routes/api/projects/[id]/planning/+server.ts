@@ -1,11 +1,11 @@
 // GET /api/projects/:id/planning — Combined timeline data (milestones + activities + dependencies)
 // Enhanced for Sprint 3 Gantt chart with phase grouping, progress, and on-track status
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { PhaseActivity, Milestone } from '$types';
 import { PROJECT_PHASES, PROJECT_PHASE_LABELS } from '$types';
 import type { ProjectPhase } from '$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 const DAYS_MS = 1000 * 60 * 60 * 24;
 
@@ -67,7 +67,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -78,7 +78,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const { data: profile } = await supabase
@@ -113,7 +113,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			?? activitiesResult.error?.message
 			?? dependenciesResult.error?.message
 			?? 'Database fout';
-		return json({ message: errorMsg, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', errorMsg);
 	}
 
 	const milestones: Milestone[] = (milestonesResult.data ?? []) as Milestone[];
@@ -153,29 +153,27 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		? Math.ceil((projectEnd.getTime() - today.getTime()) / DAYS_MS)
 		: 0;
 
-	return json({
-		data: {
-			project: {
-				id: project.id,
-				name: project.name,
-				current_phase: project.current_phase,
-				procedure_type: project.procedure_type,
-				timeline_start: profile?.timeline_start ?? allStartDate,
-				timeline_end: profile?.timeline_end ?? allEndDate
-			},
-			phases,
-			milestones,
-			activities,
-			dependencies,
-			summary: {
-				total_activities: activities.length,
-				completed_activities: completedActivities,
-				total_milestones: milestones.length,
-				completed_milestones: completedMilestones,
-				overall_progress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
-				days_remaining: daysRemaining,
-				is_on_track: checkOnTrack(activities, milestones)
-			}
+	return apiSuccess({
+		project: {
+			id: project.id,
+			name: project.name,
+			current_phase: project.current_phase,
+			procedure_type: project.procedure_type,
+			timeline_start: profile?.timeline_start ?? allStartDate,
+			timeline_end: profile?.timeline_end ?? allEndDate
+		},
+		phases,
+		milestones,
+		activities,
+		dependencies,
+		summary: {
+			total_activities: activities.length,
+			completed_activities: completedActivities,
+			total_milestones: milestones.length,
+			completed_milestones: completedMilestones,
+			overall_progress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
+			days_remaining: daysRemaining,
+			is_on_track: checkOnTrack(activities, milestones)
 		}
 	});
 };

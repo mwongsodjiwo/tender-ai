@@ -1,16 +1,16 @@
 // GET /api/projects/:id/artifacts/:artifactId — Get artifact
 // PATCH /api/projects/:id/artifacts/:artifactId — Update artifact (with versioning)
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { updateArtifactSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error: dbError } = await supabase
@@ -21,27 +21,24 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: 'Artifact niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Artifact niet gevonden');
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = updateArtifactSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	// Fetch current artifact to save version before update
@@ -53,7 +50,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (fetchError || !current) {
-		return json({ message: 'Artifact niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Artifact niet gevonden');
 	}
 
 	// Save current state as a version before updating (only if content changes)
@@ -89,7 +86,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	const { data: project } = await supabase
@@ -109,5 +106,5 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		changes: updateData
 	});
 
-	return json({ data });
+	return apiSuccess(data);
 };

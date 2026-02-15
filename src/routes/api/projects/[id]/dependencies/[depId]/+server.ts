@@ -1,14 +1,14 @@
 // DELETE /api/projects/:id/dependencies/:depId — Remove dependency
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -19,7 +19,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const { error: dbError } = await supabase
@@ -29,7 +29,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.eq('project_id', params.id);
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	await logAudit(supabase, {
@@ -43,5 +43,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		changes: {}
 	});
 
-	return json({ data: { success: true } });
+	return apiSuccess({ success: true });
 };

@@ -1,26 +1,23 @@
 // POST /api/projects/:id/export — Export document as Word or PDF
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { exportDocumentSchema } from '$server/api/validation';
 import { exportToDocx, exportToPdf } from '$server/api/export';
 import { logAudit } from '$server/db/audit';
+import { apiError } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = exportDocumentSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { document_type_id, format } = parsed.data;
@@ -33,7 +30,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projectError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	// Get document type
@@ -44,7 +41,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dtError || !documentType) {
-		return json({ message: 'Documenttype niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Documenttype niet gevonden');
 	}
 
 	// Get artifacts
@@ -56,10 +53,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.order('sort_order');
 
 	if (!artifacts || artifacts.length === 0) {
-		return json(
-			{ message: 'Geen secties gevonden voor dit documenttype', code: 'NO_CONTENT', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', 'Geen secties gevonden voor dit documenttype');
 	}
 
 	const rawOrg = project.organizations;
@@ -87,7 +81,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Export mislukt';
-		return json({ message: errorMessage, code: 'EXPORT_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'INTERNAL_ERROR', errorMessage);
 	}
 
 	const fileName = `${documentType.slug}-${project.name.toLowerCase().replace(/\s+/g, '-')}.${fileExtension}`;

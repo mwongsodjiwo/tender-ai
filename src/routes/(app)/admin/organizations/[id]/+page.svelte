@@ -201,7 +201,7 @@
 					maxlength={1000}
 					rows="3"
 					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-				/>
+				></textarea>
 			</div>
 		</div>
 
@@ -261,7 +261,7 @@
 								</select>
 								<button
 									on:click={() => handleRemoveMember(member.id, member.profile ? `${member.profile.first_name} ${member.profile.last_name}` : 'dit lid')}
-									class="rounded-md p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-600"
+									class="rounded-md p-1.5 text-gray-500 hover:bg-error-50 hover:text-error-600"
 									title="Lid verwijderen"
 								>
 									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

@@ -401,7 +401,7 @@
 			{/if}
 		</div>
 
-		<div class="text-sm text-gray-400">
+		<div class="text-sm text-gray-500">
 			Aangemaakt op {new Date(letter.created_at).toLocaleDateString('nl-NL', {
 				day: 'numeric',
 				month: 'long',

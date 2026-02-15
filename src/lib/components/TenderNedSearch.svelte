@@ -85,7 +85,7 @@
 				type="search"
 				bind:value={query}
 				placeholder="Zoek op trefwoord, organisatie of CPV-code..."
-				class="block w-full rounded-md border border-gray-300 px-4 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+				class="block w-full rounded-md border border-gray-300 px-4 py-2 text-sm shadow-sm placeholder:text-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
 			/>
 		</div>
 
@@ -123,7 +123,7 @@
 	<!-- Results -->
 	{#if !hasSearched}
 		<div class="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
-			<svg class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+			<svg class="mx-auto h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
 			</svg>
 			<p class="mt-2 text-sm font-medium text-gray-900">Zoek in TenderNed</p>

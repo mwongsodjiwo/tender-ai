@@ -17,7 +17,7 @@
 	const STATUS_ICONS: Record<string, { class: string; symbol: 'check' | 'progress' | 'skip' | 'empty' }> = {
 		completed: { class: 'bg-success-100 text-success-600', symbol: 'check' },
 		in_progress: { class: 'bg-primary-100 text-primary-600', symbol: 'progress' },
-		skipped: { class: 'bg-gray-100 text-gray-400', symbol: 'skip' },
+		skipped: { class: 'bg-gray-100 text-gray-500', symbol: 'skip' },
 		not_started: { class: 'bg-gray-50 text-gray-300', symbol: 'empty' }
 	};
 
@@ -60,14 +60,14 @@
 							{activity.label}
 						</span>
 						{#if activity.dueDate || activity.assignedToName}
-							<p class="mt-0.5 text-xs text-gray-400">
+							<p class="mt-0.5 text-xs text-gray-500">
 								{#if activity.assignedToName}{activity.assignedToName}{/if}
 								{#if activity.dueDate && activity.assignedToName} &middot; {/if}
 								{#if activity.dueDate}{formatDueDate(activity.dueDate)}{/if}
 							</p>
 						{/if}
 					</div>
-					<span class="shrink-0 text-xs text-gray-400">{STATUS_LABELS[activity.status]}</span>
+					<span class="shrink-0 text-xs text-gray-500">{STATUS_LABELS[activity.status]}</span>
 					<svg class="h-4 w-4 shrink-0 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
 					</svg>
@@ -92,14 +92,14 @@
 							{activity.label}
 						</span>
 						{#if activity.dueDate || activity.assignedToName}
-							<p class="mt-0.5 text-xs text-gray-400">
+							<p class="mt-0.5 text-xs text-gray-500">
 								{#if activity.assignedToName}{activity.assignedToName}{/if}
 								{#if activity.dueDate && activity.assignedToName} &middot; {/if}
 								{#if activity.dueDate}{formatDueDate(activity.dueDate)}{/if}
 							</p>
 						{/if}
 					</div>
-					<span class="shrink-0 text-xs text-gray-400">{STATUS_LABELS[activity.status]}</span>
+					<span class="shrink-0 text-xs text-gray-500">{STATUS_LABELS[activity.status]}</span>
 				</div>
 			{/if}
 		</li>

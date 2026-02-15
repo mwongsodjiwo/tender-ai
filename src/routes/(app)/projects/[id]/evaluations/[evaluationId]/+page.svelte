@@ -210,7 +210,7 @@
 						<span class="text-sm font-semibold text-gray-900">
 							{weightedScore(criterion.id, Number(criterion.weight_percentage))}
 						</span>
-						<span class="text-xs text-gray-400"> gew.</span>
+						<span class="text-xs text-gray-500"> gew.</span>
 					</div>
 				</div>
 			{/each}

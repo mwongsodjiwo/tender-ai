@@ -1,6 +1,6 @@
 // Reusable API guards for authorization
 
-import { json } from '@sveltejs/kit';
+import { apiError } from '$server/api/response';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 /**
@@ -12,10 +12,7 @@ export async function requireSuperadmin(
 	user: User | null
 ): Promise<Response | null> {
 	if (!user) {
-		return json(
-			{ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 },
-			{ status: 401 }
-		);
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: profile } = await supabase
@@ -25,10 +22,7 @@ export async function requireSuperadmin(
 		.single();
 
 	if (!profile?.is_superadmin) {
-		return json(
-			{ message: 'Alleen beheerders hebben toegang tot deze actie', code: 'FORBIDDEN', status: 403 },
-			{ status: 403 }
-		);
+		return apiError(403, 'FORBIDDEN', 'Alleen beheerders hebben toegang tot deze actie');
 	}
 
 	return null;

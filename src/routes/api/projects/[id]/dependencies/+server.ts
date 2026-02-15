@@ -1,18 +1,18 @@
 // GET /api/projects/:id/dependencies — List all dependencies
 // POST /api/projects/:id/dependencies — Create dependency (with cycle detection)
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createDependencySchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
 import { wouldCreateCycle } from '$server/planning/critical-path';
 import type { ActivityDependency } from '$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const { data, error: dbError } = await supabase
@@ -32,17 +32,17 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.eq('project_id', params.id);
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data: data ?? [] });
+	return apiSuccess(data ?? []);
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -53,25 +53,19 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const body = await request.json();
 	const parsed = createDependencySchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	// Prevent self-referencing dependency
 	if (parsed.data.source_type === parsed.data.target_type && parsed.data.source_id === parsed.data.target_id) {
-		return json(
-			{ message: 'Een item kan niet afhankelijk zijn van zichzelf', code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', 'Een item kan niet afhankelijk zijn van zichzelf');
 	}
 
 	// Check for circular dependencies
@@ -81,10 +75,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.eq('project_id', params.id);
 
 	if (existingDeps && wouldCreateCycle(existingDeps as ActivityDependency[], parsed.data.source_id, parsed.data.target_id)) {
-		return json(
-			{ message: 'Deze afhankelijkheid zou een circulaire keten veroorzaken', code: 'CIRCULAR_DEPENDENCY', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', 'Deze afhankelijkheid zou een circulaire keten veroorzaken');
 	}
 
 	const { data: dependency, error: dbError } = await supabase
@@ -96,12 +87,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	if (dbError) {
 		// Handle unique constraint violation
 		if (dbError.code === '23505') {
-			return json(
-				{ message: 'Deze afhankelijkheid bestaat al', code: 'DUPLICATE', status: 409 },
-				{ status: 409 }
-			);
+			return apiError(409, 'DUPLICATE', 'Deze afhankelijkheid bestaat al');
 		}
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	await logAudit(supabase, {
@@ -115,5 +103,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: parsed.data
 	});
 
-	return json({ data: dependency }, { status: 201 });
+	return apiSuccess(dependency, 201);
 };

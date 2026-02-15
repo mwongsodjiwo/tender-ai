@@ -1,13 +1,13 @@
 // GET /api/projects/:id/uea — Load all UEA sections + questions with project selections
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Verify project exists and user has access
@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	// Load all UEA sections ordered by sort_order
@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.order('sort_order');
 
 	if (secError) {
-		return json({ message: secError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', secError.message);
 	}
 
 	// Load all UEA questions ordered by section + sort_order
@@ -40,7 +40,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.order('sort_order');
 
 	if (qError) {
-		return json({ message: qError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', qError.message);
 	}
 
 	// Load project-specific selections
@@ -82,15 +82,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	const optionalCount = totalQuestions - mandatoryCount;
 	const selectedCount = questionsWithSelection.filter((q) => q.is_selected).length;
 
-	return json({
-		data: {
-			sections: sectionsWithQuestions,
-			metrics: {
-				total: totalQuestions,
-				mandatory: mandatoryCount,
-				optional: optionalCount,
-				selected: selectedCount
-			}
+	return apiSuccess({
+		sections: sectionsWithQuestions,
+		metrics: {
+			total: totalQuestions,
+			mandatory: mandatoryCount,
+			optional: optionalCount,
+			selected: selectedCount
 		}
 	});
 };

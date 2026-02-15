@@ -106,10 +106,10 @@
 			<table class="w-full">
 				<thead>
 					<tr class="border-b border-gray-200">
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Document</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Secties</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Voortgang</th>
-						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Exporteren</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Document</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Secties</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Voortgang</th>
+						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500">Exporteren</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-100">
@@ -128,7 +128,7 @@
 									{#if block.total > 0}
 										<span class="text-sm text-gray-700">{block.approved} / {block.total}</span>
 									{:else}
-										<span class="text-sm text-gray-400">-</span>
+										<span class="text-sm text-gray-500">-</span>
 									{/if}
 								</a>
 							</td>
@@ -142,7 +142,7 @@
 											<span class="text-xs font-medium text-primary-600">{block.progress}%</span>
 										</div>
 									{:else}
-										<span class="text-xs text-gray-400">Nog geen secties</span>
+										<span class="text-xs text-gray-500">Nog geen secties</span>
 									{/if}
 								</a>
 							</td>
@@ -182,7 +182,7 @@
 								{#if emviCount > 0}
 									<span class="text-sm text-gray-700">{emviCount} {emviCount === 1 ? 'criterium' : 'criteria'}</span>
 								{:else}
-									<span class="text-sm text-gray-400">-</span>
+									<span class="text-sm text-gray-500">-</span>
 								{/if}
 							</a>
 						</td>
@@ -191,7 +191,7 @@
 								{#if emviCount > 0}
 									<span class="text-xs text-gray-500">{emviCount} geconfigureerd</span>
 								{:else}
-									<span class="text-xs text-gray-400">Nog geen criteria</span>
+									<span class="text-xs text-gray-500">Nog geen criteria</span>
 								{/if}
 							</a>
 						</td>

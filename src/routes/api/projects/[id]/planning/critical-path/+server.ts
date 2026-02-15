@@ -1,15 +1,15 @@
 // GET /api/projects/:id/planning/critical-path — Calculate critical path
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { PhaseActivity, Milestone, ActivityDependency } from '$types';
 import { calculateCriticalPath } from '$server/planning/critical-path';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const [activitiesResult, milestonesResult, depsResult] = await Promise.all([
@@ -60,15 +60,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			is_critical: node.is_critical
 		}));
 
-		return json({
-			data: {
-				nodes,
-				critical_path_ids: result.critical_path.map((n) => n.id),
-				project_duration: result.project_duration
-			}
+		return apiSuccess({
+			nodes,
+			critical_path_ids: result.critical_path.map((n) => n.id),
+			project_duration: result.project_duration
 		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : 'Onbekende fout bij berekening kritiek pad';
-		return json({ message, code: 'CPM_ERROR', status: 422 }, { status: 422 });
+		return apiError(422, 'INTERNAL_ERROR', message);
 	}
 };

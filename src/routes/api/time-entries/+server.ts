@@ -1,10 +1,10 @@
 // GET /api/time-entries — List time entries (filter by week or date range)
 // POST /api/time-entries — Create a new time entry
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createTimeEntrySchema, timeEntryQuerySchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 const ISO_WEEK_REGEX = /^(\d{4})-W(\d{2})$/;
 const DAYS_IN_WEEK = 7;
@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const rawParams = {
@@ -50,12 +50,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const parsed = timeEntryQuerySchema.safeParse(rawParams);
 	if (!parsed.success) {
-		return json({
-			message: 'Validatiefout',
-			code: 'VALIDATION_ERROR',
-			status: 400,
-			errors: parsed.error.flatten().fieldErrors
-		}, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Validatiefout');
 	}
 
 	const { week, project_id } = parsed.data;
@@ -90,34 +85,29 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const { data, error: dbError } = await query;
 
 	if (dbError) {
-		return json({ message: 'Fout bij ophalen urenregistraties', code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', 'Fout bij ophalen urenregistraties');
 	}
 
-	return json({ data: data ?? [] });
+	return apiSuccess(data ?? []);
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	let body: unknown;
 	try {
 		body = await request.json();
 	} catch {
-		return json({ message: 'Ongeldige JSON', code: 'INVALID_JSON', status: 400 }, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Ongeldige JSON');
 	}
 
 	const parsed = createTimeEntrySchema.safeParse(body);
 	if (!parsed.success) {
-		return json({
-			message: 'Validatiefout',
-			code: 'VALIDATION_ERROR',
-			status: 400,
-			errors: parsed.error.flatten().fieldErrors
-		}, { status: 400 });
+		return apiError(400, 'VALIDATION_ERROR', 'Validatiefout');
 	}
 
 	const { project_id, date, hours, activity_type, notes } = parsed.data;
@@ -131,7 +121,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (projectError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const { data, error: insertError } = await supabase
@@ -149,7 +139,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (insertError) {
-		return json({ message: 'Fout bij aanmaken urenregistratie', code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', 'Fout bij aanmaken urenregistratie');
 	}
 
 	await logAudit(supabase, {
@@ -160,5 +150,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		changes: { project_id, date, hours, activity_type }
 	});
 
-	return json({ data }, { status: 201 });
+	return apiSuccess(data, 201);
 };

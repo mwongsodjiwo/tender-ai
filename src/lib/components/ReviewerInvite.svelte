@@ -149,7 +149,7 @@
 							<p class="font-medium text-gray-900">{reviewer.name}</p>
 							<p class="text-sm text-gray-500">{reviewer.email}</p>
 							{#if reviewer.artifact}
-								<p class="mt-0.5 text-xs text-gray-400">
+								<p class="mt-0.5 text-xs text-gray-500">
 									Sectie: {reviewer.artifact.title}
 								</p>
 							{/if}

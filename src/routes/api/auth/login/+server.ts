@@ -1,19 +1,16 @@
 // POST /api/auth/login — Sign in with email and password
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { loginSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json();
 
 	const parsed = loginSchema.safeParse(body);
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { email, password } = parsed.data;
@@ -25,10 +22,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	if (error) {
-		return json(
-			{ message: error.message, code: 'AUTH_ERROR', status: 401 },
-			{ status: 401 }
-		);
+		return apiError(401, 'AUTH_ERROR', error.message);
 	}
 
 	if (data.user) {
@@ -41,5 +35,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 	}
 
-	return json({ data: { user: data.user, session: data.session } });
+	return apiSuccess({ user: data.user, session: data.session });
 };

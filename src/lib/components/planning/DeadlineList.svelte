@@ -87,7 +87,7 @@
 	<!-- No results -->
 	{#if filteredItems.length === 0}
 		<div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
-			<svg class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+			<svg class="mx-auto h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
 			</svg>
 			<h3 class="mt-3 text-sm font-medium text-gray-900">Geen deadlines</h3>
@@ -101,11 +101,11 @@
 			<table class="w-full">
 				<thead>
 					<tr class="border-b border-gray-200">
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Urgentie</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Titel</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Fase</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
-						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Urgentie</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Titel</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Fase</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Status</th>
+						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500">Datum</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-100">

@@ -1,26 +1,23 @@
 // POST /api/projects/:id/contract/generate/:sectionKey — Generate article text
 // Uses standard text as base, AI generation will be added when AI module is available
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { generateContractArticleSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json().catch(() => ({}));
 	const parsed = generateContractArticleSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	// Load project context
@@ -31,7 +28,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const sectionKey = params.sectionKey;
@@ -61,21 +58,12 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 				}
 			});
 
-			return json({
-				data: {
-					content: standardText.content,
-					section_key: sectionKey
-				}
+			return apiSuccess({
+				content: standardText.content,
+				section_key: sectionKey
 			});
 		}
 	}
 
-	return json(
-		{
-			message: 'Selecteer eerst algemene voorwaarden om artikeltekst te genereren.',
-			code: 'NO_CONDITIONS',
-			status: 400
-		},
-		{ status: 400 }
-	);
+	return apiError(400, 'VALIDATION_ERROR', 'Selecteer eerst algemene voorwaarden om artikeltekst te genereren.');
 };

@@ -1,24 +1,21 @@
 // POST /api/knowledge-base/search — Search knowledge base
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { knowledgeBaseSearchSchema } from '$server/api/validation';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = knowledgeBaseSearchSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { query, cpv_codes, limit } = parsed.data;
@@ -38,7 +35,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const { data: tenders, error: tenderError } = await tenderQuery;
 
 	if (tenderError) {
-		return json({ message: tenderError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', tenderError.message);
 	}
 
 	// Search requirements for matching text
@@ -50,7 +47,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.limit(limit);
 
 	if (reqError) {
-		return json({ message: reqError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', reqError.message);
 	}
 
 	// Build results combining tenders and requirements
@@ -69,10 +66,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}))
 	];
 
-	return json({
-		data: {
-			results: results.slice(0, limit),
-			total: results.length
-		}
+	return apiSuccess({
+		results: results.slice(0, limit),
+		total: results.length
 	});
 };

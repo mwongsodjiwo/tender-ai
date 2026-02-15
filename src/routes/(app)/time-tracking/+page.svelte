@@ -434,14 +434,14 @@
 												placeholder="Notitie"
 												value={row.notes}
 												on:input={(e) => updateRow(dayIndex, rowIndex, 'notes', e.currentTarget.value)}
-												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+												class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 											/>
 										</div>
 
 										<!-- Delete button -->
 										<button
 											on:click={() => removeRow(dayIndex, rowIndex)}
-											class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+											class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
 											aria-label="Verwijder urenregistratie"
 										>
 											<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -479,7 +479,7 @@
 							>
 								{day.label}
 							</button>
-							<span class="text-sm text-gray-400">
+							<span class="text-sm text-gray-500">
 								{dayTotal(day.rows)}u
 							</span>
 						</div>
@@ -535,12 +535,12 @@
 													placeholder="Notitie"
 													value={row.notes}
 													on:input={(e) => updateRow(dayIndex, rowIndex, 'notes', e.currentTarget.value)}
-													class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400"
+													class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-500"
 												/>
 											</div>
 											<button
 												on:click={() => removeRow(dayIndex, rowIndex)}
-												class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
+												class="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-500"
 												aria-label="Verwijder"
 											>
 												<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -553,7 +553,7 @@
 						<div class="border-t border-gray-100 px-5 py-3">
 							<button
 								on:click={() => addRow(dayIndex)}
-								class="flex items-center gap-2 text-sm text-gray-400 hover:text-primary-600"
+								class="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600"
 							>
 								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
 								Uren toevoegen
@@ -585,7 +585,7 @@
 						{/if}
 					</button>
 
-					<p class="mt-3 text-center text-xs text-gray-400">
+					<p class="mt-3 text-center text-xs text-gray-500">
 						Je kunt wijzigingen altijd later aanpassen.
 					</p>
 				</div>

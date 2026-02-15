@@ -1,26 +1,23 @@
 // POST /api/chat — Send a message and get AI response
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { chatMessageSchema } from '$server/api/validation';
 import { chat } from '$server/ai/client';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = chatMessageSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { conversation_id, message } = parsed.data;
@@ -33,10 +30,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (convError || !conversation) {
-		return json(
-			{ message: 'Gesprek niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Gesprek niet gevonden');
 	}
 
 	// Save user message
@@ -48,10 +42,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	if (userMsgError) {
-		return json(
-			{ message: userMsgError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', userMsgError.message);
 	}
 
 	// Fetch conversation history
@@ -72,10 +63,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'AI-fout';
-		return json(
-			{ message: `AI-fout: ${errorMessage}`, code: 'AI_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${errorMessage}`);
 	}
 
 	// Save AI response
@@ -91,10 +79,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (aiMsgError) {
-		return json(
-			{ message: aiMsgError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', aiMsgError.message);
 	}
 
 	await logAudit(supabase, {
@@ -106,11 +91,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		entityId: aiMsg.id
 	});
 
-	return json({
-		data: {
-			message_id: aiMsg.id,
-			content: aiResponse.content,
-			conversation_id
-		}
+	return apiSuccess({
+		message_id: aiMsg.id,
+		content: aiResponse.content,
+		conversation_id
 	});
 };

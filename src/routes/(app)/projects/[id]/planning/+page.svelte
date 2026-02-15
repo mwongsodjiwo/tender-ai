@@ -468,8 +468,10 @@
 	<!-- Tabs -->
 	<div class="mt-8 border-b border-gray-200">
 		<nav class="-mb-px flex space-x-6" aria-label="Planning tabs">
+			<div role="tablist" class="flex space-x-6">
 			{#each TABS as tab (tab.id)}
 				<button
+					role="tab"
 					on:click={() => { if (!tab.disabled) activeTab = tab.id; }}
 					class="border-b-2 px-1 py-3 text-sm font-medium transition-colors
 						{activeTab === tab.id
@@ -482,12 +484,13 @@
 				>
 					{tab.label}
 					{#if tab.disabled}
-						<span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-400">
+						<span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
 							Binnenkort
 						</span>
 					{/if}
 				</button>
 			{/each}
+			</div>
 		</nav>
 	</div>
 
@@ -510,10 +513,10 @@
 					<table class="w-full">
 						<thead>
 							<tr class="border-b border-gray-200">
-								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Titel</th>
-								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
-								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Toegewezen aan</th>
-								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Deadline</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Titel</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Status</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Toegewezen aan</th>
+								<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Deadline</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-100">
@@ -536,14 +539,14 @@
 										{#if doc.assignedTo}
 											<span class="text-sm text-gray-700">{getAssignedName(doc.assignedTo)}</span>
 										{:else}
-											<span class="text-sm text-gray-400">—</span>
+											<span class="text-sm text-gray-500">—</span>
 										{/if}
 									</td>
 									<td class="px-6 py-4">
 										{#if doc.deadline}
 											<span class="text-sm text-gray-700">{formatDocDate(doc.deadline)}</span>
 										{:else}
-											<span class="text-sm text-gray-400">—</span>
+											<span class="text-sm text-gray-500">—</span>
 										{/if}
 									</td>
 								</tr>
@@ -714,7 +717,7 @@
 					<button
 						type="button"
 						on:click={() => { showMilestonePanel = false; }}
-						class="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+						class="rounded-lg p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
 						aria-label="Sluiten"
 					>
 						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -838,13 +841,16 @@
 
 	<!-- Context menu -->
 	{#if contextMenu}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="fixed z-50 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-xl"
 			style="left: {contextMenu.x}px; top: {contextMenu.y}px;"
+			role="menu"
+			tabindex="-1"
+			aria-label="Activiteitopties"
 			on:contextmenu|preventDefault
+			on:keydown={(e) => { if (e.key === 'Escape') contextMenu = null; }}
 		>
-			<div class="px-3 py-1.5 text-xs font-medium text-gray-400 truncate max-w-[200px]">
+			<div class="px-3 py-1.5 text-xs font-medium text-gray-500 truncate max-w-[200px]">
 				{contextMenu.title}
 			</div>
 			<hr class="my-1 border-gray-100" />
@@ -881,7 +887,7 @@
 					<button
 						type="button"
 						on:click={closeMilestoneModal}
-						class="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+						class="rounded-lg p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
 						aria-label="Sluiten"
 					>
 						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

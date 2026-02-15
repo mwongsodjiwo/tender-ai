@@ -162,13 +162,10 @@
 			<StepperSidebar {steps} currentStep={currentSectionIndex} onStepClick={(i) => scrollToSection(i)} />
 		</aside>
 
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div class="flex min-w-0 flex-col overflow-y-auto" style="width: {showRightSidebar ? '60%' : '80%'};" bind:this={documentScrollContainer} on:scroll={handleScroll}>
+		<div class="flex min-w-0 flex-col overflow-y-auto" role="region" aria-label="Documentinhoud" style="width: {showRightSidebar ? '60%' : '80%'};" bind:this={documentScrollContainer} on:scroll={handleScroll}>
 			<div class="document-scroll-inner mx-auto py-8" style="transform: scale({(zoomLevel / 100) * 1.25}); transform-origin: top center; --editor-font-size: {fontSize}pt;">
 				{#each artifacts as artifact, index (artifact.id)}
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-no-static-element-interactions -->
-					<div bind:this={sectionElements[artifact.id]} class="relative scroll-mt-4" id="section-{artifact.id}" on:focusin={() => handleEditorFocus(artifact.id)} on:mouseup={() => handleTextSelection(artifact.id)}>
+					<div bind:this={sectionElements[artifact.id]} class="relative scroll-mt-4" id="section-{artifact.id}" on:focusin={() => handleEditorFocus(artifact.id)} on:mouseup={() => handleTextSelection(artifact.id)} role="none">
 						<div class="mb-3 flex items-center gap-2"><span class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">{index + 1}</span><h2 class="text-base font-semibold text-gray-900">{artifact.title}</h2></div>
 						<div class="document-paper mb-10 rounded bg-white"><TiptapEditor bind:this={editorComponents[artifact.id]} content={sectionContents[artifact.id] ?? artifact.content ?? ''} placeholder="Begin hier met het bewerken van de sectie-inhoud..." showToolbar={false} on:change={(e) => { sectionContents[artifact.id] = e.detail; sectionContents = sectionContents; }} /></div>
 						<SelectionPopup visible={commentPopup.visible && pendingCommentSelection?.artifactId === artifact.id} y={commentPopup.y} on:aiRewrite={startAiRewrite} on:addComment={startAddComment} />

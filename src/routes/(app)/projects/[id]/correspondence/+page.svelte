@@ -237,7 +237,7 @@
 					>
 						<span class="font-medium">{letterType.label}</span>
 						{#if LETTER_TYPE_PHASES[letterType.value]}
-							<span class="ml-2 text-xs text-gray-400">
+							<span class="ml-2 text-xs text-gray-500">
 								{LETTER_TYPE_PHASES[letterType.value].map((p) => PROJECT_PHASE_LABELS[p]).join(', ')}
 							</span>
 						{/if}
@@ -307,11 +307,11 @@
 			<table class="w-full">
 				<thead>
 					<tr class="border-b border-gray-200">
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Fase</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Titel</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Status</th>
-						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Ontvanger</th>
-						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-400">Datum</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Fase</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Titel</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Status</th>
+						<th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Ontvanger</th>
+						<th class="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500">Datum</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-100">
@@ -331,7 +331,7 @@
 										{#if letter.subject}
 											{letter.subject}
 										{:else}
-											<span class="text-gray-400">(geen onderwerp)</span>
+											<span class="text-gray-500">(geen onderwerp)</span>
 										{/if}
 									</p>
 								</a>
@@ -346,7 +346,7 @@
 									{#if letter.recipient}
 										<span class="text-sm text-gray-700">{letter.recipient}</span>
 									{:else}
-										<span class="text-sm text-gray-400">-</span>
+										<span class="text-sm text-gray-500">-</span>
 									{/if}
 								</a>
 							</td>

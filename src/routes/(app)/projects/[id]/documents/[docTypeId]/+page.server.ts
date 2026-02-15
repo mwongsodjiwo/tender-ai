@@ -4,8 +4,9 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { TemplateSection } from '$types';
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals, parent }) => {
 	const { supabase, user } = locals;
+	await parent(); // Auth guard vanuit layout
 
 	// Load document type
 	const { data: documentType, error: dtError } = await supabase

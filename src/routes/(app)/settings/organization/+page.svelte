@@ -156,7 +156,7 @@
 	{#if !data.organization}
 		<!-- Empty state -->
 		<div class="rounded-card border-2 border-dashed border-gray-300 p-12 text-center">
-			<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+			<svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
 			</svg>
 			<h3 class="mt-2 text-sm font-semibold text-gray-900">Geen organisatie</h3>
@@ -235,7 +235,7 @@
 						class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm"
 						aria-describedby="org-slug-help"
 					/>
-					<p id="org-slug-help" class="mt-1 text-xs text-gray-400">
+					<p id="org-slug-help" class="mt-1 text-xs text-gray-500">
 						De slug kan niet worden gewijzigd na aanmaak.
 					</p>
 				</div>
@@ -257,7 +257,7 @@
 							{validationErrors['description'] ? 'border-error-300' : ''}"
 						aria-describedby={validationErrors['description'] ? 'org-description-error' : undefined}
 						aria-invalid={validationErrors['description'] ? 'true' : undefined}
-					/>
+					></textarea>
 					{#if validationErrors['description']}
 						<p id="org-description-error" class="mt-1 text-sm text-error-600">{validationErrors['description']}</p>
 					{/if}

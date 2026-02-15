@@ -192,7 +192,7 @@
 							? 'bg-primary-600 text-white'
 							: isPast
 								? 'bg-primary-100 text-primary-700'
-								: 'bg-gray-100 text-gray-400'}"
+								: 'bg-gray-100 text-gray-500'}"
 				>
 					{#if isPast}
 						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -202,7 +202,7 @@
 						{i + 1}
 					{/if}
 				</div>
-				<span class="text-sm font-medium {isActive ? 'text-gray-900' : 'text-gray-400'}">
+				<span class="text-sm font-medium {isActive ? 'text-gray-900' : 'text-gray-500'}">
 					{stepLabels[i]}
 				</span>
 				{#if i < 2}
@@ -238,7 +238,7 @@
 				<!-- End date -->
 				<div>
 					<label for="planning-end" class="block text-sm font-medium text-gray-700">
-						Gewenste einddatum <span class="text-gray-400">(optioneel)</span>
+						Gewenste einddatum <span class="text-gray-500">(optioneel)</span>
 					</label>
 					<input
 						id="planning-end"
@@ -246,7 +246,7 @@
 						bind:value={targetEndDate}
 						class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
 					/>
-					<p class="mt-1 text-xs text-gray-400">
+					<p class="mt-1 text-xs text-gray-500">
 						Laat leeg voor een realistisch voorstel door de AI.
 					</p>
 				</div>
@@ -365,12 +365,12 @@
 					<details class="group rounded-lg border border-gray-200">
 						<summary class="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
 							<div class="flex items-center gap-2">
-								<svg class="h-4 w-4 text-gray-400 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<svg class="h-4 w-4 text-gray-500 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
 									<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
 								</svg>
 								{formatPhaseLabel(phase.phase)}
 							</div>
-							<span class="text-xs text-gray-400">
+							<span class="text-xs text-gray-500">
 								{formatDate(phase.start_date)} — {formatDate(phase.end_date)}
 								({phase.activities.length} activiteiten, {phase.milestones.length} milestones)
 							</span>
@@ -385,14 +385,14 @@
 										<div class="rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
 											<div class="flex items-start justify-between">
 												<p class="text-sm font-medium text-gray-800">{activity.title}</p>
-												<span class="shrink-0 text-xs text-gray-400">
+												<span class="shrink-0 text-xs text-gray-500">
 													{activity.estimated_hours}u
 												</span>
 											</div>
 											{#if activity.description}
 												<p class="mt-0.5 text-xs text-gray-500">{activity.description}</p>
 											{/if}
-											<div class="mt-1 flex items-center gap-3 text-xs text-gray-400">
+											<div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
 												<span>{formatDate(activity.planned_start)} — {formatDate(activity.planned_end)}</span>
 												<span class="rounded bg-gray-100 px-1.5 py-0.5">{formatRoleLabel(activity.assigned_role)}</span>
 											</div>
@@ -417,7 +417,7 @@
 												</svg>
 											{/if}
 											<span class="text-gray-700">{milestone.title}</span>
-											<span class="text-xs text-gray-400">{formatDate(milestone.target_date)}</span>
+											<span class="text-xs text-gray-500">{formatDate(milestone.target_date)}</span>
 										</div>
 									{/each}
 								</div>

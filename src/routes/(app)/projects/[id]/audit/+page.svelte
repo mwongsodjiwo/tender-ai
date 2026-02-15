@@ -20,5 +20,11 @@
 		<p class="mt-1 text-sm text-gray-500">Alle activiteit voor {project.name}</p>
 	</div>
 
-	<AuditLog url="/api/projects/{project.id}/audit" />
+	<AuditLog
+		entries={data.auditEntries}
+		total={data.auditTotal}
+		page={data.auditPage}
+		perPage={data.auditPerPage}
+		baseUrl="/projects/{project.id}/audit"
+	/>
 </div>

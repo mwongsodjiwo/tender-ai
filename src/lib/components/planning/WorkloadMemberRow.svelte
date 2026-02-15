@@ -56,7 +56,7 @@
 			on:click={() => (expanded = !expanded)}
 			aria-expanded={expanded}
 		>
-			<span class="text-xs text-gray-400">{expanded ? '▼' : '▶'}</span>
+			<span class="text-xs text-gray-500">{expanded ? '▼' : '▶'}</span>
 			{#if member.avatar_url}
 				<img src={member.avatar_url} alt="" class="h-8 w-8 rounded-full" />
 			{:else}

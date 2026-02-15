@@ -1,7 +1,6 @@
+<!-- Audit log component — receives data via props, pagination via URL -->
 <script lang="ts">
-	import { onMount } from 'svelte';
-
-	export let url: string;
+	import { goto } from '$app/navigation';
 
 	interface AuditEntry {
 		id: string;
@@ -13,13 +12,11 @@
 		created_at: string;
 	}
 
-	let entries: AuditEntry[] = [];
-	let total = 0;
-	let page = 1;
-	let loading = true;
-	let errorMessage = '';
-
-	const PER_PAGE = 25;
+	export let entries: AuditEntry[] = [];
+	export let total: number = 0;
+	export let page: number = 1;
+	export let perPage: number = 25;
+	export let baseUrl: string = '';
 
 	const ACTION_LABELS: Record<string, string> = {
 		create: 'Aangemaakt',
@@ -45,24 +42,6 @@
 		organization: 'Organisatie'
 	};
 
-	async function loadEntries() {
-		loading = true;
-		errorMessage = '';
-
-		const separator = url.includes('?') ? '&' : '?';
-		const response = await fetch(`${url}${separator}page=${page}&per_page=${PER_PAGE}`);
-
-		if (response.ok) {
-			const result = await response.json();
-			entries = result.data.entries;
-			total = result.data.total;
-		} else {
-			errorMessage = 'Kon audit log niet laden';
-		}
-
-		loading = false;
-	}
-
 	function formatDate(iso: string): string {
 		return new Date(iso).toLocaleString('nl-NL', {
 			day: '2-digit',
@@ -73,9 +52,12 @@
 		});
 	}
 
-	$: totalPages = Math.ceil(total / PER_PAGE);
+	function goToPage(newPage: number): void {
+		const separator = baseUrl.includes('?') ? '&' : '?';
+		goto(`${baseUrl}${separator}page=${newPage}`);
+	}
 
-	onMount(loadEntries);
+	$: totalPages = Math.ceil(total / perPage);
 </script>
 
 <div class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-sm">
@@ -84,15 +66,7 @@
 		<p class="mt-1 text-sm text-gray-500">Alle acties op dit project worden hier vastgelegd.</p>
 	</div>
 
-	{#if loading}
-		<div class="px-6 py-8 text-center">
-			<p class="text-sm text-gray-500">Laden...</p>
-		</div>
-	{:else if errorMessage}
-		<div class="px-6 py-8 text-center">
-			<p class="text-sm text-error-600" role="alert">{errorMessage}</p>
-		</div>
-	{:else if entries.length === 0}
+	{#if entries.length === 0}
 		<div class="px-6 py-8 text-center">
 			<p class="text-sm text-gray-500">Nog geen acties vastgelegd.</p>
 		</div>
@@ -135,7 +109,7 @@
 							<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
 								{ENTITY_LABELS[entry.entity_type] ?? entry.entity_type}
 							</td>
-							<td class="max-w-xs truncate px-6 py-4 text-sm text-gray-400">
+							<td class="max-w-xs truncate px-6 py-4 text-sm text-gray-500">
 								{#if Object.keys(entry.changes).length > 0}
 									{JSON.stringify(entry.changes).slice(0, 80)}
 								{:else}
@@ -155,14 +129,14 @@
 				</p>
 				<div class="flex gap-2">
 					<button
-						on:click={() => { page -= 1; loadEntries(); }}
+						on:click={() => goToPage(page - 1)}
 						disabled={page <= 1}
 						class="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50"
 					>
 						Vorige
 					</button>
 					<button
-						on:click={() => { page += 1; loadEntries(); }}
+						on:click={() => goToPage(page + 1)}
 						disabled={page >= totalPages}
 						class="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50"
 					>

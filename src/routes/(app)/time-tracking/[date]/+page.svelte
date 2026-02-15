@@ -287,7 +287,7 @@
 						<div class="flex items-end">
 							<button
 								on:click={() => removeRow(index)}
-								class="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+								class="rounded-lg p-2.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
 								aria-label="Verwijder urenregistratie"
 							>
 								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -306,7 +306,7 @@
 							value={row.notes}
 							on:input={(e) => updateRow(index, 'notes', e.currentTarget.value)}
 							rows="2"
-							class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+							class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
 						></textarea>
 						</div>
 					</div>

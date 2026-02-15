@@ -60,7 +60,7 @@
 			<p class="text-sm font-medium text-gray-500">Op schema</p>
 			<p class="mt-1 text-3xl font-bold {summary.on_track === summary.total_active ? 'text-green-600' : 'text-orange-600'}">
 				{summary.on_track}
-				<span class="text-base font-normal text-gray-400">/ {summary.total_active}</span>
+				<span class="text-base font-normal text-gray-500">/ {summary.total_active}</span>
 			</p>
 		</div>
 		<div class="rounded-lg border border-gray-200 bg-white px-4 py-5">
@@ -68,7 +68,7 @@
 			<p class="mt-1 text-3xl font-bold {summary.critical_deadlines > 0 ? 'text-red-600' : 'text-gray-900'}">
 				{summary.critical_deadlines}
 			</p>
-			<p class="text-xs text-gray-400">komende 14 dagen</p>
+			<p class="text-xs text-gray-500">komende 14 dagen</p>
 		</div>
 	</div>
 

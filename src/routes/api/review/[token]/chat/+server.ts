@@ -1,11 +1,11 @@
 // POST /api/review/:token/chat — Chat with AI about a section (magic link access, no auth)
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { reviewChatSchema } from '$server/api/validation';
 import { chatWithReviewer } from '$server/ai/review';
 import { createServiceClient } from '$server/db/client';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request }) => {
 	const supabase = createServiceClient();
@@ -18,27 +18,18 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		.single();
 
 	if (reviewerError || !reviewer) {
-		return json(
-			{ message: 'Ongeldige of verlopen reviewlink', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Ongeldige of verlopen reviewlink');
 	}
 
 	if (new Date(reviewer.expires_at) < new Date()) {
-		return json(
-			{ message: 'Deze reviewlink is verlopen', code: 'EXPIRED', status: 410 },
-			{ status: 410 }
-		);
+		return apiError(410, 'NOT_FOUND', 'Deze reviewlink is verlopen');
 	}
 
 	const body = await request.json();
 	const parsed = reviewChatSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { conversation_id, message } = parsed.data;
@@ -51,10 +42,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		.single();
 
 	if (artError || !artifact) {
-		return json(
-			{ message: 'Sectie niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Sectie niet gevonden');
 	}
 
 	// Get or create conversation
@@ -74,10 +62,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			.single();
 
 		if (convError || !newConv) {
-			return json(
-				{ message: 'Kon gesprek niet aanmaken', code: 'DB_ERROR', status: 500 },
-				{ status: 500 }
-			);
+			return apiError(500, 'DB_ERROR', 'Kon gesprek niet aanmaken');
 		}
 		convId = newConv.id;
 	}
@@ -109,10 +94,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		});
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'AI-fout';
-		return json(
-			{ message: `AI-fout: ${errorMessage}`, code: 'AI_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${errorMessage}`);
 	}
 
 	// Save AI response
@@ -174,13 +156,11 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		});
 	}
 
-	return json({
-		data: {
-			message_id: aiMsg?.id,
-			content: result.content,
-			conversation_id: convId,
-			has_update: result.hasUpdate,
-			updated_artifact: updatedArtifact
-		}
+	return apiSuccess({
+		message_id: aiMsg?.id,
+		content: result.content,
+		conversation_id: convId,
+		has_update: result.hasUpdate,
+		updated_artifact: updatedArtifact
 	});
 };

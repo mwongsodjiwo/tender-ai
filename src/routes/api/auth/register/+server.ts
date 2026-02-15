@@ -1,19 +1,16 @@
 // POST /api/auth/register — Register a new user
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { registerSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json();
 
 	const parsed = registerSchema.safeParse(body);
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { email, password, first_name, last_name } = parsed.data;
@@ -28,10 +25,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	if (error) {
-		return json(
-			{ message: error.message, code: 'AUTH_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'AUTH_ERROR', error.message);
 	}
 
 	if (data.user) {
@@ -44,5 +38,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 	}
 
-	return json({ data: { user: data.user, session: data.session } }, { status: 201 });
+	return apiSuccess({ user: data.user, session: data.session }, 201);
 };

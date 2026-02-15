@@ -1,11 +1,11 @@
 // PATCH /api/organizations/:id/members/:memberId — Update member role
 // DELETE /api/organizations/:id/members/:memberId — Remove member
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { adminUpdateMemberRoleSchema } from '$server/api/validation';
 import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
@@ -17,10 +17,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const parsed = adminUpdateMemberRoleSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { role } = parsed.data;
@@ -34,10 +31,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (updateError || !member) {
-		return json(
-			{ message: 'Lid niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Lid niet gevonden');
 	}
 
 	await logAudit(supabase, {
@@ -50,7 +44,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		changes: { role, action: 'update_role' }
 	});
 
-	return json({ data: member });
+	return apiSuccess(member);
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
@@ -66,10 +60,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.eq('organization_id', params.id);
 
 	if (deleteError) {
-		return json(
-			{ message: deleteError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', deleteError.message);
 	}
 
 	await logAudit(supabase, {
@@ -82,5 +73,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		changes: { action: 'remove_member' }
 	});
 
-	return json({ success: true });
+	return apiSuccess({ success: true });
 };

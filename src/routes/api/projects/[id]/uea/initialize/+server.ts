@@ -1,26 +1,23 @@
 // POST /api/projects/:id/uea/initialize — Initialize UEA selections for a project
 // Creates selection records for all questions (mandatory=selected, optional=based on param)
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { initializeUeaSelectionsSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json().catch(() => ({}));
 	const parsed = initializeUeaSelectionsSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { select_all_optional } = parsed.data;
@@ -33,7 +30,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	// Load all active questions
@@ -43,7 +40,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.eq('is_active', true);
 
 	if (qError || !questions) {
-		return json({ message: 'Kon UEA-vragen niet laden', code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', 'Kon UEA-vragen niet laden');
 	}
 
 	// Build selection records
@@ -59,7 +56,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.upsert(selections, { onConflict: 'project_id,question_id' });
 
 	if (upsertError) {
-		return json({ message: upsertError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', upsertError.message);
 	}
 
 	await logAudit(supabase, {
@@ -75,11 +72,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 	});
 
-	return json({
-		data: {
-			initialized: true,
-			total: questions.length,
-			selected: selections.filter((s: { is_selected: boolean }) => s.is_selected).length
-		}
-	}, { status: 201 });
+	return apiSuccess({
+		initialized: true,
+		total: questions.length,
+		selected: selections.filter((s: { is_selected: boolean }) => s.is_selected).length
+	}, 201);
 };

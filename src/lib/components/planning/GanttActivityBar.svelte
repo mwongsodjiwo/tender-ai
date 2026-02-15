@@ -108,8 +108,8 @@
 		on:keydown={handleKeyDown}
 	>
 		<!-- Background bar -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<rect
+			role="presentation"
 			x={displayX}
 			y={y + BAR_OFFSET_Y}
 			width={barWidth}
@@ -171,8 +171,8 @@
 		<!-- Dependency connectors (shown on hover) -->
 		{#if showConnectors && !readonly && !isDragging}
 			<!-- Right connector (source: drag from here) -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<circle
+				role="presentation"
 				cx={displayX + barWidth}
 				cy={y + BAR_OFFSET_Y + BAR_HEIGHT / 2}
 				r={CONNECTOR_SIZE / 2}
@@ -183,8 +183,8 @@
 				on:pointerdown={handleConnectorPointerDown}
 			/>
 			<!-- Left connector (target: drop here) -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<circle
+				role="presentation"
 				cx={displayX}
 				cy={y + BAR_OFFSET_Y + BAR_HEIGHT / 2}
 				r={CONNECTOR_SIZE / 2}
@@ -218,7 +218,7 @@
 						{/if}
 					</p>
 					{#if activity.estimated_hours}
-						<p class="mt-0.5 text-[10px] text-gray-400">~{activity.estimated_hours} uur geschat</p>
+						<p class="mt-0.5 text-[10px] text-gray-500">~{activity.estimated_hours} uur geschat</p>
 					{/if}
 					{#if isCritical}
 						<p class="mt-0.5 text-[10px] font-medium text-red-600">Kritiek pad &mdash; geen speling</p>

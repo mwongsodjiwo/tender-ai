@@ -1,25 +1,22 @@
 // GET /api/projects/:id/planning/export/csv — Export planning as CSV
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { generateCsvExport } from '$server/planning/export-csv';
 import { planningExportQuerySchema } from '$server/api/validation';
+import { apiError } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const queryParams = Object.fromEntries(url.searchParams.entries());
 	const parsed = planningExportQuerySchema.safeParse(queryParams);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { data: project } = await supabase
@@ -30,7 +27,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		.single();
 
 	if (!project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const [milestonesResult, activitiesResult] = await Promise.all([

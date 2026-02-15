@@ -199,7 +199,7 @@
 	<!-- Initialize button when no selections exist yet -->
 	{#if !hasSelections && totalQuestions > 0}
 		<div class="rounded-card bg-white p-8 text-center shadow-card">
-			<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+			<svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 			</svg>
 			<h3 class="mt-4 text-lg font-semibold text-gray-900">UEA configureren</h3>
@@ -268,7 +268,7 @@
 					>
 						<div class="flex items-center gap-3">
 							<svg
-								class="h-5 w-5 text-gray-400 transition-transform {expandedSections.has(section.section_key) ? 'rotate-90' : ''}"
+								class="h-5 w-5 text-gray-500 transition-transform {expandedSections.has(section.section_key) ? 'rotate-90' : ''}"
 								fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
 							>
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -312,7 +312,7 @@
 									<!-- Question content -->
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center gap-2">
-											<span class="font-mono text-xs text-gray-400">{question.question_number}</span>
+											<span class="font-mono text-xs text-gray-500">{question.question_number}</span>
 											{#if question.is_mandatory}
 												<StatusBadge status="verplicht" />
 											{:else}

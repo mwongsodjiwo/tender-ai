@@ -292,11 +292,13 @@
 		</button>
 
 		{#if showTableMenu && isInTable}
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<div
 				class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+				role="menu"
+				tabindex="-1"
+				aria-label="Tabelopties"
 				on:mouseleave={() => { showTableMenu = false; }}
+				on:keydown={(e) => { if (e.key === 'Escape') { showTableMenu = false; } }}
 			>
 				<button on:click={() => { addColumnBefore(); showTableMenu = false; }} class="table-menu-btn" type="button">Kolom links invoegen</button>
 				<button on:click={() => { addColumnAfter(); showTableMenu = false; }} class="table-menu-btn" type="button">Kolom rechts invoegen</button>

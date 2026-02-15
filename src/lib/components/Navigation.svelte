@@ -5,6 +5,7 @@
 	import type { Profile, ProjectStatus, Notification } from '$types';
 	import { lastProjectId } from '$lib/stores/lastProject';
 	import NotificationBell from '$lib/components/notifications/NotificationBell.svelte';
+	import { focusTrap } from '$lib/utils/focus-trap';
 
 	export let supabase: SupabaseClient;
 	export let profile: Profile | null;
@@ -109,16 +110,24 @@
 
 <!-- Mobile overlay -->
 {#if mobileOpen}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div class="fixed inset-0 z-40 bg-black/30 lg:hidden" on:click={closeMobile}></div>
+	<button
+		type="button"
+		class="fixed inset-0 z-40 bg-black/30 lg:hidden"
+		on:click={closeMobile}
+		on:keydown={(e) => { if (e.key === 'Escape') closeMobile(); }}
+		aria-label="Navigatie sluiten"
+		tabindex="-1"
+	></button>
 {/if}
+
+<svelte:window on:keydown={(e) => { if (e.key === 'Escape' && mobileOpen) closeMobile(); }} />
 
 <!-- Sidebar -->
 <aside
 	class="fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-gray-200 bg-white transition-transform duration-200
 		{mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0"
 	aria-label="Hoofdnavigatie"
+	use:focusTrap={mobileOpen}
 >
 	<!-- Logo -->
 	<div class="flex h-16 shrink-0 items-center gap-2 px-5">
@@ -178,7 +187,7 @@
 
 		<!-- Project selector -->
 		<div class="mt-6">
-			<span class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+			<span class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
 				Project
 			</span>
 
@@ -271,7 +280,7 @@
 			<a
 				href="/projects/new"
 				on:click={closeMobile}
-				class="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+				class="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-600"
 			>
 				<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

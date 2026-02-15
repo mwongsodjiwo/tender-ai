@@ -1,15 +1,15 @@
 // GET /api/notifications/preferences — List user notification preferences
 // PUT /api/notifications/preferences — Update a preference
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { updateNotificationPreferenceSchema } from '$server/api/validation';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error } = await supabase
@@ -19,27 +19,24 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.order('notification_type');
 
 	if (error) {
-		return json({ message: error.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', error.message);
 	}
 
-	return json({ data: data ?? [] });
+	return apiSuccess(data ?? []);
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = updateNotificationPreferenceSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const updateFields: Record<string, unknown> = {};
@@ -58,11 +55,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		.single();
 
 	if (error || !data) {
-		return json(
-			{ message: 'Voorkeur niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Voorkeur niet gevonden');
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };

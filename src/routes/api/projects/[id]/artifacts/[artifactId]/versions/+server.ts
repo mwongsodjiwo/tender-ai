@@ -1,13 +1,13 @@
 // GET /api/projects/:id/artifacts/:artifactId/versions — List artifact versions
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: versions, error: dbError } = await supabase
@@ -17,8 +17,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.order('version', { ascending: false });
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data: versions });
+	return apiSuccess(versions);
 };

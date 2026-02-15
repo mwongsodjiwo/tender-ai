@@ -1,15 +1,15 @@
 // POST /api/projects/:id/evaluations/batch-score — Batch update scores for multiple evaluations
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { batchScoreSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -20,17 +20,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const body = await request.json();
 	const parsed = batchScoreSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	// Load all evaluations for this project
@@ -41,7 +38,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.is('deleted_at', null);
 
 	if (evalError) {
-		return json({ message: evalError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', evalError.message);
 	}
 
 	const evalMap = new Map((evaluations ?? []).map((e) => [e.id, e]));
@@ -49,10 +46,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	// Validate all evaluation_ids belong to this project
 	for (const scoreItem of parsed.data.scores) {
 		if (!evalMap.has(scoreItem.evaluation_id)) {
-			return json(
-				{ message: `Beoordeling ${scoreItem.evaluation_id} niet gevonden in dit project`, code: 'VALIDATION_ERROR', status: 400 },
-				{ status: 400 }
-			);
+			return apiError(400, 'VALIDATION_ERROR', `Beoordeling ${scoreItem.evaluation_id} niet gevonden in dit project`);
 		}
 	}
 
@@ -83,7 +77,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			.single();
 
 		if (dbError) {
-			return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+			return apiError(500, 'DB_ERROR', dbError.message);
 		}
 
 		updated.push(evaluation);
@@ -99,5 +93,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { batch_scores: parsed.data.scores.length, evaluations_updated: updated.length }
 	});
 
-	return json({ data: updated });
+	return apiSuccess(updated);
 };

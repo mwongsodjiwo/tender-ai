@@ -250,7 +250,7 @@
 		<div class="rounded-card bg-white shadow-card">
 			<!-- Section title -->
 			<div class="border-b border-gray-100 px-6 pt-6 pb-4">
-				<h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+				<h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">
 					{TABS.find((t) => t.key === activeTab)?.label ?? ''}
 				</h2>
 			</div>

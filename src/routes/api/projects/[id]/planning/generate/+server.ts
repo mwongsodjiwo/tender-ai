@@ -1,6 +1,5 @@
 // POST /api/projects/:id/planning/generate — AI-generated planning suggestion
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { generatePlanningSchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
@@ -12,15 +11,13 @@ import {
 	type PlanningPreferences
 } from '$server/planning/ai-planning-prompt';
 import { chat } from '$server/ai/client';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json(
-			{ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 },
-			{ status: 401 }
-		);
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	// Validate project exists
@@ -32,10 +29,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json(
-			{ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	// Parse and validate request body
@@ -43,10 +37,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const parsed = generatePlanningSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { target_start_date, target_end_date, preferences: rawPrefs } = parsed.data;
@@ -65,10 +56,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		context = await gatherPlanningContext(supabase, params.id);
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : 'Fout bij verzamelen projectcontext.';
-		return json(
-			{ message, code: 'CONTEXT_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', message);
 	}
 
 	// Build prompts
@@ -86,10 +74,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		});
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : 'Fout bij AI-planningsgeneratie.';
-		return json(
-			{ message: `AI-fout: ${message}`, code: 'AI_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${message}`);
 	}
 
 	// Parse AI response
@@ -98,10 +83,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		planning = parseAiPlanningResponse(aiResponse.content);
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : 'Ongeldige AI-response.';
-		return json(
-			{ message: `Parsing-fout: ${message}`, code: 'PARSE_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'INTERNAL_ERROR', `Parsing-fout: ${message}`);
 	}
 
 	// Audit log
@@ -121,16 +103,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 	});
 
-	return json({
-		data: {
-			planning: {
-				phases: planning.phases,
-				dependencies: planning.dependencies,
-				total_duration_days: planning.total_duration_days,
-				total_estimated_hours: planning.total_estimated_hours
-			},
-			rationale: planning.rationale,
-			warnings: planning.warnings
-		}
+	return apiSuccess({
+		planning: {
+			phases: planning.phases,
+			dependencies: planning.dependencies,
+			total_duration_days: planning.total_duration_days,
+			total_estimated_hours: planning.total_estimated_hours
+		},
+		rationale: planning.rationale,
+		warnings: planning.warnings
 	});
 };

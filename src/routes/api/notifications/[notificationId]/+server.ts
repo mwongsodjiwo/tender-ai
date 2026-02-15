@@ -1,13 +1,13 @@
 // PATCH /api/notifications/:notificationId — Mark single notification as read
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const PATCH: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error } = await supabase
@@ -19,11 +19,8 @@ export const PATCH: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (error || !data) {
-		return json(
-			{ message: 'Notificatie niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Notificatie niet gevonden');
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };

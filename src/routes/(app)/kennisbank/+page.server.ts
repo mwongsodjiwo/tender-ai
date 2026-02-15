@@ -3,18 +3,23 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, parent }) => {
 	const { supabase, user } = locals;
+	await parent(); // Auth guard vanuit layout
 
 	if (!user) {
 		throw error(401, 'Niet ingelogd');
 	}
 
 	// Get user's organizations
-	const { data: memberships } = await supabase
+	const { data: memberships, error: memberError } = await supabase
 		.from('organization_members')
 		.select('organization_id, organization:organizations(id, name, slug)')
 		.eq('profile_id', user.id);
+
+	if (memberError) {
+		throw error(500, 'Kon organisaties niet laden');
+	}
 
 	const organizations = (memberships ?? [])
 		.map((m) => {

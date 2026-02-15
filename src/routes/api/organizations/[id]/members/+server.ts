@@ -1,17 +1,17 @@
 // GET /api/organizations/:id/members — List members
 // POST /api/organizations/:id/members — Invite a member
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { inviteMemberSchema } from '$server/api/validation';
 import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error: dbError } = await supabase
@@ -21,13 +21,10 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.order('created_at');
 
 	if (dbError) {
-		return json(
-			{ message: dbError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -40,10 +37,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const parsed = inviteMemberSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { email, role } = parsed.data;
@@ -56,10 +50,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (profileError || !profile) {
-		return json(
-			{ message: 'Gebruiker niet gevonden', code: 'USER_NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Gebruiker niet gevonden');
 	}
 
 	const { data: member, error: memberError } = await supabase
@@ -74,19 +65,13 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	if (memberError) {
 		if (memberError.code === '23505') {
-			return json(
-				{ message: 'Gebruiker is al lid van deze organisatie', code: 'DUPLICATE', status: 409 },
-				{ status: 409 }
-			);
+			return apiError(409, 'DUPLICATE', 'Gebruiker is al lid van deze organisatie');
 		}
-		return json(
-			{ message: memberError.message, code: 'DB_ERROR', status: 500 },
-			{ status: 500 }
-		);
+		return apiError(500, 'DB_ERROR', memberError.message);
 	}
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	await logAudit(supabase, {
@@ -99,5 +84,5 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { email, role }
 	});
 
-	return json({ data: member }, { status: 201 });
+	return apiSuccess(member, 201);
 };

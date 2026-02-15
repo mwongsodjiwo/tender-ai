@@ -80,7 +80,7 @@
 		{:else if !hasData}
 			<div class="px-4 py-12 text-center">
 				<p class="text-sm text-gray-500">Nog geen uren geregistreerd in deze periode.</p>
-				<p class="mt-1 text-xs text-gray-400">
+				<p class="mt-1 text-xs text-gray-500">
 					{members.length} {members.length === 1 ? 'teamlid' : 'teamleden'} beschikbaar
 				</p>
 			</div>

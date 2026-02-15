@@ -1,11 +1,11 @@
 // GET /api/review/:token — Validate magic link and return review data
 // PATCH /api/review/:token — Submit review (approve/reject with feedback)
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { updateReviewSchema } from '$server/api/validation';
 import { createServiceClient } from '$server/db/client';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params }) => {
 	// Use service client — no auth required for magic link access
@@ -18,18 +18,12 @@ export const GET: RequestHandler = async ({ params }) => {
 		.single();
 
 	if (reviewerError || !reviewer) {
-		return json(
-			{ message: 'Ongeldige of verlopen reviewlink', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Ongeldige of verlopen reviewlink');
 	}
 
 	// Check expiration
 	if (new Date(reviewer.expires_at) < new Date()) {
-		return json(
-			{ message: 'Deze reviewlink is verlopen', code: 'EXPIRED', status: 410 },
-			{ status: 410 }
-		);
+		return apiError(410, 'NOT_FOUND', 'Deze reviewlink is verlopen');
 	}
 
 	// Get artifact with project info
@@ -40,41 +34,36 @@ export const GET: RequestHandler = async ({ params }) => {
 		.single();
 
 	if (artError || !artifact) {
-		return json(
-			{ message: 'Sectie niet gevonden', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Sectie niet gevonden');
 	}
 
-	return json({
-		data: {
-			reviewer: {
-				id: reviewer.id,
-				artifact_id: reviewer.artifact_id,
-				email: reviewer.email,
-				name: reviewer.name,
-				review_status: reviewer.review_status,
-				feedback: reviewer.feedback,
-				reviewed_at: reviewer.reviewed_at,
-				expires_at: reviewer.expires_at,
-				created_at: reviewer.created_at
-			},
-			artifact: {
-				id: artifact.id,
-				title: artifact.title,
-				content: artifact.content,
-				section_key: artifact.section_key,
-				status: artifact.status,
-				version: artifact.version
-			},
-			project: {
-				id: (artifact as Record<string, unknown>).project
-					? ((artifact as Record<string, unknown>).project as { id: string; name: string }).id
-					: artifact.project_id,
-				name: (artifact as Record<string, unknown>).project
-					? ((artifact as Record<string, unknown>).project as { id: string; name: string }).name
-					: ''
-			}
+	return apiSuccess({
+		reviewer: {
+			id: reviewer.id,
+			artifact_id: reviewer.artifact_id,
+			email: reviewer.email,
+			name: reviewer.name,
+			review_status: reviewer.review_status,
+			feedback: reviewer.feedback,
+			reviewed_at: reviewer.reviewed_at,
+			expires_at: reviewer.expires_at,
+			created_at: reviewer.created_at
+		},
+		artifact: {
+			id: artifact.id,
+			title: artifact.title,
+			content: artifact.content,
+			section_key: artifact.section_key,
+			status: artifact.status,
+			version: artifact.version
+		},
+		project: {
+			id: (artifact as Record<string, unknown>).project
+				? ((artifact as Record<string, unknown>).project as { id: string; name: string }).id
+				: artifact.project_id,
+			name: (artifact as Record<string, unknown>).project
+				? ((artifact as Record<string, unknown>).project as { id: string; name: string }).name
+				: ''
 		}
 	});
 };
@@ -90,27 +79,18 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		.single();
 
 	if (reviewerError || !reviewer) {
-		return json(
-			{ message: 'Ongeldige of verlopen reviewlink', code: 'NOT_FOUND', status: 404 },
-			{ status: 404 }
-		);
+		return apiError(404, 'NOT_FOUND', 'Ongeldige of verlopen reviewlink');
 	}
 
 	if (new Date(reviewer.expires_at) < new Date()) {
-		return json(
-			{ message: 'Deze reviewlink is verlopen', code: 'EXPIRED', status: 410 },
-			{ status: 410 }
-		);
+		return apiError(410, 'NOT_FOUND', 'Deze reviewlink is verlopen');
 	}
 
 	const body = await request.json();
 	const parsed = updateReviewSchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { review_status, feedback } = parsed.data;
@@ -127,7 +107,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		.single();
 
 	if (updateError) {
-		return json({ message: updateError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', updateError.message);
 	}
 
 	const artifactData = (reviewer as Record<string, unknown>).artifact as { project_id: string; title: string } | null;
@@ -155,5 +135,5 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		}
 	});
 
-	return json({ data: updated });
+	return apiSuccess(updated);
 };

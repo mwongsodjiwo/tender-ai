@@ -1,15 +1,15 @@
 // GET /api/projects/:id/conversations — List project conversations
 // POST /api/projects/:id/conversations — Create a conversation
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createConversationSchema } from '$server/api/validation';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data, error: dbError } = await supabase
@@ -19,27 +19,24 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.order('updated_at', { ascending: false });
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data });
+	return apiSuccess(data);
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const body = await request.json();
 	const parsed = createConversationSchema.safeParse({ ...body, project_id: params.id });
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const { project_id, artifact_id, title, context_type } = parsed.data;
@@ -57,8 +54,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return json({ data: conversation }, { status: 201 });
+	return apiSuccess(conversation, 201);
 };

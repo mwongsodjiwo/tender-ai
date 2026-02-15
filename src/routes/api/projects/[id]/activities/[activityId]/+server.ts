@@ -2,16 +2,16 @@
 // PATCH /api/projects/:id/activities/:activityId — Update activity
 // DELETE /api/projects/:id/activities/:activityId — Soft-delete activity
 
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { updatePhaseActivitySchema } from '$server/api/validation';
 import { logAudit } from '$server/db/audit';
+import { apiError, apiSuccess } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: activity, error: dbError } = await supabase
@@ -23,17 +23,17 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (dbError || !activity) {
-		return json({ message: 'Activiteit niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Activiteit niet gevonden');
 	}
 
-	return json({ data: activity });
+	return apiSuccess(activity);
 };
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -44,17 +44,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const body = await request.json();
 	const parsed = updatePhaseActivitySchema.safeParse(body);
 
 	if (!parsed.success) {
-		return json(
-			{ message: parsed.error.errors[0].message, code: 'VALIDATION_ERROR', status: 400 },
-			{ status: 400 }
-		);
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
 	const updateData: Record<string, unknown> = {};
@@ -80,7 +77,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		.single();
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	await logAudit(supabase, {
@@ -94,14 +91,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		changes: updateData
 	});
 
-	return json({ data: activity });
+	return apiSuccess(activity);
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
-		return json({ message: 'Niet ingelogd', code: 'UNAUTHORIZED', status: 401 }, { status: 401 });
+		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
 	const { data: project, error: projError } = await supabase
@@ -112,7 +109,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.single();
 
 	if (projError || !project) {
-		return json({ message: 'Project niet gevonden', code: 'NOT_FOUND', status: 404 }, { status: 404 });
+		return apiError(404, 'NOT_FOUND', 'Project niet gevonden');
 	}
 
 	const { error: dbError } = await supabase
@@ -122,7 +119,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.eq('project_id', params.id);
 
 	if (dbError) {
-		return json({ message: dbError.message, code: 'DB_ERROR', status: 500 }, { status: 500 });
+		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
 	await logAudit(supabase, {
@@ -136,5 +133,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		changes: {}
 	});
 
-	return json({ success: true });
+	return apiSuccess({ success: true });
 };

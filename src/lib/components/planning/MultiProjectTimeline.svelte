@@ -52,7 +52,7 @@
 				<!-- Left panel -->
 				<div class="shrink-0 border-r border-gray-200" style="width: {LEFT_PANEL}px;">
 					<div class="border-b border-gray-100 px-3 py-2" style="height: {HEADER_HEIGHT}px;">
-						<span class="text-xs font-medium text-gray-400">Project</span>
+						<span class="text-xs font-medium text-gray-500">Project</span>
 					</div>
 					{#each projects as project (project.id)}
 						<button
@@ -71,7 +71,7 @@
 									{/if}
 								</div>
 							</div>
-							<span class="shrink-0 text-xs font-medium text-gray-400">{project.progress}%</span>
+							<span class="shrink-0 text-xs font-medium text-gray-500">{project.progress}%</span>
 						</button>
 					{/each}
 				</div>
