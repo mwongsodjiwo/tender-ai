@@ -97,7 +97,7 @@ describe('createTimeEntrySchema', () => {
 	});
 
 	it('accepts all valid activity types', () => {
-		const types = ['specifying', 'evaluation', 'nvi', 'correspondence', 'market_research', 'meeting', 'other'];
+		const types = ['preparing', 'exploring', 'specifying', 'tendering', 'contracting'];
 		for (const actType of types) {
 			const result = createTimeEntrySchema.safeParse({ ...validEntry, activity_type: actType });
 			expect(result.success).toBe(true);
@@ -128,7 +128,7 @@ describe('updateTimeEntrySchema', () => {
 	});
 
 	it('accepts partial update with only activity_type', () => {
-		const result = updateTimeEntrySchema.safeParse({ activity_type: 'meeting' });
+		const result = updateTimeEntrySchema.safeParse({ activity_type: 'exploring' });
 		expect(result.success).toBe(true);
 	});
 
