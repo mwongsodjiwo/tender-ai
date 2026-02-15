@@ -3,6 +3,7 @@
 import OpenAI from 'openai';
 import { AI_CONFIG, SYSTEM_PROMPTS } from './config.js';
 import type { Message } from '$types';
+import { logInfo } from '$server/logger';
 
 const openai = new OpenAI({
 	apiKey: AI_CONFIG.apiKey
@@ -65,7 +66,7 @@ export async function chat(params: ChatParams): Promise<ChatResult> {
 				? Number(err.headers?.['retry-after'] || 0)
 				: 0;
 			const delay = Math.max(retryAfter * 1000, (2 ** attempt) * 5000);
-			console.log(`Rate limited, retrying in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${MAX_RETRIES})...`);
+			logInfo(`Rate limited, retrying in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${MAX_RETRIES})`);
 			await sleep(delay);
 		}
 	}

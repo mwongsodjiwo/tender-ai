@@ -2,6 +2,7 @@
 
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { logError } from '$server/logger';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
@@ -25,7 +26,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.single();
 
 	if (artError || !artifact) {
-		console.error('Artifact load failed:', { artError, artifactId: params.artifactId, projectId: params.id });
+		logError('Artifact load failed', { artError, artifactId: params.artifactId, projectId: params.id });
 		throw error(404, 'Sectie niet gevonden');
 	}
 

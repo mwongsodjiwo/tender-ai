@@ -2,6 +2,7 @@
 // Falls back to a simple hash-based approach when no embedding API is configured
 
 import { EMBEDDING_CONFIG } from './config.js';
+import { logError } from '$server/logger';
 
 export async function generateEmbedding(text: string): Promise<number[] | null> {
 	if (!EMBEDDING_CONFIG.apiKey || !EMBEDDING_CONFIG.endpoint) {
@@ -22,7 +23,7 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
 		});
 
 		if (!response.ok) {
-			console.error(`Embedding API error: ${response.status}`);
+			logError(`Embedding API error: ${response.status}`);
 			return null;
 		}
 
@@ -31,7 +32,7 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
 
 		return Array.isArray(embedding) ? embedding : null;
 	} catch (err) {
-		console.error('Failed to generate embedding:', err instanceof Error ? err.message : err);
+		logError('Failed to generate embedding', err instanceof Error ? err.message : err);
 		return null;
 	}
 }

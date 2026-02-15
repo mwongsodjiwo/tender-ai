@@ -8,6 +8,7 @@ import { createServiceClient } from '$server/db/client';
 import { extractText, isTextExtractable } from '$server/ai/parser';
 import { processDocumentChunks } from '$server/ai/rag';
 import { validateFileSignature } from '$server/ai/file-validator';
+import { logWarn, logInfo, logError } from '$server/logger';
 import { sanitizeDocumentText } from '$server/ai/sanitizer';
 import { apiError, apiSuccess } from '$server/api/response';
 
@@ -112,8 +113,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			contentText = sanitized.text;
 			injectionDetected = !sanitized.clean;
 			if (injectionDetected) {
-				console.warn(
-					`Prompt injection detected in upload "${file.name}":`,
+				logWarn(
+					`Prompt injection detected in upload "${file.name}"`,
 					sanitized.detections.map((d) => d.label)
 				);
 			}
@@ -171,10 +172,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	if (contentText && contentText.length > 0) {
 		processDocumentChunks(serviceClient, document.id, contentText)
 			.then((chunkCount) => {
-				console.log(`Document ${document.id}: ${chunkCount} chunks created with embeddings`);
+				logInfo(`Document ${document.id}: ${chunkCount} chunks created with embeddings`);
 			})
 			.catch((err) => {
-				console.error(`Document ${document.id}: chunking failed:`, err instanceof Error ? err.message : err);
+				logError(`Document ${document.id}: chunking failed`, err instanceof Error ? err.message : err);
 			});
 	}
 

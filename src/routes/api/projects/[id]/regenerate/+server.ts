@@ -6,6 +6,7 @@ import { regenerateSection } from '$server/ai/generation';
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import { apiError, apiSuccess } from '$server/api/response';
+import { logError } from '$server/logger';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
@@ -73,7 +74,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 	} catch (err) {
 		// Context search failure should not block generation
-		console.error('Context search failed during regeneration:', err instanceof Error ? err.message : err);
+		logError('Context search failed during regeneration', err instanceof Error ? err.message : err);
 	}
 
 	// Save current version before regeneration

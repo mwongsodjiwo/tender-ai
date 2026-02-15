@@ -7,6 +7,7 @@ import { logAudit } from '$server/db/audit';
 import { createServiceClient } from '$server/db/client';
 import type { DocumentType } from '$types';
 import { apiError, apiSuccess } from '$server/api/response';
+import { logInfo, logError } from '$server/logger';
 
 /**
  * Background artifact generation — runs after the HTTP response is sent.
@@ -64,9 +65,9 @@ async function generateArtifactsInBackground(
 					});
 					artifactsGenerated++;
 				}
-				console.log(`Generated ${sections.length} sections for ${docType.name}`);
+				logInfo(`Generated ${sections.length} sections for ${docType.name}`);
 			} catch (err) {
-				console.error(`Failed to generate artifacts for ${docType.name}:`, err);
+				logError(`Failed to generate artifacts for ${docType.name}`, err);
 			}
 		}
 
@@ -86,9 +87,9 @@ async function generateArtifactsInBackground(
 			changes: { artifacts_generated: artifactsGenerated }
 		});
 
-		console.log(`Background generation complete: ${artifactsGenerated} artifacts for project ${projectId}`);
+		logInfo(`Background generation complete: ${artifactsGenerated} artifacts for project ${projectId}`);
 	} catch (err) {
-		console.error('Background artifact generation failed:', err);
+		logError('Background artifact generation failed', err);
 		// Set project back to briefing so user can retry
 		await serviceClient
 			.from('projects')
@@ -184,7 +185,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			aiResponse.briefingData,
 			user.id,
 			user.email ?? undefined
-		).catch((err) => console.error('Unhandled background generation error:', err));
+		).catch((err) => logError('Unhandled background generation error', err));
 	}
 
 	return apiSuccess({

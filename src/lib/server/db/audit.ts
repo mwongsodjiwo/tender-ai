@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AuditAction } from '$types';
+import { logError } from '$server/logger';
 
 interface AuditParams {
 	organizationId?: string;
@@ -34,6 +35,6 @@ export async function logAudit(
 	});
 
 	if (error) {
-		console.error('Failed to write audit log:', error);
+		logError('Failed to write audit log', error);
 	}
 }

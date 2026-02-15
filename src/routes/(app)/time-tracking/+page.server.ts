@@ -2,6 +2,7 @@
 
 import type { PageServerLoad } from './$types';
 import { toISOWeekString, getWeekMonday, formatDateISO } from '$lib/utils/week';
+import { logError } from '$server/logger';
 
 const WEEKEND_OFFSET = 6;
 
@@ -46,7 +47,7 @@ export const load: PageServerLoad = async ({ url, locals, parent }) => {
 	]);
 
 	if (entriesResult.error) {
-		console.error('Failed to load time entries:', entriesResult.error.message);
+		logError('Failed to load time entries', entriesResult.error.message);
 	}
 
 	return {

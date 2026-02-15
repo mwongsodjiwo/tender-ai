@@ -1,6 +1,7 @@
 // Document text extraction — parses PDF and Word files into plain text
 
 import { Buffer } from 'node:buffer';
+import { logError } from '$server/logger';
 
 const PDF_MIME = 'application/pdf';
 const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -43,7 +44,7 @@ async function extractPdfText(file: File): Promise<string | null> {
 		const text = result?.text?.trim();
 		return text && text.length > 0 ? text : null;
 	} catch (err) {
-		console.error('PDF parsing failed:', err instanceof Error ? err.message : err);
+		logError('PDF parsing failed', err instanceof Error ? err.message : err);
 		return null;
 	}
 }
@@ -60,7 +61,7 @@ async function extractWordText(file: File): Promise<string | null> {
 		const text = result?.value?.trim();
 		return text && text.length > 0 ? text : null;
 	} catch (err) {
-		console.error('Word parsing failed:', err instanceof Error ? err.message : err);
+		logError('Word parsing failed', err instanceof Error ? err.message : err);
 		return null;
 	}
 }

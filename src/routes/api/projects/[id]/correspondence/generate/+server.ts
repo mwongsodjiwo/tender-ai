@@ -6,6 +6,7 @@ import { generateLetter } from '$server/ai/generation';
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import type { ProjectPhase } from '$types';
+import { logError } from '$server/logger';
 import { apiError, apiSuccess } from '$server/api/response';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -104,7 +105,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			instructions: parsed.data.instructions
 		});
 	} catch (err) {
-		console.error('Letter generation failed:', err);
+		logError('Letter generation failed', err);
 		return apiError(500, 'INTERNAL_ERROR', 'Brief generatie mislukt. Probeer het opnieuw.');
 	}
 

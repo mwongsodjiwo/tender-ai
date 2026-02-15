@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DocumentChunkWithDocument, TenderNedChunkWithItem } from '$types';
 import { generateEmbedding, generateEmbeddings } from './embeddings.js';
 import { EMBEDDING_CONFIG } from './config.js';
+import { logError } from '$server/logger';
 
 interface ChunkInput {
 	content: string;
@@ -50,7 +51,7 @@ export async function processDocumentChunks(
 		.insert(chunkRecords);
 
 	if (error) {
-		console.error('Failed to store document chunks:', error.message);
+		logError('Failed to store document chunks', error.message);
 		return 0;
 	}
 
