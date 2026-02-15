@@ -9,8 +9,9 @@ const MOCK_DOCUMENT_TYPE = {
 	slug: 'programma-van-eisen',
 	description: 'Test document type',
 	template_structure: [],
-	applicable_procedures: ['open'],
+	applicable_procedures: ['open' as const],
 	sort_order: 1,
+	is_active: true,
 	created_at: '2026-01-01T00:00:00Z',
 	updated_at: '2026-01-01T00:00:00Z'
 };
@@ -25,6 +26,7 @@ const MOCK_ARTIFACTS = [
 		content: '## Achtergrond\n\nDit document beschrijft de eisen.\n\n### Doel\n\n- Eis 1\n- Eis 2\n\nDe aanbestedende dienst zoekt een leverancier.',
 		version: 1,
 		status: 'generated' as const,
+		parent_artifact_id: null,
 		sort_order: 0,
 		metadata: {},
 		created_by: 'user-1',
@@ -40,6 +42,7 @@ const MOCK_ARTIFACTS = [
 		content: 'De volgende eisen zijn van toepassing:\n\n- Functionele eis A\n- Functionele eis B',
 		version: 1,
 		status: 'generated' as const,
+		parent_artifact_id: null,
 		sort_order: 1,
 		metadata: {},
 		created_by: 'user-1',
