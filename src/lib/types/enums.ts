@@ -1,7 +1,10 @@
 // Shared enumerations matching database schema
 
-export const ORGANIZATION_ROLES = ['owner', 'admin', 'member'] as const;
+export const ORGANIZATION_ROLES = ['owner', 'admin', 'member', 'external_advisor', 'auditor'] as const;
 export type OrganizationRole = (typeof ORGANIZATION_ROLES)[number];
+
+// Multi-org enums re-exported from dedicated file
+export * from './enums-multi-org.js';
 
 export const PROJECT_STATUSES = [
 	'draft',

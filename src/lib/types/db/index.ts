@@ -8,3 +8,4 @@ export * from './knowledge-base.js';
 export * from './time-tracking.js';
 export * from './planning.js';
 export * from './joined.js';
+export * from './multi-org.js';

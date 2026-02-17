@@ -1,12 +1,14 @@
-# Agent 1 — Backend
+# Agent 1 — Data & Backend
 
-Jij bent de backend-agent. Je bouwt alles wat met data, API's en server-logica te maken heeft.
+Jij bent de data- en backend-agent. Je bouwt alles wat met database, API's, validatie en server-logica te maken heeft.
 
 ## Voordat je begint
 
-1. Lees `PRODUCT.md` in de root — begrijp wat je bouwt
-2. Lees `AGENTS.md` in de root — begrijp de volledige uitvoeringsvolgorde
-3. Lees `contracts/structure.md` — begrijp de mappenstructuur en eigenaarschap
+1. Lees `CLAUDE.md` in de root — projectinstructies
+2. Lees `AGENTS.MD` in de root — alle agents, uitvoeringsvolgorde, 25 regels
+3. Lees `tender2-plan.md` — volledige v2 specificatie
+4. Lees `contracts/structure.md` — mappenstructuur en eigenaarschap
+5. Lees `contracts/api.md` — bestaande API-contracten
 
 ## Jouw mappen
 
@@ -15,39 +17,50 @@ Jij bent de backend-agent. Je bouwt alles wat met data, API's en server-logica t
 - `supabase/seed.sql`
 - `src/lib/server/db/`
 - `src/lib/server/api/`
-- `src/lib/types/` (jij maakt aan, Agent 2 en 3 gebruiken)
+- `src/lib/types/` (jij maakt aan, alle agents gebruiken)
+- `src/lib/schemas/` (Zod validatie)
+- `src/lib/utils/procedure-advice.ts`
+- `src/routes/api/`
 - `harvester/`
+- `scripts/import-cpv-codes.ts`, `scripts/seed-nuts-codes.ts` (data scripts)
 
-## Jouw stappen
+## Jouw fasen (v2)
 
-| Sprint | Stappen |
-|--------|---------|
-| Sprint 0 | 3, 4, 5 |
-| Sprint 1 | 9 |
-| Sprint 2 | 13, 14 |
-| Sprint 3 | 19, 20 |
-| Sprint 4 | 25, 26 |
-
-Zie AGENTS.md voor de volledige beschrijving van elke stap.
+| Fase | Wat |
+|------|-----|
+| 1 | Multi-org basisstructuur (enums, organization uitbreiding, relaties, settings) |
+| 2 | RLS policies & rechtenmodel |
+| 4 | CPV referentietabel + import |
+| 5 | NUTS referentietabel + postcode mapping |
+| 6 | Organization tabel uitbreiding (KVK velden) |
+| 7 | KVK API integratie (samen met Agent 4) |
+| 8 | Leveranciers CRM database + API |
+| 10 | Binnenkomende vragen module (database + API) |
+| 12 | Data governance velden op alle tabellen |
+| 17 | Correspondentie → documenten (schema migratie) |
+| 19 | Document rollen (tabel + API) |
+| 20 | Procedure advies logica (drempelwaarden) |
 
 ## Jouw contracten
 
-- Je publiceert API-contracten in `contracts/api.md` — Agent 2 en 3 bouwen hier tegenaan
-- Je publiceert TypeScript types in `src/lib/types/` — dit is de gedeelde waarheid
-- Wijzig nooit types zonder Agent 2 en 3 te informeren
+- Je publiceert API-contracten in `contracts/api.md`
+- Je publiceert TypeScript types in `src/lib/types/`
+- Wijzig nooit types zonder andere agents te informeren
 
 ## Regels die voor jou extra belangrijk zijn
 
-- **Database naamgeving is snake_case.** Elke tabel heeft id (uuid), created_at, updated_at. Soft deletes met deleted_at waar relevant.
+- **Database naamgeving is snake_case.** Elke tabel heeft id (uuid), created_at, updated_at. Soft deletes met deleted_at.
 - **Input validatie op beide lagen.** Zod schemas voor validatie. Vertrouw nooit client-side data.
-- **Audit alles.** Elke state-wijziging (create, update, delete) wordt gelogd in audit_log.
-- **TypeScript strict mode.** Geen `any`. Geen `@ts-ignore`. Elk type is expliciet.
+- **Audit alles.** Elke state-wijziging wordt gelogd in audit_log.
+- **TypeScript strict mode.** Geen `any`. Geen `@ts-ignore`.
+- **RLS op alle tabellen.** Elke nieuwe tabel heeft RLS policies. Leveranciers gescheiden per organisatie.
+- **Governance velden.** Nieuwe tabellen krijgen data_classification, retention_until, anonymized_at, archive_status.
 
 ## Kwaliteitsbewaking (regels 23-25)
 
-- **Na elke wijziging aan een type-bestand:** controleer of het bestand < 200 regels is. Zo niet, split naar domeinen (bijv. `types/db/projects.ts`, `types/api/artifacts.ts`) met een barrel export in `types/index.ts`.
-- **Elke nieuwe server-module (`db/`, `api/`) krijgt direct een testbestand.** Maak een `.test.ts` aan met minimaal de happy path en één error case. Geen module zonder test.
-- **Elke `as unknown` cast is een rode vlag.** Maak een expliciet type aan voor joined queries in plaats van te casten. Voeg het type toe aan `types/query-results.ts`.
-- **Voordat je een taak afsluit:** check bestandsgrootte, functielengte (max 30 regels), en of er tests zijn.
+- Na elke wijziging aan een type-bestand: controleer < 200 regels. Zo niet, split naar domeinen.
+- Elke nieuwe server-module krijgt direct een testbestand met happy path + error case.
+- Elke `as unknown` cast is een rode vlag. Maak een expliciet type aan.
+- Voordat je een taak afsluit: check bestandsgrootte, functielengte (max 30), tests aanwezig.
 
-Zie AGENTS.md voor alle 25 regels.
+Zie `AGENTS.MD` voor alle 25 regels.

@@ -13,3 +13,4 @@ export * from './audit.js';
 export * from './kennisbank.js';
 export * from './time-tracking.js';
 export * from './notifications.js';
+export * from './multi-org.js';

@@ -2,6 +2,8 @@
 
 import type {
 	OrganizationRole,
+	OrganizationType,
+	ContractingAuthorityType,
 	ProjectStatus,
 	ProjectPhase,
 	ProjectRole,
@@ -23,6 +25,9 @@ export interface Organization {
 	slug: string;
 	description: string | null;
 	logo_url: string | null;
+	parent_organization_id: string | null;
+	organization_type: OrganizationType;
+	aanbestedende_dienst_type: ContractingAuthorityType | null;
 	created_at: string;
 	updated_at: string;
 	deleted_at: string | null;
@@ -46,6 +51,7 @@ export interface OrganizationMember {
 	organization_id: string;
 	profile_id: string;
 	role: OrganizationRole;
+	source_organization_id: string | null;
 	created_at: string;
 	updated_at: string;
 }

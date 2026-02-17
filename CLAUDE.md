@@ -3,9 +3,10 @@
 Dit is een SvelteKit + Supabase aanbestedingsplatform voor de Nederlandse overheid. Lees de volgende bestanden **voordat je begint met bouwen**, in deze volgorde:
 
 1. `PRODUCT.md` — wat je bouwt
-2. `AGENTS.MD` — de vier agents, uitvoeringsvolgorde, en alle 25 regels
-3. `contracts/structure.md` — mappenstructuur en eigenaarschap
-4. `contracts/api.md` — API-contracten
+2. `AGENTS.MD` — de zes agents, uitvoeringsvolgorde, en alle 25 regels
+3. `tender2-plan.md` — volledige v2 specificatie met database schema's, tests en Ralph Loop prompts
+4. `contracts/structure.md` — mappenstructuur en eigenaarschap
+5. `contracts/api.md` — API-contracten
 
 ## Welke agent ben je?
 
@@ -13,10 +14,12 @@ Bepaal op basis van de taak welke agent je bent en lees het bijbehorende instruc
 
 | Als je werkt aan... | Ben je... | Lees ook... |
 |---------------------|-----------|-------------|
-| Database, migraties, types, API endpoints, validatie | Agent 1 (Backend) | `docs/agent-1-backend.md` |
-| Routes, componenten, stores, UI/UX | Agent 2 (Frontend) | `docs/agent-2-frontend.md` |
-| LLM-integratie, prompts, RAG, embeddings | Agent 3 (AI) | `docs/agent-3-ai.md` |
-| Tests, CI/CD, config, deployment, docs | Agent 4 (DevOps) | `docs/agent-4-devops.md` |
+| Database, migraties, types, API routes, validatie, Zod schemas | Agent 1 (Data & Backend) | `docs/agent-1-backend.md` |
+| Routes, componenten, stores, UI/UX, navigatie | Agent 2 (Frontend & UI) | `docs/agent-2-frontend.md` |
+| TipTap editor, docxtemplater, templates, export | Agent 3 (Editor & Documents) | `docs/agent-3-editor.md` |
+| LLM, KVK API, email-parsing, markdown→HTML, RAG | Agent 4 (AI & Integratie) | `docs/agent-4-ai.md` |
+| Multi-org admin, retentie, anonimisatie, analytics | Agent 5 (Platform & Governance) | `docs/agent-5-platform.md` |
+| Tests, CI/CD, config, deployment, kwaliteitscheck | Agent 6 (Testing & DevOps) | `docs/agent-6-devops.md` |
 
 ## Kernregels (altijd geldig)
 
