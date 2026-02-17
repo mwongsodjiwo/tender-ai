@@ -3,6 +3,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
 	DeadlineItem,
 	DeadlineResponse,
@@ -19,68 +20,104 @@ const RANGE_DAYS: Record<string, number> = {
 
 const DAYS_MS = 1000 * 60 * 60 * 24;
 
-export const GET: RequestHandler = async ({ url, locals }) => {
-	const { supabase, session } = locals;
+interface DeadlineFilters {
+	fromDate: string;
+	toDate: string;
+	projectId: string | null;
+	phaseFilter: string | null;
+	statusFilter: string | null;
+}
 
-	if (!session) {
-		throw error(401, 'Niet ingelogd');
-	}
-
-	// Parse query params
+function parseDeadlineParams(url: URL): DeadlineFilters {
 	const range = url.searchParams.get('range') ?? 'month';
 	const fromParam = url.searchParams.get('from');
-	const projectId = url.searchParams.get('project_id');
-	const phaseFilter = url.searchParams.get('phase');
-	const statusFilter = url.searchParams.get('status');
-
 	const daysAhead = RANGE_DAYS[range] ?? RANGE_DAYS.month;
-
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
+	return {
+		fromDate: fromParam ?? today.toISOString().split('T')[0],
+		toDate: new Date(today.getTime() + daysAhead * DAYS_MS).toISOString().split('T')[0],
+		projectId: url.searchParams.get('project_id'),
+		phaseFilter: url.searchParams.get('phase'),
+		statusFilter: url.searchParams.get('status')
+	};
+}
 
-	const fromDate = fromParam ?? today.toISOString().split('T')[0];
-	const toDate = new Date(today.getTime() + daysAhead * DAYS_MS).toISOString().split('T')[0];
-
-	// Build milestones query
-	let milestonesQuery = supabase
+function buildMilestonesQuery(supabase: SupabaseClient, filters: DeadlineFilters) {
+	let query = supabase
 		.from('milestones')
 		.select('id, title, target_date, phase, status, is_critical, project_id, projects!inner(name)')
 		.is('deleted_at', null)
 		.neq('status', 'completed')
-		.lte('target_date', toDate)
+		.lte('target_date', filters.toDate)
 		.order('target_date');
+	if (filters.projectId) query = query.eq('project_id', filters.projectId);
+	if (filters.phaseFilter) query = query.eq('phase', filters.phaseFilter);
+	if (filters.statusFilter) query = query.eq('status', filters.statusFilter);
+	return query.returns<MilestoneWithProjectName[]>();
+}
 
-	if (projectId) {
-		milestonesQuery = milestonesQuery.eq('project_id', projectId);
-	}
-	if (phaseFilter) {
-		milestonesQuery = milestonesQuery.eq('phase', phaseFilter);
-	}
-
-	// Build activities query
-	let activitiesQuery = supabase
+function buildActivitiesQuery(supabase: SupabaseClient, filters: DeadlineFilters) {
+	let query = supabase
 		.from('phase_activities')
 		.select('id, title, due_date, phase, status, assigned_to, project_id, projects!inner(name), profiles:assigned_to(full_name)')
 		.is('deleted_at', null)
 		.not('due_date', 'is', null)
 		.not('status', 'in', '("completed","skipped")')
-		.lte('due_date', toDate)
+		.lte('due_date', filters.toDate)
 		.order('due_date');
+	if (filters.projectId) query = query.eq('project_id', filters.projectId);
+	if (filters.phaseFilter) query = query.eq('phase', filters.phaseFilter);
+	if (filters.statusFilter) query = query.eq('status', filters.statusFilter);
+	return query.returns<ActivityWithProjectAndProfile[]>();
+}
 
-	if (projectId) {
-		activitiesQuery = activitiesQuery.eq('project_id', projectId);
-	}
-	if (phaseFilter) {
-		activitiesQuery = activitiesQuery.eq('phase', phaseFilter);
-	}
-	if (statusFilter) {
-		milestonesQuery = milestonesQuery.eq('status', statusFilter);
-		activitiesQuery = activitiesQuery.eq('status', statusFilter);
-	}
+function mapMilestonesToDeadlines(milestones: MilestoneWithProjectName[], todayMs: number): DeadlineItem[] {
+	return milestones.map((m) => {
+		const daysRemaining = Math.ceil((new Date(m.target_date).getTime() - todayMs) / DAYS_MS);
+		return {
+			id: m.id, type: 'milestone' as const, title: m.title, date: m.target_date,
+			project_id: m.project_id, project_name: m.projects?.name ?? '',
+			phase: m.phase ?? 'preparing', status: m.status, is_critical: m.is_critical,
+			assigned_to: null, assigned_to_name: null,
+			days_remaining: daysRemaining, is_overdue: daysRemaining < 0
+		};
+	});
+}
+
+function mapActivitiesToDeadlines(activities: ActivityWithProjectAndProfile[], todayMs: number): DeadlineItem[] {
+	return activities
+		.filter((a) => a.due_date !== null)
+		.map((a) => {
+			const daysRemaining = Math.ceil((new Date(a.due_date!).getTime() - todayMs) / DAYS_MS);
+			return {
+				id: a.id, type: 'activity' as const, title: a.title, date: a.due_date!,
+				project_id: a.project_id, project_name: a.projects?.name ?? '',
+				phase: a.phase, status: a.status, is_critical: false,
+				assigned_to: a.assigned_to, assigned_to_name: a.profiles?.full_name ?? null,
+				days_remaining: daysRemaining, is_overdue: daysRemaining < 0
+			};
+		});
+}
+
+function calculateSummary(items: DeadlineItem[]) {
+	return {
+		total: items.length,
+		overdue: items.filter((i) => i.is_overdue).length,
+		this_week: items.filter((i) => i.days_remaining >= 0 && i.days_remaining <= 7).length,
+		critical: items.filter((i) => i.is_critical).length
+	};
+}
+
+export const GET: RequestHandler = async ({ url, locals }) => {
+	const { supabase, session } = locals;
+	if (!session) throw error(401, 'Niet ingelogd');
+
+	const filters = parseDeadlineParams(url);
 
 	const [milestonesResult, activitiesResult] = await Promise.all([
-		milestonesQuery.returns<MilestoneWithProjectName[]>(),
-		activitiesQuery.returns<ActivityWithProjectAndProfile[]>()
+		buildMilestonesQuery(supabase, filters),
+		buildActivitiesQuery(supabase, filters)
 	]);
 
 	if (milestonesResult.error) {
@@ -90,68 +127,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		throw error(500, `Fout bij ophalen activiteiten: ${activitiesResult.error.message}`);
 	}
 
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
 	const todayMs = today.getTime();
 
-	// Map milestones to DeadlineItem
-	const milestoneItems: DeadlineItem[] = (milestonesResult.data ?? []).map((m) => {
-		const targetMs = new Date(m.target_date).getTime();
-		const daysRemaining = Math.ceil((targetMs - todayMs) / DAYS_MS);
+	const milestoneItems = mapMilestonesToDeadlines(milestonesResult.data ?? [], todayMs);
+	const activityItems = mapActivitiesToDeadlines(activitiesResult.data ?? [], todayMs);
+	const items = [...milestoneItems, ...activityItems].sort(
+		(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+	);
 
-		return {
-			id: m.id,
-			type: 'milestone' as const,
-			title: m.title,
-			date: m.target_date,
-			project_id: m.project_id,
-			project_name: m.projects?.name ?? '',
-			phase: m.phase ?? 'preparing',
-			status: m.status,
-			is_critical: m.is_critical,
-			assigned_to: null,
-			assigned_to_name: null,
-			days_remaining: daysRemaining,
-			is_overdue: daysRemaining < 0
-		};
-	});
-
-	// Map activities to DeadlineItem (filter out activities without due dates)
-	const activityItems: DeadlineItem[] = (activitiesResult.data ?? [])
-		.filter((a) => a.due_date !== null)
-		.map((a) => {
-			const dueMs = new Date(a.due_date!).getTime();
-			const daysRemaining = Math.ceil((dueMs - todayMs) / DAYS_MS);
-
-			return {
-				id: a.id,
-				type: 'activity' as const,
-				title: a.title,
-				date: a.due_date!,
-				project_id: a.project_id,
-				project_name: a.projects?.name ?? '',
-				phase: a.phase,
-				status: a.status,
-				is_critical: false,
-				assigned_to: a.assigned_to,
-				assigned_to_name: a.profiles?.full_name ?? null,
-				days_remaining: daysRemaining,
-				is_overdue: daysRemaining < 0
-			};
-		});
-
-	// Combine and sort by date
-	const items = [...milestoneItems, ...activityItems].sort((a, b) => {
-		return new Date(a.date).getTime() - new Date(b.date).getTime();
-	});
-
-	// Calculate summary
-	const summary = {
-		total: items.length,
-		overdue: items.filter((i) => i.is_overdue).length,
-		this_week: items.filter((i) => i.days_remaining >= 0 && i.days_remaining <= 7).length,
-		critical: items.filter((i) => i.is_critical).length
-	};
-
-	const response: DeadlineResponse = { items, summary };
-
+	const response: DeadlineResponse = { items, summary: calculateSummary(items) };
 	return json(response);
 };

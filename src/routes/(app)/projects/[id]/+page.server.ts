@@ -1,77 +1,80 @@
 // Project overview page — load artifacts, activities, metrics, and recent activity
 
 import type { PageServerLoad } from './$types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PhaseActivity, ArtifactWithDocType } from '$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
-	const { supabase } = locals;
+interface ReviewerRow {
+	artifact_id: string;
+	name: string;
+	email: string;
+	review_status: string;
+}
 
-	// Load artifacts with document types
-	const { data: artifacts } = await supabase
+async function loadArtifacts(supabase: SupabaseClient, projectId: string) {
+	const { data } = await supabase
 		.from('artifacts')
 		.select('*, document_type:document_types(id, name, slug)')
-		.eq('project_id', params.id)
+		.eq('project_id', projectId)
 		.order('sort_order')
 		.returns<ArtifactWithDocType[]>();
+	return data ?? [];
+}
 
-	const allArtifacts = artifacts ?? [];
-	const artifactIds = allArtifacts.map((a) => a.id);
-
-	// Load phase activities from database
-	const { data: phaseActivitiesData } = await supabase
+async function loadPhaseActivities(supabase: SupabaseClient, projectId: string): Promise<PhaseActivity[]> {
+	const { data } = await supabase
 		.from('phase_activities')
 		.select('*')
-		.eq('project_id', params.id)
+		.eq('project_id', projectId)
 		.is('deleted_at', null)
 		.order('sort_order');
+	return (data ?? []) as PhaseActivity[];
+}
 
-	const phaseActivities: PhaseActivity[] = (phaseActivitiesData ?? []) as PhaseActivity[];
-
-	// Load project profile for confirmation status and planning state
-	const { data: profileData } = await supabase
+async function loadProjectProfile(supabase: SupabaseClient, projectId: string) {
+	const { data } = await supabase
 		.from('project_profiles')
 		.select('id, contracting_authority, project_goal, planning_generated_at')
-		.eq('project_id', params.id)
+		.eq('project_id', projectId)
 		.is('deleted_at', null)
 		.maybeSingle();
+	return data;
+}
 
-	// Load reviewers for sections in review
-	let reviewers: unknown[] = [];
-	if (artifactIds.length > 0) {
-		const { data: reviewerData } = await supabase
-			.from('section_reviewers')
-			.select('*, artifact:artifacts(id, title)')
-			.in('artifact_id', artifactIds)
-			.order('created_at', { ascending: false });
-		reviewers = reviewerData ?? [];
-	}
+async function loadReviewers(supabase: SupabaseClient, artifactIds: string[]): Promise<ReviewerRow[]> {
+	if (artifactIds.length === 0) return [];
+	const { data } = await supabase
+		.from('section_reviewers')
+		.select('*, artifact:artifacts(id, title)')
+		.in('artifact_id', artifactIds)
+		.order('created_at', { ascending: false });
+	return (data ?? []) as ReviewerRow[];
+}
 
-	// Load recent audit log entries (preview — 5 most recent)
-	const { data: auditEntries } = await supabase
+async function loadAuditEntries(supabase: SupabaseClient, projectId: string) {
+	const { data } = await supabase
 		.from('audit_log')
 		.select('*')
-		.eq('project_id', params.id)
+		.eq('project_id', projectId)
 		.order('created_at', { ascending: false })
 		.limit(5);
+	return data ?? [];
+}
 
-	// Calculate project metrics
-	const totalSections = allArtifacts.length;
-	const approvedSections = allArtifacts.filter((a) => a.status === 'approved').length;
-	const progressPercentage =
-		totalSections > 0 ? Math.round((approvedSections / totalSections) * 100) : 0;
+function calculateProjectMetrics(artifacts: ArtifactWithDocType[]) {
+	const totalSections = artifacts.length;
+	const approvedSections = artifacts.filter((a) => a.status === 'approved').length;
+	const progressPercentage = totalSections > 0
+		? Math.round((approvedSections / totalSections) * 100)
+		: 0;
+	return { totalSections, approvedSections, progressPercentage };
+}
 
-	// Sections currently in review
-	const sectionsInReview = allArtifacts
+function buildSectionsInReview(artifacts: ArtifactWithDocType[], reviewers: ReviewerRow[]) {
+	return artifacts
 		.filter((a) => a.status === 'review')
 		.map((a) => {
-			const reviewer = (
-				reviewers as {
-					artifact_id: string;
-					name: string;
-					email: string;
-					review_status: string;
-				}[]
-			).find((r) => r.artifact_id === a.id);
+			const reviewer = reviewers.find((r) => r.artifact_id === a.id);
 			return {
 				id: a.id,
 				title: a.title,
@@ -81,47 +84,58 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				waitingSince: a.updated_at
 			};
 		});
+}
 
-	// Group artifacts by document type
-	const documentBlocks = allArtifacts.reduce<
-		Record<
-			string,
-			{
-				docType: { id: string; name: string; slug: string };
-				items: ArtifactWithDocType[];
-				total: number;
-				approved: number;
-				progress: number;
-			}
-		>
-	>((acc, artifact) => {
+function groupByDocumentType(artifacts: ArtifactWithDocType[]) {
+	const groups: Record<string, {
+		docType: { id: string; name: string; slug: string };
+		items: ArtifactWithDocType[];
+		total: number;
+		approved: number;
+		progress: number;
+	}> = {};
+
+	for (const artifact of artifacts) {
 		const docType = artifact.document_type;
 		const key = docType?.id ?? 'unknown';
-		if (!acc[key]) {
-			acc[key] = {
+		if (!groups[key]) {
+			groups[key] = {
 				docType: docType ?? { id: 'unknown', name: 'Overig', slug: 'overig' },
-				items: [],
-				total: 0,
-				approved: 0,
-				progress: 0
+				items: [], total: 0, approved: 0, progress: 0
 			};
 		}
-		acc[key].items.push(artifact);
-		acc[key].total++;
-		if (artifact.status === 'approved') acc[key].approved++;
-		acc[key].progress = Math.round((acc[key].approved / acc[key].total) * 100);
-		return acc;
-	}, {});
+		groups[key].items.push(artifact);
+		groups[key].total++;
+		if (artifact.status === 'approved') groups[key].approved++;
+		groups[key].progress = Math.round((groups[key].approved / groups[key].total) * 100);
+	}
+	return Object.values(groups);
+}
 
-	// Load leidraad document type ID for direct link
-	const { data: leidraadDocType } = await supabase
+async function loadLeidraadDocTypeId(supabase: SupabaseClient): Promise<string | null> {
+	const { data } = await supabase
 		.from('document_types')
 		.select('id')
 		.eq('slug', 'aanbestedingsleidraad')
 		.maybeSingle();
+	return data?.id ?? null;
+}
+
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const { supabase } = locals;
+
+	const [artifacts, phaseActivities, profileData, auditEntries, leidraadDocTypeId] = await Promise.all([
+		loadArtifacts(supabase, params.id),
+		loadPhaseActivities(supabase, params.id),
+		loadProjectProfile(supabase, params.id),
+		loadAuditEntries(supabase, params.id),
+		loadLeidraadDocTypeId(supabase)
+	]);
+
+	const reviewers = await loadReviewers(supabase, artifacts.map((a) => a.id));
 
 	return {
-		artifacts: allArtifacts,
+		artifacts,
 		phaseActivities,
 		profileSummary: profileData
 			? {
@@ -131,14 +145,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				planning_generated_at: profileData.planning_generated_at ?? null
 			}
 			: null,
-		auditEntries: auditEntries ?? [],
-		projectMetrics: {
-			totalSections,
-			approvedSections,
-			progressPercentage
-		},
-		sectionsInReview,
-		documentBlocks: Object.values(documentBlocks),
-		leidraadDocTypeId: leidraadDocType?.id ?? null
+		auditEntries,
+		projectMetrics: calculateProjectMetrics(artifacts),
+		sectionsInReview: buildSectionsInReview(artifacts, reviewers),
+		documentBlocks: groupByDocumentType(artifacts),
+		leidraadDocTypeId
 	};
 };
