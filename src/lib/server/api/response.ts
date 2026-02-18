@@ -10,7 +10,8 @@ export type ErrorCode =
 	| 'DUPLICATE'
 	| 'DB_ERROR'
 	| 'INTERNAL_ERROR'
-	| 'AUTH_ERROR';
+	| 'AUTH_ERROR'
+	| 'EXTERNAL_API_ERROR';
 
 export function apiError(status: number, code: ErrorCode, message: string): Response {
 	return json({ message, code, status }, { status });

@@ -58,6 +58,14 @@ export interface OrganizationV2Fields {
 	parent_organization_id: string | null;
 	organization_type: OrganizationType;
 	aanbestedende_dienst_type: ContractingAuthorityType | null;
+	kvk_nummer: string | null;
+	handelsnaam: string | null;
+	rechtsvorm: string | null;
+	straat: string | null;
+	postcode: string | null;
+	plaats: string | null;
+	sbi_codes: string[];
+	nuts_codes: string[];
 }
 
 // Extended OrganizationMember fields (added in v2)

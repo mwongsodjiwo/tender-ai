@@ -2,7 +2,9 @@ import type {
 	ProjectPhase,
 	ActivityStatus,
 	CorrespondenceStatus,
-	EvaluationStatus
+	EvaluationStatus,
+	DataClassification,
+	ArchiveStatus
 } from '../enums.js';
 
 // =============================================================================
@@ -79,6 +81,10 @@ export interface Correspondence {
 	status: CorrespondenceStatus;
 	sent_at: string | null;
 	metadata: Record<string, unknown>;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_by: string | null;
 	created_at: string;
 	updated_at: string;
@@ -99,6 +105,10 @@ export interface Evaluation {
 	status: EvaluationStatus;
 	notes: string;
 	metadata: Record<string, unknown>;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_by: string | null;
 	created_at: string;
 	updated_at: string;

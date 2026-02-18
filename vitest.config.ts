@@ -13,6 +13,6 @@ export default defineConfig({
 		}
 	},
 	test: {
-		include: ['tests/unit/**/*.{test,spec}.{js,ts}']
+		include: ['tests/unit/**/*.{test,spec}.{js,ts}', 'tests/rls/**/*.{test,spec}.{js,ts}']
 	}
 });

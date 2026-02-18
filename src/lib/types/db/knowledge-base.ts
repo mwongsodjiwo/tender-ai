@@ -1,3 +1,8 @@
+import type {
+	DataClassification,
+	ArchiveStatus
+} from '../enums.js';
+
 // =============================================================================
 // KNOWLEDGE BASE — Sprint R2 (Kennisbank)
 // =============================================================================
@@ -44,6 +49,10 @@ export interface DocumentComment {
 	resolved: boolean;
 	resolved_at: string | null;
 	resolved_by: string | null;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_by: string;
 	created_at: string;
 	updated_at: string;

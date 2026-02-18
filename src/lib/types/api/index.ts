@@ -14,3 +14,6 @@ export * from './kennisbank.js';
 export * from './time-tracking.js';
 export * from './notifications.js';
 export * from './multi-org.js';
+export * from './kvk.js';
+export * from './suppliers.js';
+export * from './questions.js';

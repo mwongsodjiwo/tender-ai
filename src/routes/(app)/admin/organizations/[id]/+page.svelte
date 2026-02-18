@@ -2,6 +2,8 @@
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import type { OrganizationRole } from '$types';
+	import KvkSearchDialog from '$lib/components/suppliers/KvkSearchDialog.svelte';
+	import CodeLookup from '$lib/components/CodeLookup.svelte';
 
 	export let data: PageData;
 
@@ -20,9 +22,19 @@
 	// Organization edit state
 	let orgName = data.organization.name;
 	let orgDescription = data.organization.description ?? '';
+	let kvkNummer = data.organization.kvk_nummer ?? '';
+	let handelsnaam = data.organization.handelsnaam ?? '';
+	let rechtsvorm = data.organization.rechtsvorm ?? '';
+	let straat = data.organization.straat ?? '';
+	let postcode = data.organization.postcode ?? '';
+	let plaats = data.organization.plaats ?? '';
+	let nutsCodes: string[] = [...(data.organization.nuts_codes ?? [])];
+
 	let savingOrg = false;
 	let orgSuccess = '';
 	let orgError = '';
+	let showKvkDialog = false;
+	let resolvingNuts = false;
 
 	// Add member state
 	let addEmail = '';
@@ -30,6 +42,42 @@
 	let addingMember = false;
 	let addSuccess = '';
 	let addError = '';
+
+	async function resolveNutsFromPostcode(pc: string) {
+		if (pc.length < 4) return;
+		resolvingNuts = true;
+		try {
+			const params = new URLSearchParams({ postcode: pc });
+			const res = await fetch(`/api/nuts/from-postcode?${params}`);
+			if (!res.ok) return;
+			const json = await res.json();
+			const codes = json.data?.codes as string[] | undefined;
+			if (codes && codes.length > 0) {
+				nutsCodes = codes;
+			}
+		} finally {
+			resolvingNuts = false;
+		}
+	}
+
+	async function handleKvkSelect(result: {
+		kvkNummer: string;
+		handelsnaam: string;
+		straatnaam: string | null;
+		postcode: string | null;
+		plaats: string | null;
+	}) {
+		kvkNummer = result.kvkNummer;
+		handelsnaam = result.handelsnaam;
+		if (result.straatnaam) straat = result.straatnaam;
+		if (result.postcode) postcode = result.postcode;
+		if (result.plaats) plaats = result.plaats;
+		showKvkDialog = false;
+
+		if (result.postcode) {
+			await resolveNutsFromPostcode(result.postcode);
+		}
+	}
 
 	async function handleSaveOrg() {
 		orgSuccess = '';
@@ -42,7 +90,14 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					name: orgName.trim(),
-					description: orgDescription.trim() || undefined
+					description: orgDescription.trim() || undefined,
+					kvk_nummer: kvkNummer.trim() || undefined,
+					handelsnaam: handelsnaam.trim() || undefined,
+					rechtsvorm: rechtsvorm.trim() || undefined,
+					straat: straat.trim() || undefined,
+					postcode: postcode.trim() || undefined,
+					plaats: plaats.trim() || undefined,
+					nuts_codes: nutsCodes.length > 0 ? nutsCodes : undefined
 				})
 			});
 
@@ -205,6 +260,116 @@
 			</div>
 		</div>
 
+		<!-- KVK & Adresgegevens -->
+		<div class="space-y-4 border-t border-gray-200 p-6">
+			<div class="flex items-center justify-between">
+				<h3 class="text-base font-medium text-gray-900">KVK & Adresgegevens</h3>
+				<button
+					type="button"
+					on:click={() => { showKvkDialog = true; }}
+					class="inline-flex items-center gap-1.5 rounded-card bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700"
+				>
+					<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+					</svg>
+					KVK zoeken
+				</button>
+			</div>
+
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<div>
+					<label for="org-kvk" class="block text-sm font-medium text-gray-700">KVK-nummer</label>
+					<input
+						id="org-kvk"
+						type="text"
+						bind:value={kvkNummer}
+						maxlength={8}
+						placeholder="12345678"
+						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+					/>
+				</div>
+				<div>
+					<label for="org-handelsnaam" class="block text-sm font-medium text-gray-700">Handelsnaam</label>
+					<input
+						id="org-handelsnaam"
+						type="text"
+						bind:value={handelsnaam}
+						maxlength={300}
+						placeholder="Officiële handelsnaam"
+						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+					/>
+				</div>
+			</div>
+
+			<div>
+				<label for="org-rechtsvorm" class="block text-sm font-medium text-gray-700">Rechtsvorm</label>
+				<input
+					id="org-rechtsvorm"
+					type="text"
+					bind:value={rechtsvorm}
+					maxlength={100}
+					placeholder="Bijv. Besloten Vennootschap"
+					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+				/>
+			</div>
+
+			<div>
+				<label for="org-straat" class="block text-sm font-medium text-gray-700">Straat + huisnummer</label>
+				<input
+					id="org-straat"
+					type="text"
+					bind:value={straat}
+					maxlength={200}
+					placeholder="Hoofdstraat 1"
+					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+				/>
+			</div>
+
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<div>
+					<label for="org-postcode" class="block text-sm font-medium text-gray-700">Postcode</label>
+					<input
+						id="org-postcode"
+						type="text"
+						bind:value={postcode}
+						maxlength={7}
+						placeholder="1234 AB"
+						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+					/>
+				</div>
+				<div>
+					<label for="org-plaats" class="block text-sm font-medium text-gray-700">Plaats</label>
+					<input
+						id="org-plaats"
+						type="text"
+						bind:value={plaats}
+						maxlength={100}
+						placeholder="Amsterdam"
+						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+					/>
+				</div>
+			</div>
+		</div>
+
+		<!-- NUTS-codes -->
+		<div class="space-y-4 border-t border-gray-200 p-6">
+			<div class="flex items-center gap-2">
+				<h3 class="text-base font-medium text-gray-900">NUTS-codes</h3>
+				{#if resolvingNuts}
+					<span class="text-xs text-gray-400">Bepalen op basis van postcode...</span>
+				{/if}
+			</div>
+			<CodeLookup
+				apiUrl="/api/nuts"
+				selected={nutsCodes}
+				placeholder="Zoek NUTS-code of regio..."
+				on:change={(e) => { nutsCodes = e.detail; }}
+			/>
+			<p class="text-xs text-gray-500">
+				NUTS-codes worden automatisch ingevuld bij KVK-lookup op basis van de postcode.
+			</p>
+		</div>
+
 		<div class="flex justify-end border-t border-gray-200 bg-gray-50 px-6 py-3">
 			<button
 				type="submit"
@@ -330,3 +495,10 @@
 		</div>
 	</div>
 </div>
+
+<!-- KVK Search Dialog -->
+<KvkSearchDialog
+	open={showKvkDialog}
+	onClose={() => { showKvkDialog = false; }}
+	onSelect={handleKvkSelect}
+/>

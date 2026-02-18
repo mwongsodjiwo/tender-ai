@@ -1,6 +1,8 @@
 import type {
 	ReviewStatus,
-	AuditAction
+	AuditAction,
+	DataClassification,
+	ArchiveStatus
 } from '../enums.js';
 
 export interface SectionReviewer {
@@ -13,6 +15,10 @@ export interface SectionReviewer {
 	feedback: string | null;
 	reviewed_at: string | null;
 	expires_at: string;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_at: string;
 	updated_at: string;
 }

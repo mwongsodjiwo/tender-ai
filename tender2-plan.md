@@ -376,6 +376,12 @@ CREATE TYPE anonymization_strategy AS ENUM ('replace', 'remove');
 
 ### 6.2 Bestaande Tabellen Uitbreiden
 
+#### profiles — Uitbreiden
+
+```sql
+ALTER TABLE profiles ADD COLUMN is_superadmin BOOLEAN DEFAULT false;
+```
+
 #### organizations — Uitbreiden
 
 ```sql
@@ -974,12 +980,20 @@ Elke publieke organisatie is een volwaardige organisatie. Consultants/bureaus zi
 
 | Rol | Scope | Projecten | Leveranciers | Instellingen | Templates |
 |-----|-------|-----------|-------------|-------------|-----------|
+| **Superadmin** | **Platform** | **Alle orgs, alle projecten** | **Alle orgs, volledig** | **Alle orgs, alles** | **Alle orgs, alles** |
 | Owner | Organisatie | Alles | Volledig CRM | Alle instellingen | Upload, wijzig, verwijder |
 | Admin | Organisatie | Aanmaken, beheren | Toevoegen, wijzigen | Beperkt | Upload, wijzig |
 | Member | Organisatie | Alleen toegewezen | Bekijken, toevoegen aan project | Alleen lezen | Alleen lezen |
 | External Advisor | Org (via relatie) | Alleen toegewezen | Bekijken, toevoegen aan project | Geen toegang | Alleen lezen |
 | Auditor | Org (via relatie) | Geen (tenzij toegewezen) | Geen toegang | Config instellingen | Upload, wijzig |
 | Project Lead | Project | Volledig projectbeheer | Toevoegen, koppelen | Geen toegang | Kiezen per document |
+
+**Superadmin** is de productmaker (Melissa). Deze rol staat boven de org-context:
+- Kan alle organisaties zien en ernaar switchen zonder lidmaatschap
+- Kan alle data lezen en schrijven in elke organisatie
+- RLS policies laten superadmin altijd door (`is_superadmin = true` bypass)
+- Heeft toegang tot /admin analytics
+- Veld: `profiles.is_superadmin` (boolean, default false)
 
 ### 8.4 UI Elementen
 
@@ -1758,12 +1772,14 @@ Lees tender2-plan.md (sectie 6, 8) voor context.
 Bouw de multi-organisatie basisstructuur.
 
 Stappen:
-1. Maak migratie migration_029_new_enums.sql:
+1. Maak migratie migration_028_extend_profiles.sql:
+   - ALTER TABLE profiles ADD COLUMN is_superadmin BOOLEAN DEFAULT false;
+2. Maak migratie migration_029_new_enums.sql:
    - organization_type ENUM (client, consultancy, government)
    - contracting_authority_type ENUM (centraal, decentraal)
    - organization_relationship_type ENUM (consultancy, audit, legal, other)
    - relationship_status ENUM (active, inactive, pending)
-2. Maak migratie migration_033_extend_organizations.sql:
+3. Maak migratie migration_033_extend_organizations.sql:
    - Voeg toe aan organizations: parent_organization_id (UUID FK self-ref, nullable),
      organization_type, aanbestedende_dienst_type
 3. Maak migratie migration_034_organization_relationships.sql:
@@ -1804,28 +1820,39 @@ Lees tender2-plan.md (sectie 8.3, 8.5) voor context.
 Bouw RLS policies voor het multi-organisatie rechtenmodel.
 
 Stappen:
-1. Pas RLS aan op organizations:
+1. Maak superadmin bypass helper functie:
+   - CREATE FUNCTION is_superadmin() die profiles.is_superadmin checkt
+   - Alle RLS policies krijgen OR is_superadmin() bypass
+2. Pas RLS aan op organizations:
    - Gebruiker ziet alleen organisaties waar ze lid van zijn
+   - Superadmin ziet ALLE organisaties
    - Owner/admin kan organisatie wijzigen
-2. Voeg RLS toe aan organization_relationships:
+3. Voeg RLS toe aan organization_relationships:
    - Zichtbaar als je lid bent van source OF target org
+   - Superadmin ziet alle relaties
    - Alleen owner van source of target kan aanmaken/wijzigen
-3. Voeg RLS toe aan organization_settings:
+4. Voeg RLS toe aan organization_settings:
    - Leesbaar voor alle leden van de organisatie
+   - Superadmin leest en schrijft overal
    - Schrijfbaar alleen voor owner/admin
-4. Voeg RLS toe aan organization_members (uitgebreid):
+5. Voeg RLS toe aan organization_members (uitgebreid):
    - External_advisor ziet alleen projecten waar ze project_member zijn
    - Auditor ziet alleen organization_settings
-5. Pas RLS aan op projects:
+6. Pas RLS aan op projects:
    - Scoped naar organization_id van actieve context
+   - Superadmin ziet alle projecten in alle organisaties
    - External_advisor alleen toegewezen projecten
-6. Schrijf RLS tests in tests/rls/organization-rls.test.ts:
+7. Pas RLS aan op suppliers, project_suppliers, incoming_questions:
+   - Superadmin bypass op alle leveranciers- en vragentabellen
+8. Schrijf RLS tests in tests/rls/organization-rls.test.ts:
+   - Superadmin kan ALLE org data lezen en schrijven
+   - Superadmin kan switchen naar elke org zonder lidmaatschap
    - Member kan eigen org data lezen
    - Member kan andere org data NIET lezen
    - External_advisor ziet alleen toegewezen projecten
    - Auditor ziet alleen instellingen
-   - Data volledig gescheiden tussen organisaties
-7. Draai alle tests
+   - Data volledig gescheiden tussen organisaties (voor niet-superadmins)
+9. Draai alle tests
 
 Alle tests moeten slagen. Output <promise>COMPLETE</promise> wanneer klaar.
 ```

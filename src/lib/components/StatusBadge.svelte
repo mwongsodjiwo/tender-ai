@@ -31,7 +31,10 @@
 		exploring: 'bg-warning-50 text-warning-700 border-warning-200',
 		specifying: 'bg-primary-100 text-primary-700 border-primary-200',
 		tendering: 'bg-success-50 text-success-700 border-success-200',
-		contracting: 'bg-success-100 text-success-700 border-success-200'
+		contracting: 'bg-success-100 text-success-700 border-success-200',
+		received: 'bg-primary-50 text-primary-700 border-primary-200',
+		in_review: 'bg-warning-100 text-warning-700 border-warning-200',
+		answered: 'bg-primary-100 text-primary-700 border-primary-200'
 	};
 
 	const STATUS_LABELS: Record<string, string> = {
@@ -63,7 +66,10 @@
 		exploring: 'Verkennen',
 		specifying: 'Specificeren',
 		tendering: 'Aanbesteden',
-		contracting: 'Contracteren'
+		contracting: 'Contracteren',
+		received: 'Ontvangen',
+		in_review: 'In behandeling',
+		answered: 'Beantwoord'
 	};
 
 	$: styles = STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-700 border-gray-200';

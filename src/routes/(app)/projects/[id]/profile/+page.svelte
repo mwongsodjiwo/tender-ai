@@ -5,6 +5,7 @@
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
+	import CodeLookup from '$lib/components/CodeLookup.svelte';
 
 	export let data: PageData;
 
@@ -45,7 +46,9 @@
 
 
 
-	// Form state — initialized from profile or empty
+	$: organizationNutsCodes = (data.organizationNutsCodes ?? []) as string[];
+
+	// Form state — initialized from profile or empty (pre-fill NUTS from org)
 	let form = {
 		contracting_authority: '',
 		department: '',
@@ -56,8 +59,8 @@
 		scope_description: '',
 		estimated_value: null as number | null,
 		currency: 'EUR',
-		cpv_codes: '' as string,
-		nuts_codes: '' as string,
+		cpv_codes: [] as string[],
+		nuts_codes: [...(data.organizationNutsCodes ?? [])] as string[],
 		timeline_start: '',
 		timeline_end: ''
 	};
@@ -74,8 +77,8 @@
 			scope_description: profile.scope_description ?? '',
 			estimated_value: profile.estimated_value,
 			currency: profile.currency ?? 'EUR',
-			cpv_codes: (profile.cpv_codes ?? []).join(', '),
-			nuts_codes: (profile.nuts_codes ?? []).join(', '),
+			cpv_codes: [...(profile.cpv_codes ?? [])],
+			nuts_codes: [...(profile.nuts_codes ?? [])],
 			timeline_start: profile.timeline_start ?? '',
 			timeline_end: profile.timeline_end ?? ''
 		};
@@ -102,16 +105,12 @@
 				scope_description: profile.scope_description ?? '',
 				estimated_value: profile.estimated_value,
 				currency: profile.currency ?? 'EUR',
-				cpv_codes: (profile.cpv_codes ?? []).join(', '),
-				nuts_codes: (profile.nuts_codes ?? []).join(', '),
+				cpv_codes: [...(profile.cpv_codes ?? [])],
+				nuts_codes: [...(profile.nuts_codes ?? [])],
 				timeline_start: profile.timeline_start ?? '',
 				timeline_end: profile.timeline_end ?? ''
 			};
 		}
-	}
-
-	function parseCodes(value: string): string[] {
-		return value.split(',').map((s) => s.trim()).filter(Boolean);
 	}
 
 	async function saveProfile() {
@@ -129,8 +128,8 @@
 			scope_description: form.scope_description,
 			estimated_value: form.estimated_value ?? undefined,
 			currency: form.currency,
-			cpv_codes: parseCodes(form.cpv_codes),
-			nuts_codes: parseCodes(form.nuts_codes),
+			cpv_codes: form.cpv_codes,
+			nuts_codes: form.nuts_codes,
 			timeline_start: form.timeline_start || undefined,
 			timeline_end: form.timeline_end || undefined
 		};
@@ -374,18 +373,22 @@
 									</div>
 								</div>
 								<div>
-									<label for="cpv_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.cpv_codes}</label>
-									<input id="cpv_codes" type="text" bind:value={form.cpv_codes}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="72000000-5, 72200000-7" />
-									<p class="mt-1 text-xs text-gray-500">Kommagescheiden CPV-codes</p>
+									<CodeLookup
+										label={FIELD_LABELS.cpv_codes}
+										apiUrl="/api/cpv"
+										selected={form.cpv_codes}
+										placeholder="Zoek CPV-code of omschrijving..."
+										on:change={(e) => { form.cpv_codes = e.detail; }}
+									/>
 								</div>
 								<div>
-									<label for="nuts_codes" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.nuts_codes}</label>
-									<input id="nuts_codes" type="text" bind:value={form.nuts_codes}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="NL329" />
-									<p class="mt-1 text-xs text-gray-500">Kommagescheiden NUTS-codes</p>
+									<CodeLookup
+										label={FIELD_LABELS.nuts_codes}
+										apiUrl="/api/nuts"
+										selected={form.nuts_codes}
+										placeholder="Zoek NUTS-code of regio..."
+										on:change={(e) => { form.nuts_codes = e.detail; }}
+									/>
 								</div>
 							</div>
 						{:else if activeTab === 'planning'}

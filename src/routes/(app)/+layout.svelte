@@ -1,8 +1,11 @@
 <script lang="ts">
 	import Navigation from '$components/Navigation.svelte';
+	import { initOrganizationContext } from '$stores/organization-context';
 	import type { LayoutData } from './$types';
 
 	export let data: LayoutData;
+
+	$: initOrganizationContext(data.organizations ?? []);
 </script>
 
 <div class="min-h-screen bg-[#F5F5F5]">
@@ -10,6 +13,7 @@
 		supabase={data.supabase}
 		profile={data.profile}
 		isSuperadmin={data.isSuperadmin}
+		organizations={data.organizations}
 		projects={data.projects}
 		notifications={data.notifications}
 		unreadNotificationCount={data.unreadNotificationCount}

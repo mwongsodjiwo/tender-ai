@@ -1,6 +1,8 @@
 import type {
 	DocumentCategory,
-	ProcedureType
+	ProcedureType,
+	DataClassification,
+	ArchiveStatus
 } from '../enums.js';
 
 export interface Document {
@@ -14,6 +16,10 @@ export interface Document {
 	category: DocumentCategory;
 	content_text: string | null;
 	metadata: Record<string, unknown>;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	uploaded_by: string;
 	created_at: string;
 	updated_at: string;

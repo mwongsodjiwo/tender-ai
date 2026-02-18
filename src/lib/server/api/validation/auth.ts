@@ -21,6 +21,27 @@ export const registerSchema = z.object({
 // ORGANIZATIONS
 // =============================================================================
 
+// Shared KVK field schemas
+const kvkFieldSchemas = {
+	kvk_nummer: z
+		.string()
+		.regex(/^\d{8}$/, 'KVK-nummer moet exact 8 cijfers zijn')
+		.optional(),
+	handelsnaam: z.string().max(300, 'Handelsnaam mag maximaal 300 tekens zijn').optional(),
+	rechtsvorm: z.string().max(100).optional(),
+	straat: z.string().max(200).optional(),
+	postcode: z
+		.string()
+		.regex(/^\d{4}\s?[A-Za-z]{2}$/, 'Ongeldige postcode (verwacht: 1234AB)')
+		.optional(),
+	plaats: z.string().max(100).optional(),
+	sbi_codes: z.array(z.string().max(20)).max(50).optional(),
+	nuts_codes: z
+		.array(z.string().regex(/^NL[0-9A-Z]{0,3}$/, 'Ongeldige NUTS-code'))
+		.max(20)
+		.optional()
+};
+
 export const createOrganizationSchema = z.object({
 	name: z.string().min(2, 'Naam moet minimaal 2 tekens bevatten').max(200),
 	slug: z
@@ -31,13 +52,15 @@ export const createOrganizationSchema = z.object({
 			/^[a-z0-9]+(?:-[a-z0-9]+)*$/,
 			'Slug mag alleen kleine letters, cijfers en koppeltekens bevatten'
 		),
-	description: z.string().max(1000).optional()
+	description: z.string().max(1000).optional(),
+	...kvkFieldSchemas
 });
 
 export const updateOrganizationSchema = z.object({
 	name: z.string().min(2).max(200).optional(),
 	description: z.string().max(1000).optional(),
-	logo_url: z.string().url().optional()
+	logo_url: z.string().url().optional(),
+	...kvkFieldSchemas
 });
 
 export const inviteMemberSchema = z.object({

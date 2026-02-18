@@ -12,7 +12,9 @@ import type {
 	ProcedureType,
 	ScoringMethodology,
 	ContractType,
-	GeneralConditionsType
+	GeneralConditionsType,
+	DataClassification,
+	ArchiveStatus
 } from '../enums.js';
 
 // =============================================================================
@@ -28,6 +30,14 @@ export interface Organization {
 	parent_organization_id: string | null;
 	organization_type: OrganizationType;
 	aanbestedende_dienst_type: ContractingAuthorityType | null;
+	kvk_nummer: string | null;
+	handelsnaam: string | null;
+	rechtsvorm: string | null;
+	straat: string | null;
+	postcode: string | null;
+	plaats: string | null;
+	sbi_codes: string[];
+	nuts_codes: string[];
 	created_at: string;
 	updated_at: string;
 	deleted_at: string | null;
@@ -126,6 +136,10 @@ export interface Artifact {
 	parent_artifact_id: string | null;
 	sort_order: number;
 	metadata: Record<string, unknown>;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_by: string | null;
 	created_at: string;
 	updated_at: string;
@@ -137,6 +151,10 @@ export interface Conversation {
 	artifact_id: string | null;
 	title: string | null;
 	context_type: string;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_by: string;
 	created_at: string;
 	updated_at: string;
@@ -149,6 +167,10 @@ export interface Message {
 	content: string;
 	metadata: Record<string, unknown>;
 	token_count: number | null;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_by: string | null;
 	created_at: string;
 }

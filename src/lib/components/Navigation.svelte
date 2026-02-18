@@ -1,18 +1,28 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import type { SupabaseClient } from '@supabase/supabase-js';
-	import type { Profile, ProjectStatus, Notification } from '$types';
+	import type { Organization, Profile, ProjectStatus, Notification } from '$types';
 	import { lastProjectId } from '$lib/stores/lastProject';
+	import { initOrganizationContext } from '$stores/organization-context';
+	import OrganizationSwitcher from '$components/OrganizationSwitcher.svelte';
+	import ContextBadge from '$components/ContextBadge.svelte';
 	import NotificationBell from '$lib/components/notifications/NotificationBell.svelte';
 	import { focusTrap } from '$lib/utils/focus-trap';
 
 	export let supabase: SupabaseClient;
 	export let profile: Profile | null;
 	export let isSuperadmin: boolean = false;
+	export let organizations: Organization[] = [];
 	export let projects: { id: string; name: string; status: ProjectStatus; updated_at: string }[] = [];
 	export let notifications: Notification[] = [];
 	export let unreadNotificationCount: number = 0;
+
+	$: initOrganizationContext(organizations);
+
+	function handleOrgSwitch() {
+		invalidateAll();
+	}
 
 	let mobileOpen = false;
 
@@ -20,6 +30,7 @@
 		{ href: '/dashboard', label: 'Dashboard', icon: 'home' },
 		{ href: '/planning', label: 'Planning', icon: 'calendar' },
 		{ href: '/kennisbank', label: 'Kennisbank', icon: 'book' },
+		{ href: '/suppliers', label: 'Leveranciers', icon: 'building' },
 		{ href: '/time-tracking', label: 'Urenregistratie', icon: 'clock' }
 	];
 
@@ -82,6 +93,7 @@
 		Tendermanager
 	</a>
 	<div class="flex items-center gap-1">
+		<ContextBadge />
 		<NotificationBell
 			unreadCount={unreadNotificationCount}
 			{notifications}
@@ -167,6 +179,14 @@
 						<svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
 						</svg>
+				{:else if link.icon === 'building'}
+					<!-- Lucide: Building2 -->
+					<svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 22V4a2 2 0 012-2h8a2 2 0 012 2v18" />
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 12H4a2 2 0 00-2 2v6a2 2 0 002 2h2" />
+						<path stroke-linecap="round" stroke-linejoin="round" d="M18 9h2a2 2 0 012 2v9a2 2 0 01-2 2h-2" />
+						<path stroke-linecap="round" stroke-linejoin="round" d="M10 6h4M10 10h4M10 14h4M10 18h4" />
+					</svg>
 				{:else if link.icon === 'clock'}
 					<!-- Lucide: Clock -->
 					<svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -184,6 +204,13 @@
 				</a>
 			{/each}
 		</div>
+
+		<!-- Organization switcher -->
+		{#if organizations.length > 1}
+			<div class="mt-4 border-t border-gray-100 pt-4">
+				<OrganizationSwitcher {organizations} onSwitch={handleOrgSwitch} />
+			</div>
+		{/if}
 
 		<!-- Project selector -->
 		<div class="mt-6">

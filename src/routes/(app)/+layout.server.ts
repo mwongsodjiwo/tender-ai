@@ -20,7 +20,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	// Load organizations the user is a member of (via join, so superadmins don't see all orgs in nav)
 	const { data: memberships } = await locals.supabase
 		.from('organization_members')
-		.select('organization:organizations(*)')
+		.select('organization:organizations!organization_members_organization_id_fkey(*)')
 		.eq('profile_id', user.id);
 
 	const organizations = (memberships ?? [])

@@ -1,4 +1,8 @@
-import type { TimeEntryActivityType } from '../enums.js';
+import type {
+	TimeEntryActivityType,
+	DataClassification,
+	ArchiveStatus
+} from '../enums.js';
 
 // =============================================================================
 // TIME ENTRIES — Urenregistratie module
@@ -13,6 +17,10 @@ export interface TimeEntry {
 	hours: number;
 	activity_type: TimeEntryActivityType;
 	notes: string;
+	data_classification: DataClassification;
+	retention_until: string | null;
+	anonymized_at: string | null;
+	archive_status: ArchiveStatus;
 	created_at: string;
 	updated_at: string;
 }

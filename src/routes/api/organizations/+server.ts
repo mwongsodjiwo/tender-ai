@@ -40,11 +40,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
 	}
 
-	const { name, slug, description } = parsed.data;
+	const {
+		name, slug, description,
+		kvk_nummer, handelsnaam, rechtsvorm,
+		straat, postcode, plaats, sbi_codes, nuts_codes
+	} = parsed.data;
 
 	const { data: org, error: orgError } = await supabase
 		.from('organizations')
-		.insert({ name, slug, description })
+		.insert({
+			name, slug, description,
+			kvk_nummer, handelsnaam, rechtsvorm,
+			straat, postcode, plaats, sbi_codes, nuts_codes
+		})
 		.select()
 		.single();
 

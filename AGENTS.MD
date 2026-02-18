@@ -147,16 +147,16 @@ Instellingen, responsive design, prompt optimalisatie, deployment.
 13. **TypeScript strict mode.** Geen `any`. Geen `@ts-ignore`. Elk type is expliciet.
 14. **Error handling overal.** Elke API call, database query, async operatie heeft error handling.
 15. **Componenten zijn dom.** UI-componenten ontvangen data via props, geen eigen data-fetching.
-16. **Eén bestand, één verantwoordelijkheid.** Max 200 regels. Heroverweeg structuur als dat overschreden wordt.
+16. **Eén bestand, één verantwoordelijkheid.** Max 200 regels. Heroverweeg structuur als dat overschreden wordt. **Testbestanden (`.test.ts`) zijn uitgezonderd en mogen langer zijn.**
 17. **Geen console.log in productie.** Gebruik een logger utility.
 18. **Commits zijn atomair.** Eén commit doet één ding.
 19. **Accessibility WCAG 2.1 AA.** Semantic HTML, aria-labels, keyboard navigatie. Wettelijk verplicht.
 20. **Input validatie op beide lagen.** Zod schemas in frontend én backend.
 21. **Database naamgeving is snake_case.** Elke tabel heeft id (uuid), created_at, updated_at.
 22. **Elke pagina heeft vier states.** Loading, empty, data, en error.
-23. **Bestandsgrootte bewaken na elke wijziging.** Max 200 regels, anders splitsen.
+23. **Bestandsgrootte bewaken na elke wijziging.** Max 200 regels, anders splitsen. Testbestanden uitgezonderd.
 24. **Elke nieuwe module krijgt direct een testbestand.** Happy path + één error case minimum.
-25. **Kwaliteitscheck bij afsluiting.** (a) functies ≤ 30 regels, (b) bestanden ≤ 200 regels, (c) geen console.log, (d) tests aanwezig.
+25. **Kwaliteitscheck bij afsluiting.** (a) functies ≤ 30 regels, (b) bestanden ≤ 200 regels (testbestanden uitgezonderd), (c) geen console.log, (d) tests aanwezig.
 
 ## Technische stack
 
