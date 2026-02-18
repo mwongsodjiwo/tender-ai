@@ -61,7 +61,7 @@ export async function searchKvk(
 export async function getKvkProfile(
 	kvkNummer: string
 ): Promise<KvkBasisProfiel> {
-	const url = `${KVK_BASE_URL}/basisprofiel/${kvkNummer}`;
+	const url = `https://api.kvk.nl/api/v1/basisprofielen/${kvkNummer}`;
 
 	const response = await fetch(url, {
 		headers: getHeaders(),

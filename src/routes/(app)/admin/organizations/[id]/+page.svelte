@@ -66,12 +66,14 @@
 		straatnaam: string | null;
 		postcode: string | null;
 		plaats: string | null;
+		rechtsvorm: string | null;
 	}) {
 		kvkNummer = result.kvkNummer;
 		handelsnaam = result.handelsnaam;
 		if (result.straatnaam) straat = result.straatnaam;
 		if (result.postcode) postcode = result.postcode;
 		if (result.plaats) plaats = result.plaats;
+		if (result.rechtsvorm) rechtsvorm = result.rechtsvorm;
 		showKvkDialog = false;
 
 		if (result.postcode) {

@@ -8,7 +8,7 @@ export const load: PageServerLoad = async () => {
 
 	const { data: organizations } = await serviceClient
 		.from('organizations')
-		.select('*, organization_members(count)')
+		.select('*, organization_members!organization_members_organization_id_fkey(count)')
 		.is('deleted_at', null)
 		.order('name');
 

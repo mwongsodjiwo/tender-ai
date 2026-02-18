@@ -10,11 +10,14 @@
 		postcode: string | null;
 		plaats: string | null;
 		type: string | null;
+		rechtsvorm: string | null;
 	}
 
 	export let open: boolean = false;
 	export let onClose: () => void = () => {};
 	export let onSelect: (result: KvkResult) => void = () => {};
+
+	let loadingProfile = false;
 
 	let searchNaam = '';
 	let searchKvk = '';
@@ -70,7 +73,32 @@
 		}
 	}
 
-	function handleSelect(result: KvkResult): void {
+	async function handleSelect(result: KvkResult): Promise<void> {
+		loadingProfile = true;
+		try {
+			const res = await fetch(`/api/kvk/${result.kvkNummer}`);
+			if (res.ok) {
+				const json = await res.json();
+				const profiel = json.data;
+				const eigenaar = profiel?._embedded?.eigenaar ?? {};
+				const hoofdvestiging = profiel?._embedded?.hoofdvestiging ?? {};
+				const bezoekadres = (hoofdvestiging.adressen ?? [])
+					.find((a: Record<string, unknown>) => a.type === 'bezoekadres');
+
+				result.rechtsvorm = (eigenaar.rechtsvorm as string) ?? null;
+				if (!result.straatnaam && bezoekadres?.straatnaam) {
+					result.straatnaam = bezoekadres.straatnaam;
+				}
+				if (!result.postcode && bezoekadres?.postcode) {
+					result.postcode = bezoekadres.postcode;
+				}
+				if (!result.plaats && bezoekadres?.plaats) {
+					result.plaats = bezoekadres.plaats;
+				}
+			}
+		} catch { /* gebruik zoekresultaat als fallback */ }
+		finally { loadingProfile = false; }
+
 		onSelect(result);
 		resetForm();
 	}
