@@ -1,14 +1,14 @@
-// Project profile page — load profile data, documents, and org NUTS codes
+// Project profile page — load profile data, documents, org NUTS codes, and org settings
 
 import type { PageServerLoad } from './$types';
-import type { ProjectProfile, Document } from '$types';
+import type { ProjectProfile, Document, OrganizationSettings, ProjectDocumentRole } from '$types';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { supabase } = locals;
 	const parentData = await parent();
 	const organizationId = parentData.project.organization_id;
 
-	const [profileResult, documentsResult, orgResult] = await Promise.all([
+	const [profileResult, documentsResult, orgResult, settingsResult, rolesResult] = await Promise.all([
 		supabase
 			.from('project_profiles')
 			.select('*')
@@ -23,14 +23,27 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.order('created_at', { ascending: false }),
 		supabase
 			.from('organizations')
-			.select('nuts_codes')
+			.select('nuts_codes, aanbestedende_dienst_type')
 			.eq('id', organizationId)
-			.single()
+			.single(),
+		supabase
+			.from('organization_settings')
+			.select('threshold_works, threshold_services_central, threshold_services_decentral, threshold_social_services')
+			.eq('organization_id', organizationId)
+			.maybeSingle(),
+		supabase
+			.from('project_document_roles')
+			.select('*')
+			.eq('project_id', params.id)
+			.order('role_key')
 	]);
 
 	return {
 		profile: (profileResult.data as ProjectProfile | null) ?? null,
 		documents: (documentsResult.data as Document[] | null) ?? [],
-		organizationNutsCodes: (orgResult.data?.nuts_codes as string[] | null) ?? []
+		organizationNutsCodes: (orgResult.data?.nuts_codes as string[] | null) ?? [],
+		authorityType: (orgResult.data?.aanbestedende_dienst_type as string | null) ?? 'decentraal',
+		orgThresholds: (settingsResult.data as Pick<OrganizationSettings, 'threshold_works' | 'threshold_services_central' | 'threshold_services_decentral' | 'threshold_social_services'> | null) ?? null,
+		documentRoles: (rolesResult.data as ProjectDocumentRole[] | null) ?? []
 	};
 };

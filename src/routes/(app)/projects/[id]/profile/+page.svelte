@@ -1,21 +1,25 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
-	import type { ProjectProfile, Document } from '$types';
+	import type { ProjectProfile, Document, ProjectDocumentRole } from '$types';
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 	import CodeLookup from '$lib/components/CodeLookup.svelte';
+	import ProcedureAdvisor from '$lib/components/ProcedureAdvisor.svelte';
+	import DocumentRoles from '$lib/components/DocumentRoles.svelte';
+	import type { ContractingAuthorityType } from '$types';
 
 	export let data: PageData;
 
 	$: project = data.project;
 	$: profile = data.profile as ProjectProfile | null;
 	$: documents = (data.documents ?? []) as Document[];
+	$: documentRoles = (data.documentRoles ?? []) as ProjectDocumentRole[];
 	$: isConfirmed = project.profile_confirmed;
 
 	// Tab state
-	type ProfileTab = 'opdrachtgever' | 'project' | 'financieel' | 'planning' | 'documenten';
+	type ProfileTab = 'opdrachtgever' | 'project' | 'financieel' | 'planning' | 'rollen' | 'documenten';
 	let activeTab: ProfileTab = 'opdrachtgever';
 
 	const TABS: { id: ProfileTab; label: string }[] = [
@@ -23,6 +27,7 @@
 		{ id: 'project', label: 'Project' },
 		{ id: 'financieel', label: 'Financieel' },
 		{ id: 'planning', label: 'Planning' },
+		{ id: 'rollen', label: 'Documentrollen' },
 		{ id: 'documenten', label: 'Documenten' }
 	];
 
@@ -47,6 +52,10 @@
 
 
 	$: organizationNutsCodes = (data.organizationNutsCodes ?? []) as string[];
+	$: authorityType = (data.authorityType ?? 'decentraal') as ContractingAuthorityType;
+	$: orgThresholds = data.orgThresholds ?? null;
+
+	let deviationJustification = '';
 
 	// Form state — initialized from profile or empty (pre-fill NUTS from org)
 	let form = {
@@ -390,6 +399,16 @@
 										on:change={(e) => { form.nuts_codes = e.detail; }}
 									/>
 								</div>
+
+								<!-- Procedure advice -->
+								<ProcedureAdvisor
+									estimatedValue={form.estimated_value}
+									{authorityType}
+									settings={orgThresholds}
+									chosenProcedure={project.procedure_type}
+									bind:deviationJustification
+									{editing}
+								/>
 							</div>
 						{:else if activeTab === 'planning'}
 							<div class="space-y-5">
@@ -404,6 +423,12 @@
 										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" />
 								</div>
 							</div>
+						{:else if activeTab === 'rollen'}
+							<DocumentRoles
+								projectId={project.id}
+								roles={documentRoles}
+								disabled={isConfirmed}
+							/>
 						{:else if activeTab === 'documenten'}
 							<div class="flex items-center justify-between">
 								<div>
@@ -448,7 +473,15 @@
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<!-- Main card with key-value rows -->
 			<div class="lg:col-span-2">
-				{#if activeTab === 'documenten'}
+				{#if activeTab === 'rollen'}
+					<!-- Document roles tab -->
+					<div class="rounded-card bg-white p-6 shadow-card">
+						<DocumentRoles
+							projectId={project.id}
+							roles={documentRoles}
+						/>
+					</div>
+				{:else if activeTab === 'documenten'}
 					<!-- Documents tab — full-width card with table -->
 					<div class="rounded-card bg-white shadow-card">
 						<div class="flex items-center justify-between border-b border-gray-100 px-6 pt-6 pb-4">
@@ -632,6 +665,18 @@
 											<span class="text-sm text-gray-900">—</span>
 										{/if}
 									</dd>
+								</div>
+
+								<!-- Procedure advice (view mode) -->
+								<div class="px-6 py-4">
+									<ProcedureAdvisor
+										estimatedValue={profile?.estimated_value ?? null}
+										{authorityType}
+										settings={orgThresholds}
+										chosenProcedure={project.procedure_type}
+										bind:deviationJustification
+										editing={false}
+									/>
 								</div>
 							{:else if activeTab === 'planning'}
 								<div class="flex items-center justify-between px-6 py-4">
