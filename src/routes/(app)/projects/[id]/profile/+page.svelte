@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
-	import type { ProjectProfile, Document, ProjectDocumentRole } from '$types';
+	import type { ProjectProfile, Document, Organization, ProjectDocumentRole } from '$types';
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 	import CodeLookup from '$lib/components/CodeLookup.svelte';
 	import ProcedureAdvisor from '$lib/components/ProcedureAdvisor.svelte';
 	import DocumentRoles from '$lib/components/DocumentRoles.svelte';
+	import OrganizationTab from '$lib/components/OrganizationTab.svelte';
 	import type { ContractingAuthorityType } from '$types';
 
 	export let data: PageData;
@@ -16,14 +17,15 @@
 	$: profile = data.profile as ProjectProfile | null;
 	$: documents = (data.documents ?? []) as Document[];
 	$: documentRoles = (data.documentRoles ?? []) as ProjectDocumentRole[];
+	$: organization = (data.organization ?? null) as Partial<Organization> | null;
 	$: isConfirmed = project.profile_confirmed;
 
 	// Tab state
-	type ProfileTab = 'opdrachtgever' | 'project' | 'financieel' | 'planning' | 'rollen' | 'documenten';
-	let activeTab: ProfileTab = 'opdrachtgever';
+	type ProfileTab = 'organisatie' | 'project' | 'financieel' | 'planning' | 'rollen' | 'documenten';
+	let activeTab: ProfileTab = 'organisatie';
 
 	const TABS: { id: ProfileTab; label: string }[] = [
-		{ id: 'opdrachtgever', label: 'Opdrachtgever' },
+		{ id: 'organisatie', label: 'Organisatie' },
 		{ id: 'project', label: 'Project' },
 		{ id: 'financieel', label: 'Financieel' },
 		{ id: 'planning', label: 'Planning' },
@@ -322,39 +324,8 @@
 
 					<!-- Form fields -->
 					<div class="px-6 py-6">
-						{#if activeTab === 'opdrachtgever'}
-							<div class="space-y-5">
-								<div>
-									<label for="contracting_authority" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contracting_authority}</label>
-									<input id="contracting_authority" type="text" bind:value={form.contracting_authority}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="Naam organisatie" />
-								</div>
-								<div>
-									<label for="department" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.department}</label>
-									<input id="department" type="text" bind:value={form.department}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="Afdeling" />
-								</div>
-								<div>
-									<label for="contact_name" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_name}</label>
-									<input id="contact_name" type="text" bind:value={form.contact_name}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="Naam contactpersoon" />
-								</div>
-								<div>
-									<label for="contact_email" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_email}</label>
-									<input id="contact_email" type="email" bind:value={form.contact_email}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="email@voorbeeld.nl" />
-								</div>
-								<div>
-									<label for="contact_phone" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.contact_phone}</label>
-									<input id="contact_phone" type="tel" bind:value={form.contact_phone}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-										placeholder="+31 6 12345678" />
-								</div>
-							</div>
+						{#if activeTab === 'organisatie'}
+							<OrganizationTab {organization} />
 						{:else if activeTab === 'project'}
 							<div class="space-y-5">
 								<div>
@@ -473,7 +444,10 @@
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<!-- Main card with key-value rows -->
 			<div class="lg:col-span-2">
-				{#if activeTab === 'rollen'}
+				{#if activeTab === 'organisatie'}
+					<!-- Organization tab — always read-only -->
+					<OrganizationTab {organization} />
+				{:else if activeTab === 'rollen'}
 					<!-- Document roles tab -->
 					<div class="rounded-card bg-white p-6 shadow-card">
 						<DocumentRoles
@@ -560,11 +534,7 @@
 						<div class="flex items-center justify-between border-b border-gray-100 px-6 pt-6 pb-4">
 							<div class="flex items-center gap-3">
 								<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50">
-								{#if activeTab === 'opdrachtgever'}
-									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-									</svg>
-								{:else if activeTab === 'project'}
+								{#if activeTab === 'project'}
 									<svg class="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
 									</svg>
@@ -595,28 +565,7 @@
 
 						<!-- Key-value rows separated by dividers -->
 						<dl class="divide-y divide-gray-100">
-							{#if activeTab === 'opdrachtgever'}
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.contracting_authority}</dt>
-									<dd class="text-sm text-gray-900">{profile?.contracting_authority || '—'}</dd>
-								</div>
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.department}</dt>
-									<dd class="text-sm text-gray-900">{profile?.department || '—'}</dd>
-								</div>
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.contact_name}</dt>
-									<dd class="text-sm text-gray-900">{profile?.contact_name || '—'}</dd>
-								</div>
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.contact_email}</dt>
-									<dd class="text-sm text-gray-900">{profile?.contact_email || '—'}</dd>
-								</div>
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.contact_phone}</dt>
-									<dd class="text-sm text-gray-900">{profile?.contact_phone || '—'}</dd>
-								</div>
-							{:else if activeTab === 'project'}
+							{#if activeTab === 'project'}
 								<div class="px-6 py-4">
 									<dt class="text-sm text-gray-500">{FIELD_LABELS.project_goal}</dt>
 									<dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{profile?.project_goal || '—'}</dd>
