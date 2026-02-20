@@ -2,7 +2,7 @@
 	import { tick } from 'svelte';
 	import type { Editor } from '@tiptap/core';
 	import TiptapEditor from '$components/TiptapEditor.svelte';
-	import StepperSidebar from '$lib/components/StepperSidebar.svelte';
+	import PageThumbnails from '$lib/components/editor/PageThumbnails.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import EditorToolbar from '$lib/components/editor/EditorToolbar.svelte';
@@ -53,10 +53,11 @@
 	}
 	$: approvedCount = artifacts.filter((a) => a.status === 'approved').length;
 	$: totalCount = artifacts.length;
-	$: steps = artifacts.map((a, i) => ({
-		label: a.title,
-		status: (a.status === 'approved' ? 'completed' : i === currentSectionIndex ? 'active' : 'pending') as 'completed' | 'active' | 'pending',
-		hasWarning: !a.content || a.content.trim() === ''
+	$: pageSections = artifacts.map((a) => ({
+		id: a.id,
+		title: a.title,
+		status: a.status as 'draft' | 'generated' | 'review' | 'approved',
+		contentPreview: sectionContents[a.id] ?? a.content ?? ''
 	}));
 	let documentScrollContainer: HTMLElement;
 	function scrollToSection(i: number) { currentSectionIndex = i; const a = artifacts[i]; if (a && sectionElements[a.id]) sectionElements[a.id].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -155,7 +156,7 @@
 			<ContractSettings projectId={project.id} bind:contractType bind:generalConditions />
 			<div class="flex-1 overflow-y-auto p-4">
 				<div class="mb-4"><div class="flex items-center justify-between text-xs text-gray-500"><span>Voortgang</span><span>{approvedCount}/{totalCount}</span></div><div class="mt-1.5"><ProgressBar value={approvedCount} max={totalCount || 1} showPercentage={false} size="sm" /></div></div>
-				<StepperSidebar {steps} currentStep={currentSectionIndex} onStepClick={(i) => scrollToSection(i)} />
+				<PageThumbnails sections={pageSections} currentIndex={currentSectionIndex} onSectionClick={(i) => scrollToSection(i)} />
 			</div>
 		</aside>
 

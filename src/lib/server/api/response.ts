@@ -20,3 +20,10 @@ export function apiError(status: number, code: ErrorCode, message: string): Resp
 export function apiSuccess<T>(data: T, status = 200): Response {
 	return json({ data }, { status });
 }
+
+export function apiSuccessCached<T>(data: T, maxAgeSeconds = 3600): Response {
+	return json({ data }, {
+		status: 200,
+		headers: { 'Cache-Control': `public, max-age=${maxAgeSeconds}` }
+	});
+}

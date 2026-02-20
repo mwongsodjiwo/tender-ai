@@ -7,6 +7,7 @@ import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import { apiError, apiSuccess } from '$server/api/response';
 import { logError } from '$server/logger';
+import { markdownToTiptapHtml } from '$utils/markdown-to-tiptap';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
@@ -103,11 +104,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		return apiError(500, 'INTERNAL_ERROR', `AI-fout: ${errorMessage}`);
 	}
 
+	// Convert markdown to TipTap HTML before storing
+	const htmlContent = await markdownToTiptapHtml(result.content);
+
 	// Update artifact with new content
 	const { data: updated, error: updateError } = await supabase
 		.from('artifacts')
 		.update({
-			content: result.content,
+			content: htmlContent,
 			version: artifact.version + 1,
 			status: 'generated'
 		})

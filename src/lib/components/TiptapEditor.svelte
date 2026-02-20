@@ -7,6 +7,8 @@
 	import { TableRow } from '@tiptap/extension-table-row';
 	import { TableCell } from '@tiptap/extension-table-cell';
 	import { TableHeader } from '@tiptap/extension-table-header';
+	import { TextStyle } from '@tiptap/extension-text-style';
+	import { FontFamily } from '@tiptap/extension-font-family';
 
 	export let content: string = '';
 	export let editable: boolean = true;
@@ -48,6 +50,7 @@
 	let isOrderedList = false;
 	let isBlockquote = false;
 	let headingLevel: number | null = null;
+	let activeFontFamily = '';
 
 	function updateToolbarState() {
 		if (!editor) return;
@@ -57,6 +60,7 @@
 		isBulletList = editor.isActive('bulletList');
 		isOrderedList = editor.isActive('orderedList');
 		isBlockquote = editor.isActive('blockquote');
+		activeFontFamily = (editor.getAttributes('textStyle').fontFamily as string) ?? '';
 
 		if (editor.isActive('heading', { level: 1 })) headingLevel = 1;
 		else if (editor.isActive('heading', { level: 2 })) headingLevel = 2;
@@ -99,7 +103,9 @@
 				}),
 				TableRow,
 				TableCell,
-				TableHeader
+				TableHeader,
+				TextStyle,
+				FontFamily.configure({ types: ['textStyle'] })
 			],
 			content: initialHtml,
 			editable,
@@ -135,6 +141,10 @@
 	function toggleBlockquote() { editor?.chain().focus().toggleBlockquote().run(); }
 	function setHeading(level: 1 | 2 | 3) { editor?.chain().focus().toggleHeading({ level }).run(); }
 	function setParagraph() { editor?.chain().focus().setParagraph().run(); }
+	function setFontFamily(font: string) {
+		if (!font) editor?.chain().focus().unsetFontFamily().run();
+		else editor?.chain().focus().setFontFamily(font).run();
+	}
 	function insertTable() {
 		editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
 	}

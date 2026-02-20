@@ -2,7 +2,7 @@
 
 import type { RequestHandler } from './$types';
 import { nutsSearchSchema } from '$server/api/validation';
-import { apiError, apiSuccess } from '$server/api/response';
+import { apiError, apiSuccessCached } from '$server/api/response';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const { supabase, user } = locals;
@@ -56,8 +56,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return apiSuccess({
+	return apiSuccessCached({
 		items: data ?? [],
 		total: count ?? 0
-	});
+	}, 3600);
 };

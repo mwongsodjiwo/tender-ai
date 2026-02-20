@@ -1,8 +1,15 @@
 // Server hooks for Supabase auth integration
 
 import { createServerClient } from '@supabase/ssr';
-import { type Handle } from '@sveltejs/kit';
+import { type Handle, type HandleServerError } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+
+export const handleError: HandleServerError = async ({ error, event }) => {
+	console.error('[handleError]', event.url.pathname, error);
+	return {
+		message: 'Internal Error'
+	};
+};
 
 export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {

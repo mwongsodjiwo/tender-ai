@@ -1,27 +1,29 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
-	import type { ProjectProfile, Document, Organization, ProjectDocumentRole } from '$types';
+	import type { ProjectProfile, Document, Organization, Milestone } from '$types';
 	import { PROCEDURE_TYPE_LABELS, DOCUMENT_CATEGORY_LABELS } from '$types';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 	import CodeLookup from '$lib/components/CodeLookup.svelte';
 	import ProcedureAdvisor from '$lib/components/ProcedureAdvisor.svelte';
-	import DocumentRoles from '$lib/components/DocumentRoles.svelte';
 	import OrganizationTab from '$lib/components/OrganizationTab.svelte';
-	import type { ContractingAuthorityType } from '$types';
+	import ProjectSummary from '$lib/components/ProjectSummary.svelte';
+	import PlanningMilestones from '$lib/components/planning/PlanningMilestones.svelte';
+	import type { TimelineMilestone } from '$lib/utils/procurement-timeline.js';
+	import type { ContractingAuthorityType, ProcedureType } from '$types';
 
 	export let data: PageData;
 
 	$: project = data.project;
 	$: profile = data.profile as ProjectProfile | null;
 	$: documents = (data.documents ?? []) as Document[];
-	$: documentRoles = (data.documentRoles ?? []) as ProjectDocumentRole[];
 	$: organization = (data.organization ?? null) as Partial<Organization> | null;
+	$: milestones = (data.milestones ?? []) as Milestone[];
 	$: isConfirmed = project.profile_confirmed;
 
 	// Tab state
-	type ProfileTab = 'organisatie' | 'project' | 'financieel' | 'planning' | 'rollen' | 'documenten';
+	type ProfileTab = 'organisatie' | 'project' | 'financieel' | 'planning' | 'documenten';
 	let activeTab: ProfileTab = 'organisatie';
 
 	const TABS: { id: ProfileTab; label: string }[] = [
@@ -29,7 +31,6 @@
 		{ id: 'project', label: 'Project' },
 		{ id: 'financieel', label: 'Financieel' },
 		{ id: 'planning', label: 'Planning' },
-		{ id: 'rollen', label: 'Documentrollen' },
 		{ id: 'documenten', label: 'Documenten' }
 	];
 
@@ -59,39 +60,41 @@
 
 	let deviationJustification = '';
 
+	// Milestones state for Planning tab
+	let planningMilestones: TimelineMilestone[] = [];
+
+	function handleMilestonesChange(updated: TimelineMilestone[]): void {
+		planningMilestones = updated;
+	}
+
+	// Use planningMilestones as live preview for sidebar when DB milestones are empty
+	$: effectiveMilestones = milestones.length > 0
+		? milestones
+		: planningMilestones.map((m) => ({
+				...m,
+				id: m.milestone_type,
+				project_id: project.id
+			})) as unknown as Milestone[];
+
 	// Form state — initialized from profile or empty (pre-fill NUTS from org)
 	let form = {
-		contracting_authority: '',
-		department: '',
-		contact_name: '',
-		contact_email: '',
-		contact_phone: '',
 		project_goal: '',
 		scope_description: '',
 		estimated_value: null as number | null,
 		currency: 'EUR',
 		cpv_codes: [] as string[],
-		nuts_codes: [...(data.organizationNutsCodes ?? [])] as string[],
-		timeline_start: '',
-		timeline_end: ''
+		nuts_codes: [...(data.organizationNutsCodes ?? [])] as string[]
 	};
 
 	// Sync form from profile whenever profile changes
 	$: if (profile) {
 		form = {
-			contracting_authority: profile.contracting_authority ?? '',
-			department: profile.department ?? '',
-			contact_name: profile.contact_name ?? '',
-			contact_email: profile.contact_email ?? '',
-			contact_phone: profile.contact_phone ?? '',
 			project_goal: profile.project_goal ?? '',
 			scope_description: profile.scope_description ?? '',
 			estimated_value: profile.estimated_value,
 			currency: profile.currency ?? 'EUR',
 			cpv_codes: [...(profile.cpv_codes ?? [])],
-			nuts_codes: [...(profile.nuts_codes ?? [])],
-			timeline_start: profile.timeline_start ?? '',
-			timeline_end: profile.timeline_end ?? ''
+			nuts_codes: [...(profile.nuts_codes ?? [])]
 		};
 	}
 
@@ -107,19 +110,12 @@
 		// Reset form from profile
 		if (profile) {
 			form = {
-				contracting_authority: profile.contracting_authority ?? '',
-				department: profile.department ?? '',
-				contact_name: profile.contact_name ?? '',
-				contact_email: profile.contact_email ?? '',
-				contact_phone: profile.contact_phone ?? '',
 				project_goal: profile.project_goal ?? '',
 				scope_description: profile.scope_description ?? '',
 				estimated_value: profile.estimated_value,
 				currency: profile.currency ?? 'EUR',
 				cpv_codes: [...(profile.cpv_codes ?? [])],
-				nuts_codes: [...(profile.nuts_codes ?? [])],
-				timeline_start: profile.timeline_start ?? '',
-				timeline_end: profile.timeline_end ?? ''
+				nuts_codes: [...(profile.nuts_codes ?? [])]
 			};
 		}
 	}
@@ -130,19 +126,12 @@
 		success = '';
 
 		const payload = {
-			contracting_authority: form.contracting_authority,
-			department: form.department,
-			contact_name: form.contact_name,
-			contact_email: form.contact_email || undefined,
-			contact_phone: form.contact_phone,
 			project_goal: form.project_goal,
 			scope_description: form.scope_description,
 			estimated_value: form.estimated_value ?? undefined,
 			currency: form.currency,
 			cpv_codes: form.cpv_codes,
-			nuts_codes: form.nuts_codes,
-			timeline_start: form.timeline_start || undefined,
-			timeline_end: form.timeline_end || undefined
+			nuts_codes: form.nuts_codes
 		};
 
 		const method = profile ? 'PATCH' : 'POST';
@@ -160,10 +149,43 @@
 			return;
 		}
 
+		// Save planning milestones to DB if present
+		if (planningMilestones.length > 0) {
+			await savePlanningMilestones();
+		}
+
 		saving = false;
 		editing = false;
 		success = 'Projectprofiel opgeslagen.';
 		await invalidateAll();
+	}
+
+	async function savePlanningMilestones(): Promise<void> {
+		// Soft-delete existing procurement milestones first
+		for (const existing of milestones) {
+			await fetch(`/api/projects/${project.id}/milestones/${existing.id}`, {
+				method: 'DELETE'
+			});
+		}
+		// Insert updated milestones
+		for (const m of planningMilestones) {
+			const res = await fetch(`/api/projects/${project.id}/milestones`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					milestone_type: m.milestone_type,
+					title: m.label,
+					target_date: m.target_date,
+					is_critical: true,
+					status: 'pending'
+				})
+			});
+			if (!res.ok) {
+				const json = await res.json();
+				error = json.message ?? 'Milestone kon niet worden opgeslagen.';
+				return;
+			}
+		}
 	}
 
 	async function confirmProfile() {
@@ -219,19 +241,12 @@
 	}
 
 	const FIELD_LABELS: Record<string, string> = {
-		contracting_authority: 'Opdrachtgever',
-		department: 'Afdeling',
-		contact_name: 'Contactpersoon',
-		contact_email: 'E-mail',
-		contact_phone: 'Telefoon',
 		project_goal: 'Projectdoel',
 		scope_description: 'Scope / omschrijving',
 		estimated_value: 'Geschatte waarde',
 		currency: 'Valuta',
 		cpv_codes: 'CPV-codes',
-		nuts_codes: 'NUTS-codes',
-		timeline_start: 'Startdatum',
-		timeline_end: 'Einddatum'
+		nuts_codes: 'NUTS-codes'
 	};
 </script>
 
@@ -242,8 +257,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="space-y-6">
-	<!-- Simplified page header -->
-	<h1 class="text-xl font-bold text-gray-900">Projectprofiel</h1>
+	<h1 class="text-2xl font-bold text-gray-900">Projectprofiel</h1>
 
 	<!-- Underline-style tab navigation -->
 	<nav class="-mb-px flex gap-6 border-b border-gray-200" aria-label="Profiel tabbladen">
@@ -382,23 +396,12 @@
 								/>
 							</div>
 						{:else if activeTab === 'planning'}
-							<div class="space-y-5">
-								<div>
-									<label for="timeline_start" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.timeline_start}</label>
-									<input id="timeline_start" type="date" bind:value={form.timeline_start}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" />
-								</div>
-								<div>
-									<label for="timeline_end" class="block text-sm font-medium text-gray-700">{FIELD_LABELS.timeline_end}</label>
-									<input id="timeline_end" type="date" bind:value={form.timeline_end}
-										class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" />
-								</div>
-							</div>
-						{:else if activeTab === 'rollen'}
-							<DocumentRoles
-								projectId={project.id}
-								roles={documentRoles}
-								disabled={isConfirmed}
+							<PlanningMilestones
+								procedureType={project.procedure_type as ProcedureType | null}
+								anchorDate={profile?.timeline_start || new Date().toISOString().split('T')[0]}
+								milestones={planningMilestones}
+								disabled={false}
+								onMilestonesChange={handleMilestonesChange}
 							/>
 						{:else if activeTab === 'documenten'}
 							<div class="flex items-center justify-between">
@@ -425,18 +428,13 @@
 
 			<!-- Sidebar -->
 			<div class="space-y-4">
-				<!-- Status card -->
-				<div class="rounded-card bg-white p-6 shadow-card">
-					<div class="flex items-center gap-2">
-						{#if isConfirmed}
-							<span class="h-2.5 w-2.5 rounded-full bg-success-500"></span>
-							<span class="text-sm font-medium text-gray-900">Bevestigd</span>
-						{:else}
-							<span class="h-2.5 w-2.5 rounded-full bg-warning-500"></span>
-							<span class="text-sm font-medium text-gray-900">Concept</span>
-						{/if}
-					</div>
-				</div>
+				<ProjectSummary
+					{project}
+					{profile}
+					milestones={effectiveMilestones}
+					{authorityType}
+					{orgThresholds}
+				/>
 			</div>
 		</div>
 	{:else}
@@ -447,14 +445,6 @@
 				{#if activeTab === 'organisatie'}
 					<!-- Organization tab — always read-only -->
 					<OrganizationTab {organization} />
-				{:else if activeTab === 'rollen'}
-					<!-- Document roles tab -->
-					<div class="rounded-card bg-white p-6 shadow-card">
-						<DocumentRoles
-							projectId={project.id}
-							roles={documentRoles}
-						/>
-					</div>
 				{:else if activeTab === 'documenten'}
 					<!-- Documents tab — full-width card with table -->
 					<div class="rounded-card bg-white shadow-card">
@@ -628,25 +618,14 @@
 									/>
 								</div>
 							{:else if activeTab === 'planning'}
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.timeline_start}</dt>
-									<dd class="text-sm text-gray-900">
-										{#if profile?.timeline_start}
-											{new Date(profile.timeline_start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-										{:else}
-											—
-										{/if}
-									</dd>
-								</div>
-								<div class="flex items-center justify-between px-6 py-4">
-									<dt class="text-sm text-gray-500">{FIELD_LABELS.timeline_end}</dt>
-									<dd class="text-sm text-gray-900">
-										{#if profile?.timeline_end}
-											{new Date(profile.timeline_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-										{:else}
-											—
-										{/if}
-									</dd>
+								<div class="px-6 py-4">
+									<PlanningMilestones
+										procedureType={project.procedure_type as ProcedureType | null}
+										anchorDate={profile?.timeline_start || new Date().toISOString().split('T')[0]}
+										milestones={planningMilestones}
+										disabled={true}
+										onMilestonesChange={null}
+									/>
 								</div>
 							{/if}
 						</dl>
@@ -657,36 +636,13 @@
 
 			<!-- Right sidebar -->
 			<div class="space-y-4">
-				<!-- Status card -->
-				<div class="rounded-card bg-white p-6 shadow-card">
-					<p class="text-sm font-medium text-gray-500">Profielstatus</p>
-					<div class="mt-2 flex items-center gap-2">
-						{#if isConfirmed}
-							<span class="h-2.5 w-2.5 rounded-full bg-success-500"></span>
-							<span class="text-sm font-semibold text-gray-900">Bevestigd</span>
-						{:else}
-							<span class="h-2.5 w-2.5 rounded-full bg-warning-500"></span>
-							<span class="text-sm font-semibold text-gray-900">Concept</span>
-						{/if}
-					</div>
-
-					{#if project.procedure_type}
-						<p class="mt-4 text-sm font-medium text-gray-500">Procedure</p>
-						<p class="mt-1 text-sm text-gray-900">{PROCEDURE_TYPE_LABELS[project.procedure_type as keyof typeof PROCEDURE_TYPE_LABELS] ?? project.procedure_type}</p>
-					{/if}
-
-					{#if profile?.estimated_value}
-						<p class="mt-4 text-sm font-medium text-gray-500">Geschatte waarde</p>
-						<p class="mt-1 text-sm text-gray-900">&euro;{profile.estimated_value.toLocaleString('nl-NL')}</p>
-					{/if}
-
-					{#if project.deadline_date}
-						<p class="mt-4 text-sm font-medium text-gray-500">Deadline</p>
-						<p class="mt-1 text-sm text-gray-900">
-							{new Date(project.deadline_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-						</p>
-					{/if}
-				</div>
+				<ProjectSummary
+					{project}
+					{profile}
+					milestones={effectiveMilestones}
+					{authorityType}
+					{orgThresholds}
+				/>
 
 				<!-- Action buttons -->
 				{#if !isConfirmed && profile}

@@ -63,3 +63,12 @@ export function calculateRetentionDate(
 export function getGovernanceTables(): string[] {
 	return Object.keys(TABLE_CLASSIFICATIONS);
 }
+
+/** Values emitted by RetentionProfileSelector on change */
+export interface RetentionProfileValues {
+	profileId: string;
+	archiveYearsGranted: number;
+	archiveYearsNotGranted: number;
+	personalDataYears: number;
+	operationalYears: number;
+}

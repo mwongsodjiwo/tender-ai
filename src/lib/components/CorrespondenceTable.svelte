@@ -259,12 +259,12 @@
 					{#each filteredLetters as letter (letter.id)}
 						<tr class="group transition-colors hover:bg-gray-50">
 							<td class="px-6 py-4">
-								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" class="block">
 									<StatusBadge status={letter.phase} />
 								</a>
 							</td>
 							<td class="px-6 py-4">
-								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block min-w-0">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" class="block min-w-0">
 									<span class="text-sm font-medium text-gray-900">
 										{LETTER_TYPE_LABELS[letter.letter_type] ?? letter.letter_type}
 									</span>
@@ -278,12 +278,12 @@
 								</a>
 							</td>
 							<td class="px-6 py-4">
-								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" class="block">
 									<StatusBadge status={letter.status} />
 								</a>
 							</td>
 							<td class="px-6 py-4">
-								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" class="block">
 									{#if letter.recipient}
 										<span class="text-sm text-gray-700">{letter.recipient}</span>
 									{:else}
@@ -292,7 +292,7 @@
 								</a>
 							</td>
 							<td class="px-6 py-4 text-right">
-								<a href="/projects/{projectId}/correspondence/{letter.id}" data-sveltekit-reload class="block">
+								<a href="/projects/{projectId}/correspondence/{letter.id}" class="block">
 									<span class="text-sm text-gray-500">{formatDate(letter.created_at)}</span>
 								</a>
 							</td>

@@ -4,6 +4,7 @@ import type {
 	OrganizationRole,
 	OrganizationType,
 	ContractingAuthorityType,
+	MemberStatus,
 	ProjectStatus,
 	ProjectPhase,
 	ProjectRole,
@@ -61,6 +62,8 @@ export interface OrganizationMember {
 	organization_id: string;
 	profile_id: string;
 	role: OrganizationRole;
+	status: MemberStatus;
+	manager_id: string | null;
 	source_organization_id: string | null;
 	created_at: string;
 	updated_at: string;

@@ -61,7 +61,8 @@ export const assembleDocumentSchema = z.object({
 
 export const exportDocumentSchema = z.object({
 	document_type_id: z.string().uuid('Ongeldig documenttype-ID'),
-	format: z.enum(['docx', 'pdf'], { errorMap: () => ({ message: 'Formaat moet docx of pdf zijn' }) })
+	format: z.enum(['docx', 'pdf'], { errorMap: () => ({ message: 'Formaat moet docx of pdf zijn' }) }),
+	template_id: z.string().uuid('Ongeldig template-ID').optional()
 });
 
 // =============================================================================

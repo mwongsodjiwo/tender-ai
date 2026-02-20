@@ -8,6 +8,7 @@ import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import type { TemplateSection } from '$types';
 import { apiError, apiSuccess } from '$server/api/response';
+import { markdownToTiptapHtml } from '$utils/markdown-to-tiptap';
 
 interface GenerationContext {
 	supabase: SupabaseClient;
@@ -180,14 +181,15 @@ async function processSection(ctx: GenerationContext, section: TemplateSection) 
 		knowledgeBaseContext: kbContext || undefined,
 		instructions: ctx.instructions
 	});
-	const artifactId = await upsertArtifact(ctx.supabase, section, result.content, ctx);
+	const htmlContent = await markdownToTiptapHtml(result.content);
+	const artifactId = await upsertArtifact(ctx.supabase, section, htmlContent, ctx);
 	await logAudit(ctx.supabase, {
 		organizationId: ctx.organizationId, projectId: ctx.projectId,
 		actorId: ctx.userId, actorEmail: ctx.userEmail,
 		action: 'generate', entityType: 'artifact', entityId: artifactId,
 		changes: { section_key: section.key, source: 'leidraad_generation', token_count: result.tokenCount }
 	});
-	return { section_key: section.key, title: section.title, content: result.content, artifact_id: artifactId };
+	return { section_key: section.key, title: section.title, content: htmlContent, artifact_id: artifactId };
 }
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {

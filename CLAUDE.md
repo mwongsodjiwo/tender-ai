@@ -4,7 +4,7 @@ Dit is een SvelteKit + Supabase aanbestedingsplatform voor de Nederlandse overhe
 
 1. `PRODUCT.md` — wat je bouwt
 2. `AGENTS.MD` — de zes agents, uitvoeringsvolgorde, en alle 25 regels
-3. `tender2-plan.md` — volledige v2 specificatie met database schema's, tests en Ralph Loop prompts
+3. `docs/team-en-projectprofiel-refactor.md` — implementatieplan team & projectprofiel refactor (fasen 27-38)
 4. `contracts/structure.md` — mappenstructuur en eigenaarschap
 5. `contracts/api.md` — API-contracten
 

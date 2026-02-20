@@ -11,32 +11,29 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		throw redirect(303, '/login');
 	}
 
-	const { data: profile } = await locals.supabase
-		.from('profiles')
-		.select('*')
-		.eq('id', user.id)
-		.single();
-
-	// Load organizations the user is a member of (via join, so superadmins don't see all orgs in nav)
-	const { data: memberships } = await locals.supabase
-		.from('organization_members')
-		.select('organization:organizations!organization_members_organization_id_fkey(*)')
-		.eq('profile_id', user.id);
-
-	const organizations = (memberships ?? [])
-		.map((m: { organization: unknown }) => m.organization as Organization | null)
-		.filter((org): org is Organization => org != null && org.deleted_at == null)
-		.sort((a, b) => a.name.localeCompare(b.name));
-
-	// Load projects for sidebar navigation (all non-deleted projects the user can see)
-	const { data: projects } = await locals.supabase
-		.from('projects')
-		.select('id, name, status, updated_at')
-		.is('deleted_at', null)
-		.order('updated_at', { ascending: false });
-
-	// Load recent notifications + unread count for the bell
-	const [{ data: recentNotifications }, { count: unreadCount }] = await Promise.all([
+	// Parallelliseer onafhankelijke queries (profile, memberships, projects, notifications)
+	const [
+		{ data: profile },
+		{ data: memberships },
+		{ data: projects },
+		{ data: recentNotifications },
+		{ count: unreadCount }
+	] = await Promise.all([
+		locals.supabase
+			.from('profiles')
+			.select('*')
+			.eq('id', user.id)
+			.single(),
+		locals.supabase
+			.from('organization_members')
+			.select('organization:organizations!organization_members_organization_id_fkey(id, name, slug)')
+			.eq('profile_id', user.id),
+		locals.supabase
+			.from('projects')
+			.select('id, name, status, updated_at')
+			.is('deleted_at', null)
+			.order('updated_at', { ascending: false })
+			.limit(50),
 		locals.supabase
 			.from('notifications')
 			.select('*')
@@ -49,6 +46,11 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 			.eq('user_id', user.id)
 			.eq('is_read', false)
 	]);
+
+	const organizations = (memberships ?? [])
+		.map((m: { organization: unknown }) => m.organization as Organization | null)
+		.filter((org): org is Organization => org != null && org.deleted_at == null)
+		.sort((a, b) => a.name.localeCompare(b.name));
 
 	return {
 		profile,

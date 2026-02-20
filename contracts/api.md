@@ -85,13 +85,29 @@ All endpoints return JSON. Authentication is via Supabase session cookies (handl
 
 ### `GET /api/organizations/:id/members`
 - **Auth:** Required (must be member)
-- **Response:** `{ data: OrganizationMemberWithProfile[] }`
+- **Query:**
+  - `search` (optional) — Search on name/email (max 200 chars)
+  - `status` (optional) — `"active" | "inactive" | "all"` (default: `"all"`)
+  - `limit` (optional) — Results per page (1-100, default 25)
+  - `offset` (optional) — Pagination offset (default 0)
+- **Response:** `{ data: { items: OrganizationMemberWithProfile[], total: number } }`
 
 ### `POST /api/organizations/:id/members`
 - **Auth:** Required (must be admin/owner)
 - **Body:** `{ email: string, role: "owner" | "admin" | "member" }`
 - **Response (201):** `{ data: OrganizationMember }`
 - **Errors:** 404 (user not found), 409 (already a member)
+
+### `PATCH /api/organizations/:id/members/:memberId`
+- **Auth:** Required (must be admin/owner)
+- **Body:** `{ role?: OrganizationRole, status?: "active" | "inactive", manager_id?: string | null }`
+- **Response:** `{ data: OrganizationMemberWithProfile }`
+- **Errors:** 400 (validation), 404 (member not found)
+- **Note:** `manager_id` must reference an existing organization_members id, or null to unset
+
+### `DELETE /api/organizations/:id/members/:memberId`
+- **Auth:** Required (must be admin/owner)
+- **Response:** `{ data: { success: true } }`
 
 ---
 

@@ -18,6 +18,15 @@
 		{ value: '14', label: '14pt' }, { value: '16', label: '16pt' },
 		{ value: '18', label: '18pt' }
 	];
+	const FONT_FAMILIES = [
+		{ value: '', label: 'Standaard' },
+		{ value: 'Asap', label: 'Asap' },
+		{ value: 'Arial', label: 'Arial' },
+		{ value: 'Times New Roman', label: 'Times New Roman' },
+		{ value: 'Verdana', label: 'Verdana' },
+		{ value: 'Georgia', label: 'Georgia' },
+		{ value: 'Calibri', label: 'Calibri' }
+	];
 
 	export const ZOOM_BASE = 1.25;
 
@@ -25,11 +34,13 @@
 	let isBulletList = false; let isOrderedList = false; let isBlockquote = false;
 	let headingLevel: number | null = null;
 	let isInTable = false; let showTableMenu = false;
+	let activeFontFamily = '';
 
 	function updateToolbar(editor: Editor | null) {
 		if (!editor) {
 			isBold = isItalic = isStrike = isBulletList = isOrderedList = isBlockquote = isInTable = false;
 			headingLevel = null;
+			activeFontFamily = '';
 			return;
 		}
 		isBold = editor.isActive('bold');
@@ -39,6 +50,7 @@
 		isOrderedList = editor.isActive('orderedList');
 		isBlockquote = editor.isActive('blockquote');
 		isInTable = editor.isActive('table');
+		activeFontFamily = (editor.getAttributes('textStyle').fontFamily as string) ?? '';
 		headingLevel = editor.isActive('heading', { level: 1 }) ? 1
 			: editor.isActive('heading', { level: 2 }) ? 2
 			: editor.isActive('heading', { level: 3 }) ? 3 : null;
@@ -76,6 +88,12 @@
 		if (!focusedEditor) return;
 		if (val === 'p') focusedEditor.chain().focus().setParagraph().run();
 		else focusedEditor.chain().focus().toggleHeading({ level: Number(val) as 1 | 2 | 3 }).run();
+	}
+
+	function setFontFamily(val: string) {
+		if (!focusedEditor) return;
+		if (!val) focusedEditor.chain().focus().unsetFontFamily().run();
+		else focusedEditor.chain().focus().setFontFamily(val).run();
 	}
 
 	function zoomIn() { const i = ZOOM_LEVELS.indexOf(zoomLevel); if (i < ZOOM_LEVELS.length - 1) zoomLevel = ZOOM_LEVELS[i + 1]; }
@@ -130,6 +148,9 @@
 	</div>
 	<span class="toolbar-divider"></span>
 
+	<select on:change={(e) => setFontFamily((e.target as HTMLSelectElement).value)} value={activeFontFamily} class="toolbar-select" title="Lettertype" aria-label="Lettertype" disabled={!focusedEditor}>
+		{#each FONT_FAMILIES as font}<option value={font.value}>{font.label}</option>{/each}
+	</select>
 	<select bind:value={fontSize} class="toolbar-select" title="Lettergrootte" aria-label="Lettergrootte">
 		{#each FONT_SIZES as size}<option value={size.value}>{size.label}</option>{/each}
 	</select>

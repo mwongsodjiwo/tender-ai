@@ -1,5 +1,6 @@
 import type {
 	MilestoneType,
+	MilestoneSource,
 	ProjectPhase,
 	ActivityStatus,
 	DependencyType,
@@ -22,6 +23,7 @@ export interface Milestone {
 	is_critical: boolean;
 	status: ActivityStatus;
 	sort_order: number;
+	source: MilestoneSource;
 	metadata: Record<string, unknown>;
 	created_by: string | null;
 	created_at: string;

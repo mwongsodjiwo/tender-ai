@@ -7,24 +7,20 @@ export const load: LayoutServerLoad = async ({ params, locals, parent }) => {
 	const { supabase } = locals;
 	const parentData = await parent();
 
-	const { data: project, error: projectError } = await supabase
-		.from('projects')
-		.select('*')
-		.eq('id', params.id)
-		.is('deleted_at', null)
-		.single();
+	// Load project + members in parallel
+	const [{ data: project, error: projectError }, { data: members }] = await Promise.all([
+		supabase.from('projects').select('*').eq('id', params.id).is('deleted_at', null).single(),
+		supabase
+			.from('project_members')
+			.select('*, profile:profiles(first_name, last_name, email, phone, job_title), roles:project_member_roles(role)')
+			.eq('project_id', params.id)
+	]);
 
 	if (projectError || !project) {
 		throw error(404, 'Project niet gevonden');
 	}
 
-	// Load project members with roles
-	const { data: members } = await supabase
-		.from('project_members')
-		.select('*, profile:profiles(first_name, last_name, email), roles:project_member_roles(role)')
-		.eq('project_id', params.id);
-
-	// Load organization members for add-member dropdown
+	// Load organization members (depends on project.organization_id)
 	const { data: organizationMembers } = await supabase
 		.from('organization_members')
 		.select('profile_id, profile:profiles(first_name, last_name, email)')

@@ -6,7 +6,7 @@ Jij bent de AI- en integratie-agent. Je bouwt alles wat met LLM, externe API's, 
 
 1. Lees `CLAUDE.md` in de root — projectinstructies
 2. Lees `AGENTS.MD` in de root — alle agents, uitvoeringsvolgorde, 25 regels
-3. Lees `tender2-plan.md` — volledige v2 specificatie (sectie 7, 11, 13.3)
+3. Lees `docs/team-en-projectprofiel-refactor.md` — implementatieplan fasen 27-38 (indien relevant)
 4. Lees `contracts/structure.md` — mappenstructuur en eigenaarschap
 5. Lees `contracts/api.md` — beschikbare endpoints
 

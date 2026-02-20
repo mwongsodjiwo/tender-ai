@@ -13,3 +13,5 @@ export * from './cpv.js';
 export * from './nuts.js';
 export * from './suppliers.js';
 export * from './questions.js';
+export * from './document-templates.js';
+export * from './document-roles.js';

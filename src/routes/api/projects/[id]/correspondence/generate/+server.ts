@@ -8,6 +8,7 @@ import { logAudit } from '$server/db/audit';
 import type { ProjectPhase } from '$types';
 import { logError } from '$server/logger';
 import { apiError, apiSuccess } from '$server/api/response';
+import { markdownToTiptapHtml } from '$utils/markdown-to-tiptap';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const { supabase, user } = locals;
@@ -121,10 +122,13 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		changes: { letter_type: parsed.data.letter_type, token_count: result.tokenCount }
 	});
 
+	// Convert markdown body to TipTap HTML
+	const htmlBody = await markdownToTiptapHtml(result.body);
+
 	// Return generated content — caller is responsible for saving
 	return apiSuccess({
 		subject: result.subject,
-		body: result.body,
+		body: htmlBody,
 		recipient: parsed.data.recipient || evaluationData?.tendererName || ''
 	});
 };

@@ -123,6 +123,24 @@ export const SUPPLIER_PROJECT_ROLE_LABELS: Record<SupplierProjectRole, string> =
 // QUESTION STATUS ENUMS — Fase 10 (Binnenkomende Vragen)
 // =============================================================================
 
+// =============================================================================
+// DOCUMENT ROLE KEYS — Fase 19 (Document rollen)
+// =============================================================================
+
+export const DOCUMENT_ROLE_KEYS = [
+	'contactpersoon', 'inkoper', 'projectleider',
+	'budgethouder', 'juridisch_adviseur'
+] as const;
+export type DocumentRoleKey = (typeof DOCUMENT_ROLE_KEYS)[number];
+
+export const DOCUMENT_ROLE_LABELS: Record<DocumentRoleKey, string> = {
+	contactpersoon: 'Contactpersoon',
+	inkoper: 'Inkoper',
+	projectleider: 'Projectleider',
+	budgethouder: 'Budgethouder',
+	juridisch_adviseur: 'Juridisch adviseur'
+};
+
 export const QUESTION_STATUSES = [
 	'received', 'in_review', 'answered', 'approved', 'published'
 ] as const;

@@ -1,6 +1,6 @@
 // KVK API client — server-side proxy to KVK Zoeken & Basisprofiel API
 
-import { kvk_api_key } from '$env/static/private';
+import { KVK_API_KEY } from '$env/static/private';
 import type {
 	KvkSearchParams,
 	KvkSearchResult,
@@ -32,7 +32,7 @@ function buildSearchUrl(params: KvkSearchParams): string {
 
 function getHeaders(): Record<string, string> {
 	return {
-		apikey: kvk_api_key,
+		apikey: KVK_API_KEY,
 		Accept: 'application/json'
 	};
 }

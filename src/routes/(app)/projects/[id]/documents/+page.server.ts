@@ -11,30 +11,35 @@ export const load: PageServerLoad = async ({ params, locals, url, parent }) => {
 	// Determine active tab from URL query parameter
 	const activeTab = url.searchParams.get('tab') ?? 'documents';
 
-	// Load all active document types
-	const { data: documentTypes, error: dtError } = await supabase
-		.from('document_types')
-		.select('id, name, slug, description, sort_order')
-		.eq('is_active', true)
-		.order('sort_order');
+	// Load all queries in parallel
+	const [
+		{ data: documentTypes, error: dtError },
+		{ data: artifacts, error: artifactError },
+		{ data: emviCriteria },
+		{ data: uploadedDocuments },
+		{ data: lettersData },
+		{ data: evaluationsData }
+	] = await Promise.all([
+		supabase.from('document_types').select('id, name, slug, description, sort_order').eq('is_active', true).order('sort_order'),
+		supabase
+			.from('artifacts')
+			.select('id, title, status, sort_order, document_type:document_types(id, name, slug)')
+			.eq('project_id', params.id)
+			.order('sort_order'),
+		supabase.from('emvi_criteria').select('id').eq('project_id', params.id).is('deleted_at', null),
+		supabase.from('documents').select('*').eq('project_id', params.id).is('deleted_at', null).order('created_at', { ascending: false }),
+		supabase.from('correspondence').select('*').eq('project_id', params.id).is('deleted_at', null).order('created_at', { ascending: false }),
+		supabase.from('evaluations').select('*').eq('project_id', params.id).is('deleted_at', null).order('ranking', { ascending: true })
+	]);
 
 	if (dtError) {
 		throw error(500, 'Kon documenttypes niet laden');
 	}
-
-	const allDocTypes = documentTypes ?? [];
-
-	// Load all artifacts for this project
-	const { data: artifacts, error: artifactError } = await supabase
-		.from('artifacts')
-		.select('*, document_type:document_types(id, name, slug)')
-		.eq('project_id', params.id)
-		.order('sort_order');
-
 	if (artifactError) {
 		throw error(500, 'Kon documenten niet laden');
 	}
 
+	const allDocTypes = documentTypes ?? [];
 	const allArtifacts = artifacts ?? [];
 
 	// Group artifacts by document type id
@@ -67,41 +72,8 @@ export const load: PageServerLoad = async ({ params, locals, url, parent }) => {
 		};
 	});
 
-	// Load EMVI criteria count
-	const { data: emviCriteria } = await supabase
-		.from('emvi_criteria')
-		.select('id')
-		.eq('project_id', params.id)
-		.is('deleted_at', null);
-
 	const emviCount = emviCriteria?.length ?? 0;
-
-	// Load uploaded documents
-	const { data: uploadedDocuments } = await supabase
-		.from('documents')
-		.select('*')
-		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.order('created_at', { ascending: false });
-
-	// Load correspondence for this project
-	const { data: lettersData } = await supabase
-		.from('correspondence')
-		.select('*')
-		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.order('created_at', { ascending: false });
-
 	const letters: Correspondence[] = (lettersData ?? []) as Correspondence[];
-
-	// Load evaluations (for context with rejection letters)
-	const { data: evaluationsData } = await supabase
-		.from('evaluations')
-		.select('*')
-		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.order('ranking', { ascending: true });
-
 	const evaluations: Evaluation[] = (evaluationsData ?? []) as Evaluation[];
 
 	return {

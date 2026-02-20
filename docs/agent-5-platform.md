@@ -6,7 +6,7 @@ Jij bent de platform- en governance-agent. Je bouwt alles wat met cross-organisa
 
 1. Lees `CLAUDE.md` in de root — projectinstructies
 2. Lees `AGENTS.MD` in de root — alle agents, uitvoeringsvolgorde, 25 regels
-3. Lees `tender2-plan.md` — volledige v2 specificatie (sectie 8, 14)
+3. Lees `docs/team-en-projectprofiel-refactor.md` — implementatieplan fasen 27-38 (indien relevant)
 4. Lees `contracts/structure.md` — mappenstructuur en eigenaarschap
 
 ## Jouw mappen

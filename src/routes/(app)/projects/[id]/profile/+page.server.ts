@@ -1,14 +1,14 @@
 // Project profile page — load profile data, documents, org NUTS codes, and org settings
 
 import type { PageServerLoad } from './$types';
-import type { ProjectProfile, Document, Organization, OrganizationSettings, ProjectDocumentRole } from '$types';
+import type { ProjectProfile, Document, Organization, OrganizationSettings, Milestone } from '$types';
 
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { supabase } = locals;
 	const parentData = await parent();
 	const organizationId = parentData.project.organization_id;
 
-	const [profileResult, documentsResult, orgResult, settingsResult, rolesResult] = await Promise.all([
+	const [profileResult, documentsResult, orgResult, settingsResult, milestonesResult] = await Promise.all([
 		supabase
 			.from('project_profiles')
 			.select('*')
@@ -32,10 +32,12 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.eq('organization_id', organizationId)
 			.maybeSingle(),
 		supabase
-			.from('project_document_roles')
+			.from('milestones')
 			.select('*')
 			.eq('project_id', params.id)
-			.order('role_key')
+			.is('deleted_at', null)
+			.in('milestone_type', ['publication', 'submission_deadline', 'award_decision'])
+			.order('target_date')
 	]);
 
 	return {
@@ -45,6 +47,6 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		organizationNutsCodes: (orgResult.data?.nuts_codes as string[] | null) ?? [],
 		authorityType: (orgResult.data?.aanbestedende_dienst_type as string | null) ?? 'decentraal',
 		orgThresholds: (settingsResult.data as Pick<OrganizationSettings, 'threshold_works' | 'threshold_services_central' | 'threshold_services_decentral' | 'threshold_social_services'> | null) ?? null,
-		documentRoles: (rolesResult.data as ProjectDocumentRole[] | null) ?? []
+		milestones: (milestonesResult.data as Milestone[] | null) ?? []
 	};
 };

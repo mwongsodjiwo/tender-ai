@@ -25,9 +25,9 @@ interface DashboardData {
 
 async function loadBaseData(supabase: SupabaseClient): Promise<DashboardData> {
 	const [projectsRes, artifactsRes, activitiesRes] = await Promise.all([
-		supabase.from('projects').select('id, name, status, current_phase, deadline_date, created_at, updated_at').is('deleted_at', null).order('updated_at', { ascending: false }),
-		supabase.from('artifacts').select('id, status, project_id, updated_at'),
-		supabase.from('phase_activities').select('id, project_id, status').is('deleted_at', null)
+		supabase.from('projects').select('id, name, status, current_phase, deadline_date, created_at, updated_at').is('deleted_at', null).order('updated_at', { ascending: false }).limit(200),
+		supabase.from('artifacts').select('id, status, project_id, updated_at').limit(500),
+		supabase.from('phase_activities').select('id, project_id, status').is('deleted_at', null).limit(500)
 	]);
 	return {
 		projects: projectsRes.data ?? [],
@@ -51,30 +51,47 @@ function calculateProjectProgress(
 }
 
 function calculateMetrics(data: DashboardData): DashboardMetrics {
-	const activeProjects = data.projects.filter(p => ACTIVE_STATUSES.includes(p.status));
 	const oneWeekAgo = new Date();
 	oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+	// Single-pass: tel artifact statussen en review trend in één loop
+	const statusCounts: Record<string, number> = {};
+	let recentReviewCount = 0;
+	for (const a of data.artifacts) {
+		statusCounts[a.status] = (statusCounts[a.status] ?? 0) + 1;
+		if (a.status === 'review' && new Date(a.updated_at) >= oneWeekAgo) {
+			recentReviewCount++;
+		}
+	}
+
+	// Single-pass: tel project statussen
+	const activeProjects: typeof data.projects = [];
+	let completedCount = 0;
+	for (const p of data.projects) {
+		if (ACTIVE_STATUSES.includes(p.status)) activeProjects.push(p);
+		if (COMPLETED_STATUSES.includes(p.status)) completedCount++;
+	}
 
 	const progressValues = activeProjects.map(p =>
 		calculateProjectProgress(p.id, data.artifacts, data.activities)
 	);
 	const averageProgress = progressValues.length > 0
-		? Math.round(progressValues.reduce((sum, p) => sum + p, 0) / progressValues.length)
+		? Math.round(progressValues.reduce((sum, v) => sum + v, 0) / progressValues.length)
 		: 0;
 
 	return {
 		total_projects: data.projects.length,
 		active_projects: activeProjects.length,
-		completed_projects: data.projects.filter(p => COMPLETED_STATUSES.includes(p.status)).length,
-		in_review_count: data.artifacts.filter(a => a.status === 'review').length,
-		in_review_trend: data.artifacts.filter(a => a.status === 'review' && new Date(a.updated_at) >= oneWeekAgo).length,
+		completed_projects: completedCount,
+		in_review_count: statusCounts['review'] ?? 0,
+		in_review_trend: recentReviewCount,
 		average_progress: averageProgress,
 		sections_by_status: {
-			draft: data.artifacts.filter(a => a.status === 'draft').length,
-			generated: data.artifacts.filter(a => a.status === 'generated').length,
-			review: data.artifacts.filter(a => a.status === 'review').length,
-			approved: data.artifacts.filter(a => a.status === 'approved').length,
-			rejected: data.artifacts.filter(a => a.status === 'rejected').length
+			draft: statusCounts['draft'] ?? 0,
+			generated: statusCounts['generated'] ?? 0,
+			review: statusCounts['review'] ?? 0,
+			approved: statusCounts['approved'] ?? 0,
+			rejected: statusCounts['rejected'] ?? 0
 		},
 		total_sections: data.artifacts.length
 	};
@@ -179,11 +196,15 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 	const { hasOrganization } = await parent();
 	const { supabase } = locals;
 
-	const data = await loadBaseData(supabase);
+	// Parallelliseer onafhankelijke data loads
+	const [data, { items: combinedDeadlines, hasError: deadlineError }] = await Promise.all([
+		loadBaseData(supabase),
+		loadCombinedDeadlines(supabase)
+	]);
+
 	const metrics = calculateMetrics(data);
 	const recentProjects = buildRecentProjects(data);
 	const upcomingDeadlines = buildProjectDeadlines(data.projects);
-	const { items: combinedDeadlines, hasError: deadlineError } = await loadCombinedDeadlines(supabase);
 	const monthlyData = buildMonthlyData(data.projects);
 
 	return {

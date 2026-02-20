@@ -64,10 +64,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div>
-		<h1 class="text-2xl font-bold text-gray-900">Documenten</h1>
-		<p class="mt-1 text-sm text-gray-500">Alle producten, documenten en correspondentie voor {project.name}</p>
-	</div>
+	<h1 class="text-2xl font-bold text-gray-900">Documenten</h1>
 
 	<!-- Tabs -->
 	<div class="border-b border-gray-200">

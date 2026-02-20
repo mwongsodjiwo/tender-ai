@@ -1,42 +1,28 @@
-// Correspondentie overzichtspagina — load correspondence list and evaluations
+// Correspondence overview — loads project and letters
+// Fase 17 redirect removed: correspondence page functions independently
 
 import type { PageServerLoad } from './$types';
-import type { Correspondence, Evaluation } from '$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { supabase } = locals;
 
-	// Load all correspondence for this project
-	const { data: lettersData } = await supabase
-		.from('correspondence')
-		.select('*')
-		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.order('created_at', { ascending: false });
-
-	const letters: Correspondence[] = (lettersData ?? []) as Correspondence[];
-
-	// Load evaluations (for context with rejection letters)
-	const { data: evaluationsData } = await supabase
-		.from('evaluations')
-		.select('*')
-		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.order('ranking', { ascending: true });
-
-	const evaluations: Evaluation[] = (evaluationsData ?? []) as Evaluation[];
-
-	// Load project profile for phase context
-	const { data: profileData } = await supabase
-		.from('project_profiles')
-		.select('*')
-		.eq('project_id', params.id)
-		.is('deleted_at', null)
-		.maybeSingle();
+	const [projectResult, lettersResult] = await Promise.all([
+		supabase
+			.from('projects')
+			.select('id, name, status, organization_id')
+			.eq('id', params.id)
+			.single(),
+		supabase
+			.from('correspondence')
+			.select('*')
+			.eq('project_id', params.id)
+			.is('deleted_at', null)
+			.order('created_at', { ascending: false })
+	]);
 
 	return {
-		letters,
-		evaluations,
-		projectProfile: profileData
+		project: projectResult.data ?? { id: params.id, name: '', status: 'draft', organization_id: '' },
+		letters: lettersResult.data ?? [],
+		evaluations: []
 	};
 };

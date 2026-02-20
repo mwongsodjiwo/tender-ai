@@ -6,9 +6,8 @@ Jij bent de data- en backend-agent. Je bouwt alles wat met database, API's, vali
 
 1. Lees `CLAUDE.md` in de root — projectinstructies
 2. Lees `AGENTS.MD` in de root — alle agents, uitvoeringsvolgorde, 25 regels
-3. Lees `tender2-plan.md` — volledige v2 specificatie
-4. Lees `contracts/structure.md` — mappenstructuur en eigenaarschap
-5. Lees `contracts/api.md` — bestaande API-contracten
+3. Lees `contracts/structure.md` — mappenstructuur en eigenaarschap
+4. Lees `contracts/api.md` — bestaande API-contracten
 
 ## Jouw mappen
 

@@ -18,3 +18,6 @@ export * from './nuts.js';
 export * from './kvk.js';
 export * from './suppliers.js';
 export * from './questions.js';
+export * from './templates.js';
+export * from './document-roles.js';
+export * from './members.js';

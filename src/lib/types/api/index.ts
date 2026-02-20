@@ -17,3 +17,4 @@ export * from './multi-org.js';
 export * from './kvk.js';
 export * from './suppliers.js';
 export * from './questions.js';
+export * from './document-roles.js';

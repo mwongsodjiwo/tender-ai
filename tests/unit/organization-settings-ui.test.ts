@@ -237,30 +237,18 @@ describe('SettingsRetentionTab component', () => {
 		expect(existsSync(filePath)).toBe(true);
 	});
 
-	it('has retention profile selector', () => {
+	it('imports RetentionProfileSelector component', () => {
 		const source = readFileSync(filePath, 'utf-8');
-		expect(source).toContain('Selectielijst profiel');
+		expect(source).toContain('RetentionProfileSelector');
 		expect(source).toContain('retentionProfiles');
 		expect(source).toContain('retentionProfile');
 	});
 
-	it('has archive years fields', () => {
+	it('passes retention values to RetentionProfileSelector', () => {
 		const source = readFileSync(filePath, 'utf-8');
-		expect(source).toContain('Bewaartermijn gegund');
-		expect(source).toContain('Bewaartermijn niet-gegund');
 		expect(source).toContain('archiveYearsGranted');
 		expect(source).toContain('archiveYearsNotGranted');
-	});
-
-	it('has personal data years field', () => {
-		const source = readFileSync(filePath, 'utf-8');
-		expect(source).toContain('Persoonsgegevens');
 		expect(source).toContain('personalDataYears');
-	});
-
-	it('has operational data years field', () => {
-		const source = readFileSync(filePath, 'utf-8');
-		expect(source).toContain('Operationele data');
 		expect(source).toContain('operationalYears');
 	});
 
@@ -282,9 +270,8 @@ describe('SettingsRetentionTab component', () => {
 		expect(source).toContain('notifyExpired');
 	});
 
-	it('applies profile values on selection change', () => {
+	it('has handleProfileChange callback', () => {
 		const source = readFileSync(filePath, 'utf-8');
-		expect(source).toContain('applyProfile');
 		expect(source).toContain('handleProfileChange');
 	});
 
@@ -296,6 +283,82 @@ describe('SettingsRetentionTab component', () => {
 	it('has save button', () => {
 		const source = readFileSync(filePath, 'utf-8');
 		expect(source).toContain('Opslaan');
+	});
+
+	it('is under 200 lines', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source.split('\n').length).toBeLessThanOrEqual(200);
+	});
+});
+
+// =============================================================================
+// RETENTION PROFILE SELECTOR COMPONENT (Fase 21)
+// =============================================================================
+
+describe('RetentionProfileSelector component', () => {
+	const filePath = path.resolve('src/lib/components/RetentionProfileSelector.svelte');
+
+	it('exists', () => {
+		expect(existsSync(filePath)).toBe(true);
+	});
+
+	it('has profile dropdown with label', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('Selectielijst profiel');
+		expect(source).toContain('retention-profile');
+	});
+
+	it('has archive years fields', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('Bewaartermijn gegund');
+		expect(source).toContain('Bewaartermijn niet-gegund');
+	});
+
+	it('has personal data years field', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('Persoonsgegevens');
+	});
+
+	it('has operational data years field', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('Operationele data');
+	});
+
+	it('shows profile description', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('profile-description');
+		expect(source).toContain('selectedProfile.description');
+	});
+
+	it('shows profile source', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('Bron:');
+		expect(source).toContain('selectedProfile.source');
+	});
+
+	it('auto-fills values on profile change', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('handleProfileChange');
+		expect(source).toContain('archive_years_granted');
+		expect(source).toContain('archive_years_not_granted');
+	});
+
+	it('emits change callback', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('emitChange');
+		expect(source).toContain('onChange');
+	});
+
+	it('has accessibility attributes', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('aria-describedby');
+		expect(source).toContain('role="note"');
+	});
+
+	it('imports RetentionProfileValues from governance', () => {
+		const source = readFileSync(filePath, 'utf-8');
+		expect(source).toContain('RetentionProfileValues');
+		expect(source).toContain('$utils/governance');
 	});
 
 	it('is under 200 lines', () => {

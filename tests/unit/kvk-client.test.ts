@@ -2,10 +2,9 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the SvelteKit private env module
+// Mock the SvelteKit private env module (must match exact export names from kvk.ts)
 vi.mock('$env/static/private', () => ({
-	KVK_API_KEY: 'test-kvk-api-key',
-	KVK_API_BASE_URL: 'https://api.kvk.nl/test/api/v2'
+	KVK_API_KEY: 'test-kvk-api-key'
 }));
 
 // Mock global fetch
@@ -155,7 +154,7 @@ describe('getKvkProfile', () => {
 		await getKvkProfile('12345678');
 
 		const calledUrl = mockFetch.mock.calls[0][0] as string;
-		expect(calledUrl).toContain('/basisprofiel/12345678');
+		expect(calledUrl).toContain('/basisprofielen/12345678');
 	});
 
 	it('throws KvkApiError on 404', async () => {

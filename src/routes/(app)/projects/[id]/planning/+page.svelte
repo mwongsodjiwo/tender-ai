@@ -8,7 +8,6 @@
 		MILESTONE_TYPE_LABELS,
 		ACTIVITY_STATUS_LABELS
 	} from '$types';
-	import MetricCard from '$lib/components/MetricCard.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import DeadlineList from '$lib/components/planning/DeadlineList.svelte';
 	import DeadlineCalendar from '$lib/components/planning/DeadlineCalendar.svelte';
@@ -387,15 +386,10 @@
 	<title>Planning — {project.name} — Tendermanager</title>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+<div class="space-y-6">
 	<!-- Header -->
-	<div class="mt-4 flex items-center justify-between">
-		<div>
-			<h1 class="text-2xl font-bold text-gray-900">Planning</h1>
-			<p class="mt-1 text-sm text-gray-500">
-				Beheer deadlines, milestones en planningsdoelen voor dit project.
-			</p>
-		</div>
+	<div class="flex items-center justify-between">
+		<h1 class="text-2xl font-bold text-gray-900">Planning</h1>
 		<div class="flex items-center gap-3">
 			<!-- Export dropdown -->
 			<div class="export-menu-wrapper relative">
@@ -435,38 +429,9 @@
 		</div>
 	</div>
 
-	<!-- Metrics -->
-	<div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
-		<MetricCard
-			label="Voortgang"
-			value="{metrics.progressPercentage}%"
-			trend="{metrics.completedActivities}/{metrics.totalActivities} activiteiten"
-		/>
-		<MetricCard
-			label="Milestones"
-			value="{metrics.completedMilestones}/{metrics.totalMilestones}"
-			trend="afgerond"
-		/>
-		<MetricCard
-			label="Deadlines"
-			value="{deadlineItems.length}"
-			trend="openstaand"
-		/>
-		<MetricCard
-			label="Verlopen"
-			value="{metrics.overdueCount}"
-			trend={metrics.overdueCount > 0 ? 'actie vereist' : 'alles op schema'}
-			trendDirection={metrics.overdueCount > 0 ? 'down' : 'neutral'}
-		/>
-		<MetricCard
-			label="Deze week"
-			value="{metrics.thisWeekCount}"
-			trend="komende 7 dagen"
-		/>
-	</div>
 
 	<!-- Tabs -->
-	<div class="mt-8 border-b border-gray-200">
+	<div class="border-b border-gray-200">
 		<nav class="-mb-px flex space-x-6" aria-label="Planning tabs">
 			<div role="tablist" class="flex space-x-6">
 			{#each TABS as tab (tab.id)}
@@ -495,7 +460,7 @@
 	</div>
 
 	<!-- Tab content -->
-	<div class="mt-6">
+	<div>
 		{#if activeTab === 'documents'}
 			<!-- Documents table -->
 			{#if planningDocuments.length === 0}

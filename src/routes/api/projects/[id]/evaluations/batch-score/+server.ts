@@ -65,23 +65,25 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		};
 	}
 
-	// Update each evaluation with merged scores
-	const updated: unknown[] = [];
-	for (const [evalId, mergedScores] of scoresByEval.entries()) {
-		const { data: evaluation, error: dbError } = await supabase
-			.from('evaluations')
-			.update({ scores: mergedScores })
-			.eq('id', evalId)
-			.eq('project_id', params.id)
-			.select()
-			.single();
+	// Update evaluations in parallel (was: sequential N+1 loop)
+	const updatePromises = Array.from(scoresByEval.entries()).map(
+		([evalId, mergedScores]) =>
+			supabase
+				.from('evaluations')
+				.update({ scores: mergedScores })
+				.eq('id', evalId)
+				.eq('project_id', params.id)
+				.select()
+				.single()
+	);
+	const results = await Promise.all(updatePromises);
 
-		if (dbError) {
-			return apiError(500, 'DB_ERROR', dbError.message);
-		}
-
-		updated.push(evaluation);
+	const firstError = results.find(r => r.error);
+	if (firstError?.error) {
+		return apiError(500, 'DB_ERROR', firstError.error.message);
 	}
+
+	const updated = results.map(r => r.data);
 
 	await logAudit(supabase, {
 		organizationId: project.organization_id,

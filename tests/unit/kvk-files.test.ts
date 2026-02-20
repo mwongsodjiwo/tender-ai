@@ -68,8 +68,8 @@ describe('KVK client file', () => {
 		expect(source).toContain('/zoeken');
 	});
 
-	it('uses /basisprofiel/ endpoint', () => {
-		expect(source).toContain('/basisprofiel/');
+	it('uses /basisprofielen/ endpoint', () => {
+		expect(source).toContain('/basisprofielen/');
 	});
 });
 

@@ -1,30 +1,54 @@
-// GET /api/organizations/:id/members — List members
+// GET /api/organizations/:id/members — List members (search, filter, pagination)
 // POST /api/organizations/:id/members — Invite a member
 
 import type { RequestHandler } from './$types';
-import { inviteMemberSchema } from '$server/api/validation';
+import { inviteMemberSchema, memberSearchSchema } from '$server/api/validation';
 import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
 import { apiError, apiSuccess } from '$server/api/response';
 
-export const GET: RequestHandler = async ({ params, locals }) => {
+export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { supabase, user } = locals;
 
 	if (!user) {
 		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
 	}
 
-	const { data, error: dbError } = await supabase
+	const parsed = memberSearchSchema.safeParse(
+		Object.fromEntries(url.searchParams)
+	);
+
+	if (!parsed.success) {
+		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
+	}
+
+	const { search, status, limit, offset } = parsed.data;
+
+	let query = supabase
 		.from('organization_members')
-		.select('*, profile:profiles(*)')
-		.eq('organization_id', params.id)
-		.order('created_at');
+		.select('*, profile:profiles(*)', { count: 'exact' })
+		.eq('organization_id', params.id);
+
+	if (status !== 'all') {
+		query = query.eq('status', status);
+	}
+
+	if (search) {
+		query = query.or(
+			`profile.first_name.ilike.%${search}%,profile.last_name.ilike.%${search}%,profile.email.ilike.%${search}%`,
+			{ foreignTable: 'profiles' }
+		);
+	}
+
+	const { data, count, error: dbError } = await query
+		.order('created_at')
+		.range(offset, offset + limit - 1);
 
 	if (dbError) {
 		return apiError(500, 'DB_ERROR', dbError.message);
 	}
 
-	return apiSuccess(data);
+	return apiSuccess({ items: data, total: count ?? 0 });
 };
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -42,7 +66,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	const { email, role } = parsed.data;
 
-	// Find profile by email
 	const { data: profile, error: profileError } = await supabase
 		.from('profiles')
 		.select('id')
@@ -65,19 +88,15 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	if (memberError) {
 		if (memberError.code === '23505') {
-			return apiError(409, 'DUPLICATE', 'Gebruiker is al lid van deze organisatie');
+			return apiError(409, 'DUPLICATE', 'Gebruiker is al lid');
 		}
 		return apiError(500, 'DB_ERROR', memberError.message);
 	}
 
-	if (!user) {
-		return apiError(401, 'UNAUTHORIZED', 'Niet ingelogd');
-	}
-
 	await logAudit(supabase, {
 		organizationId: params.id,
-		actorId: user.id,
-		actorEmail: user.email ?? undefined,
+		actorId: user!.id,
+		actorEmail: user!.email ?? undefined,
 		action: 'invite',
 		entityType: 'organization_member',
 		entityId: member.id,

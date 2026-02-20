@@ -3,6 +3,14 @@
 export const ORGANIZATION_ROLES = ['owner', 'admin', 'member', 'external_advisor', 'auditor'] as const;
 export type OrganizationRole = (typeof ORGANIZATION_ROLES)[number];
 
+export const MEMBER_STATUSES = ['active', 'inactive'] as const;
+export type MemberStatus = (typeof MEMBER_STATUSES)[number];
+
+export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
+	active: 'Actief',
+	inactive: 'Inactief'
+};
+
 // Multi-org enums re-exported from dedicated file
 export * from './enums-multi-org.js';
 
@@ -67,6 +75,15 @@ export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
 
 export const ARTIFACT_STATUSES = ['draft', 'generated', 'review', 'approved', 'rejected'] as const;
 export type ArtifactStatus = (typeof ARTIFACT_STATUSES)[number];
+
+export const DOCUMENT_EDIT_STATUSES = ['concept', 'in_review', 'approved'] as const;
+export type DocumentEditStatus = (typeof DOCUMENT_EDIT_STATUSES)[number];
+
+export const DOCUMENT_EDIT_STATUS_LABELS: Record<DocumentEditStatus, string> = {
+	concept: 'Concept',
+	in_review: 'In review',
+	approved: 'Goedgekeurd'
+};
 
 export const MESSAGE_ROLES = ['user', 'assistant', 'system'] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
@@ -353,6 +370,9 @@ export const MILESTONE_TYPE_LABELS: Record<MilestoneType, string> = {
 	custom: 'Aangepast'
 };
 
+export const MILESTONE_SOURCES = ['manual', 'calculated'] as const;
+export type MilestoneSource = (typeof MILESTONE_SOURCES)[number];
+
 // =============================================================================
 // DEPENDENCIES — Planning Sprint 1
 // =============================================================================
@@ -406,6 +426,71 @@ export const NOTIFICATION_TYPE_DESCRIPTIONS: Record<NotificationType, string> = 
 	overload_warning: 'Waarschuwing bij overbezetting teamlid',
 	weekly_summary: 'Wekelijks overzicht van alle projecten'
 };
+
+// =============================================================================
+// LETTER TYPES — Fase 17 (Correspondentie als Document Types)
+// =============================================================================
+
+export const LETTER_TYPES = [
+	'invitation_rfi',
+	'invitation_consultation',
+	'thank_you',
+	'nvi',
+	'pv_opening',
+	'pv_evaluation',
+	'provisional_award',
+	'rejection',
+	'final_award',
+	'invitation_signing',
+	'cover_letter'
+] as const;
+export type LetterType = (typeof LETTER_TYPES)[number];
+
+export const LETTER_TYPE_LABELS: Record<LetterType, string> = {
+	invitation_rfi: 'Uitnodiging RFI',
+	invitation_consultation: 'Uitnodiging marktconsultatie',
+	thank_you: 'Bedankbrief deelname',
+	nvi: 'Nota van Inlichtingen',
+	pv_opening: 'PV opening inschrijvingen',
+	pv_evaluation: 'PV beoordeling',
+	provisional_award: 'Voorlopige gunningsbeslissing',
+	rejection: 'Afwijzingsbrief',
+	final_award: 'Definitieve gunning',
+	invitation_signing: 'Uitnodiging tot ondertekening',
+	cover_letter: 'Begeleidende brief'
+};
+
+export const LETTER_TYPE_SLUGS: Record<LetterType, string> = {
+	invitation_rfi: 'correspondence-invitation-rfi',
+	invitation_consultation: 'correspondence-invitation-consultation',
+	thank_you: 'correspondence-thank-you',
+	nvi: 'correspondence-nvi',
+	pv_opening: 'correspondence-pv-opening',
+	pv_evaluation: 'correspondence-pv-evaluation',
+	provisional_award: 'correspondence-provisional-award',
+	rejection: 'correspondence-rejection',
+	final_award: 'correspondence-final-award',
+	invitation_signing: 'correspondence-invitation-signing',
+	cover_letter: 'correspondence-cover-letter'
+};
+
+export const LETTER_TYPE_PHASES: Record<LetterType, ProjectPhase[]> = {
+	invitation_rfi: ['exploring'],
+	invitation_consultation: ['exploring'],
+	thank_you: ['exploring'],
+	nvi: ['tendering'],
+	pv_opening: ['tendering'],
+	pv_evaluation: ['tendering'],
+	provisional_award: ['tendering'],
+	rejection: ['tendering'],
+	final_award: ['tendering'],
+	invitation_signing: ['contracting'],
+	cover_letter: ['contracting']
+};
+
+// Document type categories (document vs correspondence)
+export const DOCUMENT_TYPE_CATEGORIES = ['document', 'correspondence'] as const;
+export type DocumentTypeCategory = (typeof DOCUMENT_TYPE_CATEGORIES)[number];
 
 // =============================================================================
 // AUDIT ACTIONS

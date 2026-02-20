@@ -1,8 +1,11 @@
-// PATCH /api/organizations/:id/members/:memberId — Update member role
+// PATCH /api/organizations/:id/members/:memberId — Update member (role, status, manager)
 // DELETE /api/organizations/:id/members/:memberId — Remove member
 
 import type { RequestHandler } from './$types';
-import { adminUpdateMemberRoleSchema } from '$server/api/validation';
+import {
+	adminUpdateMemberRoleSchema,
+	updateMemberSchema
+} from '$server/api/validation';
 import { requireSuperadmin } from '$server/api/guards';
 import { logAudit } from '$server/db/audit';
 import { apiError, apiSuccess } from '$server/api/response';
@@ -14,20 +17,36 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	if (guardResponse) return guardResponse;
 
 	const body = await request.json();
-	const parsed = adminUpdateMemberRoleSchema.safeParse(body);
 
-	if (!parsed.success) {
-		return apiError(400, 'VALIDATION_ERROR', parsed.error.errors[0].message);
+	// Support both role-only updates and status/manager updates
+	const memberParsed = updateMemberSchema.safeParse(body);
+	const roleParsed = adminUpdateMemberRoleSchema.safeParse(body);
+
+	const updateFields: Record<string, unknown> = {};
+
+	if (roleParsed.success && roleParsed.data.role) {
+		updateFields.role = roleParsed.data.role;
 	}
 
-	const { role } = parsed.data;
+	if (memberParsed.success) {
+		if (memberParsed.data.status !== undefined) {
+			updateFields.status = memberParsed.data.status;
+		}
+		if (memberParsed.data.manager_id !== undefined) {
+			updateFields.manager_id = memberParsed.data.manager_id;
+		}
+	}
+
+	if (Object.keys(updateFields).length === 0) {
+		return apiError(400, 'VALIDATION_ERROR', 'Geen geldige velden opgegeven');
+	}
 
 	const { data: member, error: updateError } = await supabase
 		.from('organization_members')
-		.update({ role })
+		.update(updateFields)
 		.eq('id', params.memberId)
 		.eq('organization_id', params.id)
-		.select()
+		.select('*, profile:profiles(*)')
 		.single();
 
 	if (updateError || !member) {
@@ -38,10 +57,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		organizationId: params.id,
 		actorId: user!.id,
 		actorEmail: user!.email ?? undefined,
-		action: 'admin_action',
+		action: 'update',
 		entityType: 'organization_member',
 		entityId: params.memberId,
-		changes: { role, action: 'update_role' }
+		changes: updateFields
 	});
 
 	return apiSuccess(member);

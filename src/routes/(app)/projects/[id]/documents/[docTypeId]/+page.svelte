@@ -2,7 +2,7 @@
 	import { tick } from 'svelte';
 	import type { Editor } from '@tiptap/core';
 	import TiptapEditor from '$components/TiptapEditor.svelte';
-	import StepperSidebar from '$lib/components/StepperSidebar.svelte';
+	import PageThumbnails from '$lib/components/editor/PageThumbnails.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import EditorToolbar from '$lib/components/editor/EditorToolbar.svelte';
@@ -48,9 +48,11 @@
 	}
 	$: approvedCount = artifacts.filter((a) => a.status === 'approved').length;
 	$: totalCount = artifacts.length;
-	$: steps = artifacts.map((a, i) => ({
-		label: a.title,
-		status: (a.status === 'approved' ? 'completed' : a.status === 'generated' || a.status === 'review' || (a.status === 'draft' && a.content) ? 'active' : i === currentSectionIndex ? 'active' : 'pending') as 'completed' | 'active' | 'pending'
+	$: pageSections = artifacts.map((a) => ({
+		id: a.id,
+		title: a.title,
+		status: a.status as 'draft' | 'generated' | 'review' | 'approved',
+		contentPreview: sectionContents[a.id] ?? a.content ?? ''
 	}));
 	let documentScrollContainer: HTMLElement;
 	function scrollToSection(i: number) { currentSectionIndex = i; const a = artifacts[i]; if (a && sectionElements[a.id]) sectionElements[a.id].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -159,7 +161,7 @@
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		<aside class="hidden shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 lg:block" style="width: 20%;">
 			<div class="mb-4"><div class="flex items-center justify-between text-xs text-gray-500"><span>Voortgang</span><span>{approvedCount}/{totalCount}</span></div><div class="mt-1.5"><ProgressBar value={approvedCount} max={totalCount || 1} showPercentage={false} size="sm" /></div></div>
-			<StepperSidebar {steps} currentStep={currentSectionIndex} onStepClick={(i) => scrollToSection(i)} />
+			<PageThumbnails sections={pageSections} currentIndex={currentSectionIndex} onSectionClick={(i) => scrollToSection(i)} />
 		</aside>
 
 		<div class="flex min-w-0 flex-col overflow-y-auto" role="region" aria-label="Documentinhoud" style="width: {showRightSidebar ? '60%' : '80%'};" bind:this={documentScrollContainer} on:scroll={handleScroll}>

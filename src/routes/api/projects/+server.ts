@@ -14,12 +14,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	}
 
 	const organizationId = url.searchParams.get('organization_id');
+	const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '100', 10) || 100, 200);
 
 	let query = supabase
 		.from('projects')
 		.select('*')
 		.is('deleted_at', null)
-		.order('updated_at', { ascending: false });
+		.order('updated_at', { ascending: false })
+		.limit(limit);
 
 	if (organizationId) {
 		query = query.eq('organization_id', organizationId);

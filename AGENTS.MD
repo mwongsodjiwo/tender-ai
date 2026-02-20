@@ -41,12 +41,14 @@ tendermanager/
 │   │   ├── components/
 │   │   │   ├── editor/            → Agent 3
 │   │   │   ├── suppliers/         → Agent 2
+│   │   │   ├── team/              → Agent 2
 │   │   │   └── (overige)          → Agent 2
 │   │   ├── stores/                → Agent 2
 │   │   ├── utils/
 │   │   │   ├── markdown-to-tiptap.ts → Agent 4
 │   │   │   ├── governance.ts      → Agent 5
 │   │   │   ├── procedure-advice.ts → Agent 1
+│   │   │   ├── procurement-timeline.ts → Agent 1
 │   │   │   └── (overige)          → Agent 2
 │   │   ├── types/                 → Agent 1 (maakt aan), alle agents (gebruiken)
 │   │   └── schemas/               → Agent 1 (Zod)
@@ -97,7 +99,7 @@ Instellingen, responsive design, prompt optimalisatie, deployment.
 
 ### Nieuwe fasen (v2)
 
-> Zie `tender2-plan.md` voor volledige details en Ralph Loop prompts per fase.
+> Fasen 1-26 zijn de originele v2 fasen. Fasen 27-38 staan in `docs/team-en-projectprofiel-refactor.md`.
 
 | Fase | Wat | Agent(s) | Afhankelijk van |
 |------|-----|----------|----------------|
@@ -127,12 +129,24 @@ Instellingen, responsive design, prompt optimalisatie, deployment.
 | 24 | Superadmin analytics | 5 | Fase 1-22 |
 | 25 | Dashboard | 2 | Alles |
 | 26 | Testing & validatie (end-to-end) | 6 | Alles |
+| 27 | Team: database uitbreiding (status, manager_id) | 1 | — |
+| 28 | Team: API uitbreidingen (search, filter, status) | 1 | Fase 27 |
+| 29 | Team: UI redesign (tabel, zoekbalk, tabs, drawer) | 2 | Fase 27, 28 |
+| 30 | Documentrollen koppeling aan teamleden | 1 | Fase 27 |
+| 31 | Documentrollen UI in drawer | 2 | Fase 29, 30 |
+| 32 | Projectprofiel: tab Organisatie (read-only) | 2 | — |
+| 33 | Projectprofiel: opslaan vs. bevestigen | 1, 2 | — |
+| 34 | Planning: termijnberekening logica | 1 | Fase 20 |
+| 35 | Planning: UI sleutelmomenten met cascade | 2 | Fase 34 |
+| 36 | Projectprofiel: sidebar samenvatting | 2 | Fase 34, 35 |
+| 37 | Opschonen: oude velden en tabs verwijderen | 1, 2 | Fase 29, 31, 32, 35 |
+| 38 | Tests & validatie | 6 | Alles |
 
 ---
 
 ## Regels
 
-1. **Lees altijd eerst `CLAUDE.md`, `PRODUCT.md` en `tender2-plan.md`** voordat je begint met bouwen.
+1. **Lees altijd eerst `CLAUDE.md`, `PRODUCT.md` en het relevante implementatieplan** voordat je begint met bouwen.
 2. **Werk alleen in je eigen mappen.** Zie de territoriumkaart. Als je iets nodig hebt uit andermans territorium, maak een contract aan in `contracts/`.
 3. **Types zijn het contract.** Agent 1 maakt types in `src/lib/types/`. Alle agents gebruiken exact deze types. Nooit eigen types bedenken.
 4. **API-contracten zijn bindend.** Agent 1 documenteert endpoints in `contracts/api.md` met request/response shapes. Andere agents bouwen hier tegenaan.
