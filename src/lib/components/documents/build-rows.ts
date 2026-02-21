@@ -38,13 +38,15 @@ function getProductHref(slug: string, id: string, projectId: string): string {
 }
 
 function buildDocRows(
-	blocks: ProductBlock[], projectId: string, emviCount: number, archived: boolean
+	blocks: ProductBlock[], projectId: string, emviCount: number,
+	archived: boolean, nextDeadline: string | null
 ): DocumentRow[] {
+	const date = nextDeadline ?? '';
 	const rows: DocumentRow[] = blocks.map((b) => ({
 		id: b.id, name: b.name, subtitle: b.description, type: 'document' as const,
 		progress: b.progress, status: null,
 		sections: b.total > 0 ? `${b.approved} / ${b.total}` : null,
-		date: '', href: getProductHref(b.slug, b.id, projectId),
+		date, href: getProductHref(b.slug, b.id, projectId),
 		exportable: !archived && b.total > 0, archived
 	}));
 	if (!archived) {
@@ -53,7 +55,7 @@ function buildDocRows(
 			subtitle: 'Gunningssystematiek en wegingscriteria', type: 'document',
 			progress: null, status: null,
 			sections: emviCount > 0 ? `${emviCount} criteria` : null,
-			date: '', href: `/projects/${projectId}/emvi`, exportable: false, archived: false
+			date, href: `/projects/${projectId}/emvi`, exportable: false, archived: false
 		});
 	}
 	return rows;
@@ -72,10 +74,10 @@ function buildBriefRows(
 
 export function buildRows(
 	blocks: ProductBlock[], emviCount: number, letters: Correspondence[],
-	projectId: string, archived: boolean
+	projectId: string, archived: boolean, nextDeadline?: string | null
 ): DocumentRow[] {
 	return [
-		...buildDocRows(blocks, projectId, emviCount, archived),
+		...buildDocRows(blocks, projectId, emviCount, archived, nextDeadline ?? null),
 		...buildBriefRows(letters, projectId, archived)
 	];
 }

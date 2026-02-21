@@ -29,7 +29,8 @@
 	let selectedDocument: DocumentRow | null = null;
 	let showCreateModal = false;
 
-	$: allRows = buildRows(productBlocks, emviCount, letters, project.id, false);
+	$: nextDeadline = (data.nextDeadline ?? null) as string | null;
+	$: allRows = buildRows(productBlocks, emviCount, letters, project.id, false, nextDeadline);
 	$: allArchivedRows = buildRows(archivedProductBlocks, 0, archivedLetters, project.id, true);
 	$: filteredRows = filterRows(allRows, searchQuery, typeFilter);
 	$: filteredArchivedRows = filterRows(allArchivedRows, searchQuery, typeFilter);

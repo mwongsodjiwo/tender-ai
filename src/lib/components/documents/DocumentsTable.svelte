@@ -14,7 +14,7 @@
 		{ key: 'name', label: 'Naam', className: 'w-[35%]', accessor: (r) => r.name },
 		{ key: 'type', label: 'Type', className: 'w-[12%]', accessor: (r) => r.type === 'document' ? 'Document' : 'Brief' },
 		{ key: 'progress', label: 'Voortgang', className: 'w-[20%]', visibleFrom: 'md' },
-		{ key: 'date', label: 'Datum', className: 'w-[18%]', visibleFrom: 'lg', accessor: (r) => formatDate(r.date) },
+		{ key: 'date', label: 'Datum', className: 'w-[18%]', visibleFrom: 'lg', accessor: (r) => r.date ? formatDate(r.date) : '' },
 		{ key: 'export', label: 'Exporteren', srOnly: true, className: 'w-[15%]' }
 	];
 
@@ -49,6 +49,12 @@
 			{:else}
 				<span class="text-xs text-gray-400">—</span>
 			{/if}
+		{:else if column.key === 'date'}
+			{#if row.date}
+				<span class="text-sm text-gray-600">{value}</span>
+			{:else}
+				<span class="text-xs text-gray-400">Geen deadline</span>
+			{/if}
 		{:else if column.key === 'export'}
 			{#if row.exportable && onExport}
 				<div class="flex items-center justify-end gap-1.5">
@@ -68,7 +74,7 @@
 					</button>
 				</div>
 			{:else}
-				<span></span>
+				<span class="text-xs text-gray-400">—</span>
 			{/if}
 		{:else}
 			<span class="text-sm text-gray-600">{value}</span>
