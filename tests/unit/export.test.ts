@@ -1,7 +1,8 @@
 // Unit tests: Sprint 2 document export engine
 
 import { describe, it, expect } from 'vitest';
-import { exportToDocx, exportToPdf } from '../../src/lib/server/api/export';
+import { exportToDocx } from '../../src/lib/server/api/export-docx';
+import { exportToPdf } from '../../src/lib/server/api/export-pdf';
 
 const MOCK_DOCUMENT_TYPE = {
 	id: '550e8400-e29b-41d4-a716-446655440000',
@@ -29,6 +30,10 @@ const MOCK_ARTIFACTS = [
 		parent_artifact_id: null,
 		sort_order: 0,
 		metadata: {},
+		data_classification: 'operational' as const,
+		retention_until: null,
+		anonymized_at: null,
+		archive_status: 'active' as const,
 		created_by: 'user-1',
 		created_at: '2026-01-01T00:00:00Z',
 		updated_at: '2026-01-01T00:00:00Z'
@@ -45,6 +50,10 @@ const MOCK_ARTIFACTS = [
 		parent_artifact_id: null,
 		sort_order: 1,
 		metadata: {},
+		data_classification: 'operational' as const,
+		retention_until: null,
+		anonymized_at: null,
+		archive_status: 'active' as const,
 		created_by: 'user-1',
 		created_at: '2026-01-01T00:00:00Z',
 		updated_at: '2026-01-01T00:00:00Z'

@@ -113,7 +113,7 @@
 	</select>
 	<span class="toolbar-divider"></span>
 
-	<button on:click={() => cmd('bold')} class="toolbar-btn" class:active={isBold} title="Vet (Ctrl+B)" aria-label="Vet" aria-pressed={isBold} type="button" disabled={!focusedEditor}><span class="text-sm font-bold">B</span></button>
+	<button on:click={() => cmd('bold')} class="toolbar-btn" class:active={isBold} title="Vet (Ctrl+B)" aria-label="Vet" aria-pressed={isBold} type="button" disabled={!focusedEditor}><span class="text-sm font-semibold">B</span></button>
 	<button on:click={() => cmd('italic')} class="toolbar-btn" class:active={isItalic} title="Cursief (Ctrl+I)" aria-label="Cursief" aria-pressed={isItalic} type="button" disabled={!focusedEditor}><span class="text-sm italic">I</span></button>
 	<button on:click={() => cmd('strike')} class="toolbar-btn" class:active={isStrike} title="Doorhalen" aria-label="Doorhalen" aria-pressed={isStrike} type="button" disabled={!focusedEditor}><span class="text-sm line-through">S</span></button>
 	<span class="toolbar-divider"></span>
@@ -167,7 +167,7 @@
 	<button on:click={() => dispatch('toggleComments')} class="toolbar-btn relative" class:active={isCommentsSidebarActive} class:has-comments={activeCommentsCount > 0 && !isCommentsSidebarActive} title="Opmerkingen tonen/verbergen" aria-label="Opmerkingen tonen/verbergen" type="button">
 		<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
 		{#if activeCommentsCount > 0}
-			<span class="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white">{activeCommentsCount}</span>
+			<span class="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-semibold text-white">{activeCommentsCount}</span>
 		{/if}
 	</button>
 </div>

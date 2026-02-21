@@ -64,7 +64,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	let outputBuffer: Buffer;
 	try {
-		outputBuffer = renderTemplate(templateBuffer, templateData);
+		outputBuffer = renderTemplate(templateBuffer, templateData as unknown as Record<string, unknown>);
 	} catch (err) {
 		logError('Template rendering failed', err);
 		const msg = err instanceof Error ? err.message : 'Rendering mislukt';

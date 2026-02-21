@@ -34,7 +34,7 @@
 {:else if organizations.length === 0}
 	<div class="space-y-6">
 		<div>
-			<h1 class="text-2xl font-bold text-gray-900">Kennisbank</h1>
+			<h1 class="text-2xl font-semibold text-gray-900">Kennisbank</h1>
 			<p class="mt-1 text-gray-600">
 				Beheer organisatiedocumenten en doorzoek TenderNed-data.
 			</p>
@@ -48,7 +48,7 @@
 {:else}
 <div class="space-y-6">
 	<div>
-		<h1 class="text-2xl font-bold text-gray-900">Kennisbank</h1>
+		<h1 class="text-2xl font-semibold text-gray-900">Kennisbank</h1>
 		<p class="mt-1 text-gray-600">
 			Beheer organisatiedocumenten en doorzoek TenderNed-data.
 		</p>

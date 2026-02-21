@@ -1,7 +1,7 @@
 <!-- GanttHeader — Time axis for the Gantt chart (days/weeks/months) -->
 <script lang="ts">
-	import type { TimeMarker } from './gantt-utils';
-	import { GANTT_CONSTANTS } from './gantt-utils';
+	import type { TimeMarker } from './gantt-types';
+	import { GANTT_CONSTANTS } from './gantt-types';
 
 	export let markers: TimeMarker[];
 	export let totalWidth: number;

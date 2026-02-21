@@ -1,7 +1,7 @@
 <!-- GanttDependencyLine — SVG arrow between dependent items in the Gantt chart -->
 <script lang="ts">
 	import type { DependencyType } from '$types';
-	import { calculateDependencyPath } from './gantt-utils';
+	import { calculateDependencyPath } from './gantt-layout';
 
 	export let sourceX: number;
 	export let sourceY: number;

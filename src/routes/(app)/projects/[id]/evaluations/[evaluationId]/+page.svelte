@@ -2,10 +2,8 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import type { Evaluation, EmviCriterion } from '$types/database';
-	import type { ScoringMethodology } from '$types/enums';
 	import {
-		EVALUATION_STATUS_LABELS,
-		CRITERION_TYPE_LABELS
+		EVALUATION_STATUS_LABELS
 	} from '$types';
 	import MetricCard from '$lib/components/MetricCard.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
@@ -15,8 +13,6 @@
 	$: project = data.project;
 	$: evaluation = data.evaluation as Evaluation;
 	$: criteria = (data.criteria ?? []) as EmviCriterion[];
-	$: scoringMethodology = (data.scoringMethodology ?? null) as ScoringMethodology | null;
-
 	// Editable score state per criterion
 	let scores: Record<string, number> = {};
 	let notes = '';
@@ -112,9 +108,9 @@
 				<a href="/projects/{project.id}/evaluations" class="text-sm text-gray-500 hover:text-gray-700">&larr; Beoordelingen</a>
 			</div>
 			<div class="mt-1 flex items-center gap-3">
-				<h1 class="text-2xl font-bold text-gray-900">{evaluation.tenderer_name}</h1>
+				<h1 class="text-2xl font-semibold text-gray-900">{evaluation.tenderer_name}</h1>
 				{#if evaluation.ranking}
-					<span class="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold
+					<span class="inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold
 						{evaluation.ranking === 1 ? 'bg-success-100 text-success-700' : 'bg-gray-100 text-gray-700'}">
 						#{evaluation.ranking}
 					</span>
@@ -217,7 +213,7 @@
 			{#if criteria.length > 0}
 				<div class="flex items-center justify-end gap-4 px-6 py-4 bg-gray-50">
 					<span class="text-sm font-semibold text-gray-900">Totaal gewogen score:</span>
-					<span class="text-lg font-bold text-primary-600 w-20 text-right">{localTotalRounded}</span>
+					<span class="text-lg font-semibold text-primary-600 w-20 text-right">{localTotalRounded}</span>
 				</div>
 			{:else}
 				<div class="px-6 py-8 text-center text-sm text-gray-500">

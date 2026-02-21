@@ -9,7 +9,7 @@
 
 <div class="flex min-h-screen items-center justify-center bg-gray-50 px-4">
 	<div class="text-center">
-		<p class="text-6xl font-bold text-gray-300">{$page.status}</p>
+		<p class="text-6xl font-semibold text-gray-300">{$page.status}</p>
 		<h1 class="mt-4 text-xl font-semibold text-gray-900">
 			{#if $page.status === 404}
 				Pagina niet gevonden

@@ -44,7 +44,7 @@
 <div class="space-y-6">
 	<!-- Page header -->
 	<div>
-		<h1 class="text-2xl font-bold text-gray-900">Planning</h1>
+		<h1 class="text-2xl font-semibold text-gray-900">Planning</h1>
 		<p class="mt-1 text-sm text-gray-500">
 			Organisatie-breed overzicht van alle projectplanningen
 		</p>
@@ -54,18 +54,18 @@
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 		<div class="rounded-lg border border-gray-200 bg-white px-4 py-5">
 			<p class="text-sm font-medium text-gray-500">Actieve projecten</p>
-			<p class="mt-1 text-3xl font-bold text-gray-900">{summary.total_active}</p>
+			<p class="mt-1 text-3xl font-semibold text-gray-900">{summary.total_active}</p>
 		</div>
 		<div class="rounded-lg border border-gray-200 bg-white px-4 py-5">
 			<p class="text-sm font-medium text-gray-500">Op schema</p>
-			<p class="mt-1 text-3xl font-bold {summary.on_track === summary.total_active ? 'text-green-600' : 'text-orange-600'}">
+			<p class="mt-1 text-3xl font-semibold {summary.on_track === summary.total_active ? 'text-green-600' : 'text-orange-600'}">
 				{summary.on_track}
 				<span class="text-base font-normal text-gray-500">/ {summary.total_active}</span>
 			</p>
 		</div>
 		<div class="rounded-lg border border-gray-200 bg-white px-4 py-5">
 			<p class="text-sm font-medium text-gray-500">Kritieke deadlines</p>
-			<p class="mt-1 text-3xl font-bold {summary.critical_deadlines > 0 ? 'text-red-600' : 'text-gray-900'}">
+			<p class="mt-1 text-3xl font-semibold {summary.critical_deadlines > 0 ? 'text-red-600' : 'text-gray-900'}">
 				{summary.critical_deadlines}
 			</p>
 			<p class="text-xs text-gray-500">komende 14 dagen</p>

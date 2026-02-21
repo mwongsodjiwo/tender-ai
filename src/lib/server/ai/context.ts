@@ -3,7 +3,7 @@
 // Context is wrapped in XML tags with injection-resistant formatting
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { semanticSearch } from './rag.js';
+import { semanticSearch } from './rag-retrieval.js';
 import { wrapContextForPrompt } from './sanitizer.js';
 
 interface ContextSearchParams {

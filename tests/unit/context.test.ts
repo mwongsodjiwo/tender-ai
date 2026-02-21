@@ -3,7 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock the RAG module before importing context
-vi.mock('$server/ai/rag', () => ({
+vi.mock('$server/ai/rag-retrieval', () => ({
 	semanticSearch: vi.fn()
 }));
 
@@ -13,7 +13,7 @@ vi.mock('$server/ai/sanitizer', async () => {
 });
 
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
-import { semanticSearch } from '$server/ai/rag';
+import { semanticSearch } from '$server/ai/rag-retrieval';
 
 const mockSupabase = {} as Parameters<typeof searchContext>[0]['supabase'];
 

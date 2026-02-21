@@ -133,6 +133,7 @@ describe('calculateCriticalPath', () => {
 			is_critical: true,
 			status: 'not_started',
 			sort_order: 0,
+			source: 'manual',
 			metadata: {},
 			created_by: null,
 			created_at: '2026-01-01T00:00:00Z',

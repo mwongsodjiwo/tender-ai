@@ -125,7 +125,7 @@
 				<div class="px-6 py-4">
 					<PlanningMilestones
 						procedureType={project.procedure_type as ProcedureType | null}
-						anchorDate={profile?.timeline_start || new Date().toISOString().split('T')[0]}
+						anchorDate={new Date().toISOString().split('T')[0]}
 						milestones={planningMilestones}
 						disabled={true}
 						onMilestonesChange={null}

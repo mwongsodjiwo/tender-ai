@@ -340,6 +340,34 @@ All endpoints return JSON. Authentication is via Supabase session cookies (handl
 
 ---
 
+## Archive / Unarchive (Fase 39)
+
+### `POST /api/projects/:id/documents/:docTypeId/archive`
+- **Auth:** Required
+- **Body:** None
+- **Response:** `{ data: { message: "Document gearchiveerd", archived_count: number } }`
+- **Note:** Sets `archive_status = 'archived'` on all artifacts with `document_type_id = docTypeId` in this project.
+
+### `POST /api/projects/:id/documents/:docTypeId/unarchive`
+- **Auth:** Required
+- **Body:** None
+- **Response:** `{ data: { message: "Document hersteld uit archief", unarchived_count: number } }`
+- **Note:** Sets `archive_status = 'active'` on all artifacts with `document_type_id = docTypeId` in this project.
+
+### `POST /api/projects/:id/correspondence/:letterId/archive`
+- **Auth:** Required
+- **Body:** None
+- **Response:** `{ data: { message: "Brief gearchiveerd", correspondence: Correspondence } }`
+- **Note:** Sets `archive_status = 'archived'` on the correspondence record.
+
+### `POST /api/projects/:id/correspondence/:letterId/unarchive`
+- **Auth:** Required
+- **Body:** None
+- **Response:** `{ data: { message: "Brief hersteld uit archief", correspondence: Correspondence } }`
+- **Note:** Sets `archive_status = 'active'` on the correspondence record.
+
+---
+
 ## Type Definitions
 
 See `src/lib/types/` for full TypeScript type definitions:

@@ -21,3 +21,4 @@ export * from './questions.js';
 export * from './templates.js';
 export * from './document-roles.js';
 export * from './members.js';
+export * from './archive.js';

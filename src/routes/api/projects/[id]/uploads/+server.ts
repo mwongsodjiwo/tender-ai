@@ -6,7 +6,7 @@ import { uploadDocumentSchema, uploadFileValidation } from '$server/api/validati
 import { logAudit } from '$server/db/audit';
 import { createServiceClient } from '$server/db/client';
 import { extractText, isTextExtractable } from '$server/ai/parser';
-import { processDocumentChunks } from '$server/ai/rag';
+import { processDocumentChunks } from '$server/ai/rag-context';
 import { validateFileSignature } from '$server/ai/file-validator';
 import { logWarn, logInfo, logError } from '$server/logger';
 import { sanitizeDocumentText } from '$server/ai/sanitizer';

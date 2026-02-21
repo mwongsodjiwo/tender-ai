@@ -23,23 +23,6 @@ Jij bent de data- en backend-agent. Je bouwt alles wat met database, API's, vali
 - `harvester/`
 - `scripts/import-cpv-codes.ts`, `scripts/seed-nuts-codes.ts` (data scripts)
 
-## Jouw fasen (v2)
-
-| Fase | Wat |
-|------|-----|
-| 1 | Multi-org basisstructuur (enums, organization uitbreiding, relaties, settings) |
-| 2 | RLS policies & rechtenmodel |
-| 4 | CPV referentietabel + import |
-| 5 | NUTS referentietabel + postcode mapping |
-| 6 | Organization tabel uitbreiding (KVK velden) |
-| 7 | KVK API integratie (samen met Agent 4) |
-| 8 | Leveranciers CRM database + API |
-| 10 | Binnenkomende vragen module (database + API) |
-| 12 | Data governance velden op alle tabellen |
-| 17 | Correspondentie → documenten (schema migratie) |
-| 19 | Document rollen (tabel + API) |
-| 20 | Procedure advies logica (drempelwaarden) |
-
 ## Jouw contracten
 
 - Je publiceert API-contracten in `contracts/api.md`

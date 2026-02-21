@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { ProjectRole } from '$lib/types/enums.js';
+	import type { DocumentRoleKey } from '$lib/types/enums.js';
 	import TeamPage from '$lib/components/team/TeamPage.svelte';
-	import ReviewerInvite from '$lib/components/ReviewerInvite.svelte';
 
 	export let data: PageData;
 
@@ -30,14 +30,11 @@
 		profile_id: string;
 		profile: { first_name: string; last_name: string; email: string };
 	}[];
-	$: artifacts = data.artifacts as { id: string; title: string; section_key: string }[];
-	$: reviewers = data.reviewers as {
+	$: documentRoles = (data.documentRoles ?? []) as {
 		id: string;
-		email: string;
-		name: string;
-		review_status: string;
-		token: string;
-		artifact: { id: string; title: string } | null;
+		role_key: DocumentRoleKey;
+		role_label: string;
+		project_member_id: string | null;
 	}[];
 </script>
 
@@ -47,16 +44,19 @@
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold text-gray-900">Team</h1>
+		<h1 class="text-2xl font-semibold text-gray-900">Team</h1>
 		<button
 			type="button"
-			on:click={() => (showAddForm = !showAddForm)}
-			class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
+			on:click={() => (showAddForm = true)}
+			class="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 transition-colors"
 		>
-			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+			Toevoegen
+			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M2 21a8 8 0 0 1 13.292-6"/>
+				<circle cx="10" cy="8" r="5"/>
+				<path d="M19 16v6"/>
+				<path d="M22 19h-6"/>
 			</svg>
-			{showAddForm ? 'Annuleren' : 'Teamlid toevoegen'}
 		</button>
 	</div>
 
@@ -66,17 +66,8 @@
 			projectId={project.id}
 			{members}
 			{organizationMembers}
+			{documentRoles}
 			bind:showAddForm
-		/>
-	</section>
-
-	<!-- Kennishouders (reviewers) -->
-	<section>
-		<h2 class="mb-4 text-lg font-semibold text-gray-900">Kennishouders</h2>
-		<ReviewerInvite
-			projectId={project.id}
-			{artifacts}
-			{reviewers}
 		/>
 	</section>
 </div>

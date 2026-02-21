@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
-	import type { Profile } from '$types';
 
 	export let data: PageData;
 

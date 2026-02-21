@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { OrganizationProjectPlanning } from '$types';
 	import { PROJECT_PHASE_LABELS, PROJECT_PHASES } from '$types';
-	import { PHASE_COLORS } from './gantt-utils';
+	import { PHASE_COLORS } from './gantt-types';
 	import {
 		type ViewRange,
 		RANGE_OPTIONS,

@@ -9,7 +9,7 @@
 		<div class="mx-auto w-full max-w-md">
 			<div class="mb-8 flex items-center gap-3">
 				<img src="/logo.png" alt="Tendermanager logo" class="h-10 w-10 rounded-full" />
-				<span class="text-xl font-bold text-gray-900">Tendermanager</span>
+				<span class="text-xl font-semibold text-gray-900">Tendermanager</span>
 			</div>
 			<slot />
 		</div>

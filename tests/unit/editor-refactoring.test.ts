@@ -36,12 +36,12 @@ describe('DocumentEditStatus type', () => {
 describe('TiptapEditor font extensions', () => {
 	it('imports TextStyle extension', async () => {
 		const mod = await import('@tiptap/extension-text-style');
-		expect(mod.TextStyle ?? mod.default).toBeDefined();
+		expect(mod.TextStyle ?? (mod as Record<string, unknown>).default).toBeDefined();
 	});
 
 	it('imports FontFamily extension', async () => {
 		const mod = await import('@tiptap/extension-font-family');
-		expect(mod.FontFamily ?? mod.default).toBeDefined();
+		expect(mod.FontFamily ?? (mod as Record<string, unknown>).default).toBeDefined();
 	});
 
 	it('TiptapEditor.svelte includes TextStyle import', () => {

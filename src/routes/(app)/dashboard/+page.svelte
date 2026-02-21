@@ -3,7 +3,6 @@
 	import type { DashboardMetrics, DashboardRecentProject, MonthlyProjectData } from '$types';
 	import { PROJECT_PHASE_LABELS } from '$types';
 	import type { ProjectPhase } from '$types';
-	import MetricCard from '$lib/components/MetricCard.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import InfoBanner from '$lib/components/InfoBanner.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -79,13 +78,14 @@
 		<!-- Page header -->
 		<div class="flex items-center justify-between">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+				<h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
 				<p class="mt-1 text-sm text-gray-500">Overzicht van uw projecten en activiteit</p>
 			</div>
 			<a
 				href="/projects/new"
-				class="rounded-card bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-card transition-all hover:bg-primary-700 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+				class="inline-flex items-center gap-2 rounded-full bg-primary-600 px-5 py-3.5 text-sm font-medium text-white shadow-card transition-all hover:bg-primary-700 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
 				Nieuw project
 			</a>
 		</div>
@@ -108,7 +108,7 @@
 				<!-- Center: Big metric — Documents in review -->
 				<div class="flex flex-col items-center justify-center rounded-card bg-white p-6 shadow-card">
 					<p class="text-sm font-medium text-gray-500">Documenten in review</p>
-					<p class="mt-3 text-5xl font-bold tracking-tight text-gray-900">{metrics.in_review_count}</p>
+					<p class="mt-3 text-5xl font-semibold tracking-tight text-gray-900">{metrics.in_review_count}</p>
 					{#if metrics.in_review_trend > 0}
 						<div class="mt-3 flex items-center gap-1 text-sm text-success-600">
 							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -121,11 +121,11 @@
 					{/if}
 					<div class="mt-4 grid w-full grid-cols-2 gap-3 border-t border-gray-100 pt-4">
 						<div class="text-center">
-							<p class="text-2xl font-bold text-gray-900">{metrics.active_projects}</p>
+							<p class="text-2xl font-semibold text-gray-900">{metrics.active_projects}</p>
 							<p class="text-xs text-gray-500">Actief</p>
 						</div>
 						<div class="text-center">
-							<p class="text-2xl font-bold text-gray-900">{metrics.completed_projects}</p>
+							<p class="text-2xl font-semibold text-gray-900">{metrics.completed_projects}</p>
 							<p class="text-xs text-gray-500">Afgerond</p>
 						</div>
 					</div>
@@ -207,7 +207,7 @@
 								/>
 							</svg>
 							<div class="absolute inset-0 flex items-center justify-center">
-								<span class="text-3xl font-bold text-gray-900">{metrics.average_progress}%</span>
+								<span class="text-3xl font-semibold text-gray-900">{metrics.average_progress}%</span>
 							</div>
 						</div>
 					</div>

@@ -55,8 +55,8 @@ export default {
 				}
 			},
 			fontFamily: {
-				sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-				display: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+				sans: ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
+				display: ['Poppins', 'system-ui', '-apple-system', 'sans-serif']
 			},
 			borderRadius: {
 				card: '12px',

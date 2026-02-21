@@ -19,20 +19,6 @@ Jij bent de frontend-agent. Je bouwt alles wat de gebruiker ziet en waarmee de g
 - `src/lib/utils/` (behalve specifieke agent-utils)
 - `tailwind.config.js`
 
-## Jouw fasen (v2)
-
-| Fase | Wat |
-|------|-----|
-| 3 | Context-switcher UI (org dropdown, context badge) |
-| 9 | Leveranciers UI (lijst + drawer met 5 tabs) |
-| 10 | Binnenkomende vragen UI (samen met Agent 1) |
-| 11 | Organization settings UI (samen met Agent 5) |
-| 14 | Template upload UI (samen met Agent 3) |
-| 17 | Correspondentie → documenten (route refactor) |
-| 19 | Document rollen UI in projectprofiel |
-| 20 | Procedure advies UI (waarschuwing bij afwijking) |
-| 25 | Dashboard (als laatste, wanneer alle datapoints beschikbaar zijn) |
-
 ## Afhankelijkheden
 
 - Je wacht op Agent 1 voor types (`src/lib/types/`) en API endpoints (`contracts/api.md`)

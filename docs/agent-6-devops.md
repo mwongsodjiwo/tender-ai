@@ -21,12 +21,6 @@ Jij bent de testing- en DevOps-agent. Je bouwt de testinfrastructuur, bewaakt kw
 - `svelte.config.js`
 - `package.json`
 
-## Jouw fasen (v2)
-
-| Fase | Wat |
-|------|-----|
-| 26 | End-to-end testing & validatie (alle flows, kwaliteitscheck) |
-
 ## Doorlopend
 
 - Integratietests na elke fase van andere agents

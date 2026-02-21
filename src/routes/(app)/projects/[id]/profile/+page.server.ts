@@ -36,7 +36,6 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 			.select('*')
 			.eq('project_id', params.id)
 			.is('deleted_at', null)
-			.in('milestone_type', ['publication', 'submission_deadline', 'award_decision'])
 			.order('target_date')
 	]);
 

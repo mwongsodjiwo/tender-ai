@@ -49,6 +49,10 @@ function makeTimeEntry(overrides: Partial<TimeEntry> = {}): TimeEntry {
 		hours: 8,
 		activity_type: 'preparing',
 		notes: '',
+		data_classification: 'operational',
+		retention_until: null,
+		anonymized_at: null,
+		archive_status: 'active',
 		created_at: '2026-02-03T00:00:00Z',
 		updated_at: '2026-02-03T00:00:00Z',
 		...overrides

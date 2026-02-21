@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { tick } from 'svelte';
 	import type { PageData } from './$types';
 	import BackButton from '$lib/components/BackButton.svelte';
@@ -135,7 +134,7 @@
 	<div class="mb-4 flex items-center justify-between">
 		<div>
 			<BackButton />
-			<h1 class="mt-1 text-xl font-bold text-gray-900">Briefing: {data.project.name}</h1>
+			<h1 class="mt-1 text-xl font-semibold text-gray-900">Briefing: {data.project.name}</h1>
 		</div>
 		{#if briefingComplete}
 			<span class="rounded-full bg-success-100 px-3 py-1 text-sm font-medium text-success-800">

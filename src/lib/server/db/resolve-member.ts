@@ -26,7 +26,7 @@ export async function resolveMemberPersonData(
 		return null;
 	}
 
-	const profile = data.profiles as {
+	const profile = data.profiles as unknown as {
 		first_name: string;
 		last_name: string;
 		email: string;

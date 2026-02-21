@@ -63,7 +63,7 @@
 		{#each documents as doc}
 			<li class="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
 				<div class="flex items-center gap-4">
-					<span class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-xs font-bold text-gray-600">
+					<span class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-xs font-semibold text-gray-600">
 						{FILE_ICONS[doc.mime_type] ?? 'DOC'}
 					</span>
 					<div>

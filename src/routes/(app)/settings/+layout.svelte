@@ -33,7 +33,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<h1 class="text-2xl font-bold text-gray-900">Instellingen</h1>
+	<h1 class="text-2xl font-semibold text-gray-900">Instellingen</h1>
 
 	<div class="lg:grid lg:grid-cols-12 lg:gap-x-8">
 		<aside class="lg:col-span-3">

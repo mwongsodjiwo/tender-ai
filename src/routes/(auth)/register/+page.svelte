@@ -62,7 +62,7 @@
 </div>
 
 <!-- Heading -->
-<h1 class="text-3xl font-bold tracking-tight text-gray-900">Account aanmaken</h1>
+<h1 class="text-3xl font-semibold tracking-tight text-gray-900">Account aanmaken</h1>
 
 <!-- Form -->
 <form on:submit|preventDefault={handleRegister} class="mt-8 space-y-5">

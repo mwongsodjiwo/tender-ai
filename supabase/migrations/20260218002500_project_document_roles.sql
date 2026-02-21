@@ -29,7 +29,7 @@ CREATE INDEX idx_project_document_roles_project
 CREATE TRIGGER set_updated_at_project_document_roles
   BEFORE UPDATE ON project_document_roles
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at();
+  EXECUTE FUNCTION update_updated_at_column();
 
 -- RLS
 ALTER TABLE project_document_roles ENABLE ROW LEVEL SECURITY;
@@ -41,7 +41,7 @@ CREATE POLICY "project_document_roles_select"
       SELECT 1 FROM projects p
       JOIN organization_members om ON om.organization_id = p.organization_id
       WHERE p.id = project_document_roles.project_id
-        AND om.user_id = auth.uid()
+        AND om.profile_id = auth.uid()
     )
   );
 
@@ -52,7 +52,7 @@ CREATE POLICY "project_document_roles_insert"
       SELECT 1 FROM projects p
       JOIN organization_members om ON om.organization_id = p.organization_id
       WHERE p.id = project_document_roles.project_id
-        AND om.user_id = auth.uid()
+        AND om.profile_id = auth.uid()
         AND om.role IN ('owner', 'admin', 'member')
     )
   );
@@ -64,7 +64,7 @@ CREATE POLICY "project_document_roles_update"
       SELECT 1 FROM projects p
       JOIN organization_members om ON om.organization_id = p.organization_id
       WHERE p.id = project_document_roles.project_id
-        AND om.user_id = auth.uid()
+        AND om.profile_id = auth.uid()
         AND om.role IN ('owner', 'admin', 'member')
     )
   );
@@ -76,7 +76,7 @@ CREATE POLICY "project_document_roles_delete"
       SELECT 1 FROM projects p
       JOIN organization_members om ON om.organization_id = p.organization_id
       WHERE p.id = project_document_roles.project_id
-        AND om.user_id = auth.uid()
+        AND om.profile_id = auth.uid()
         AND om.role IN ('owner', 'admin')
     )
   );

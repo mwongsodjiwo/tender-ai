@@ -57,8 +57,6 @@ export interface CreateProjectProfileRequest {
 	currency?: string;
 	cpv_codes?: string[];
 	nuts_codes?: string[];
-	timeline_start?: string;
-	timeline_end?: string;
 }
 
 export interface UpdateProjectProfileRequest {
@@ -73,8 +71,6 @@ export interface UpdateProjectProfileRequest {
 	currency?: string;
 	cpv_codes?: string[];
 	nuts_codes?: string[];
-	timeline_start?: string;
-	timeline_end?: string;
 }
 
 export type ProjectProfileResponse = ProjectProfile;

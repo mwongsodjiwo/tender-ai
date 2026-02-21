@@ -20,7 +20,7 @@
 		</div>
 	{:else}
 		<p class="text-sm font-medium text-gray-500">{label}</p>
-		<p class="mt-2 text-3xl font-bold tracking-tight text-gray-900">{value}</p>
+		<p class="mt-2 text-3xl font-semibold tracking-tight text-gray-900">{value}</p>
 		{#if trend}
 			<div class="mt-2 flex items-center gap-1 text-sm {TREND_COLORS[trendDirection]}">
 				{#if trendDirection === 'up'}

@@ -2,7 +2,7 @@
 
 import type { RequestHandler } from './$types';
 import { sectionChatSchema } from '$server/api/validation';
-import { chatAboutSection } from '$server/ai/generation';
+import { chatAboutSection } from '$server/ai/generation-core';
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import { apiError, apiSuccess } from '$server/api/response';

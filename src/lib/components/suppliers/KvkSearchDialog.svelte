@@ -17,8 +17,6 @@
 	export let onClose: () => void = () => {};
 	export let onSelect: (result: KvkResult) => void = () => {};
 
-	let loadingProfile = false;
-
 	let searchNaam = '';
 	let searchKvk = '';
 	let searchPlaats = '';
@@ -74,7 +72,6 @@
 	}
 
 	async function handleSelect(result: KvkResult): Promise<void> {
-		loadingProfile = true;
 		try {
 			const res = await fetch(`/api/kvk/${result.kvkNummer}`);
 			if (res.ok) {
@@ -97,7 +94,6 @@
 				}
 			}
 		} catch { /* gebruik zoekresultaat als fallback */ }
-		finally { loadingProfile = false; }
 
 		onSelect(result);
 		resetForm();

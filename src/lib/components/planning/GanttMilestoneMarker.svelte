@@ -2,7 +2,8 @@
 <script lang="ts">
 	import type { Milestone } from '$types';
 	import { MILESTONE_TYPE_LABELS, ACTIVITY_STATUS_LABELS } from '$types';
-	import { PHASE_COLORS, formatDateFull, getDaysRemaining } from './gantt-utils';
+	import { PHASE_COLORS } from './gantt-types';
+	import { formatDateFull, getDaysRemaining } from './gantt-layout';
 	import type { ProjectPhase } from '$types';
 
 	export let milestone: Milestone;

@@ -139,7 +139,7 @@
 				<!-- Days until deadline -->
 				<div class="text-center">
 					{#if document.daysRemaining !== null}
-						<p class="text-5xl font-bold {getDaysColor(document.daysRemaining)}">
+						<p class="text-5xl font-semibold {getDaysColor(document.daysRemaining)}">
 							{getDaysLabel(document.daysRemaining)}
 						</p>
 						<p class="mt-1 text-sm text-gray-500">

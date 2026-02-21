@@ -16,15 +16,6 @@ Jij bent de platform- en governance-agent. Je bouwt alles wat met cross-organisa
 - `src/routes/(app)/admin/` (superadmin analytics)
 - `src/routes/(app)/settings/` (samen met Agent 2)
 
-## Jouw fasen (v2)
-
-| Fase | Wat |
-|------|-----|
-| 11 | Organization settings UI (samen met Agent 2) |
-| 21 | Selectielijst profielen (VNG 2020, PROVISA) |
-| 22 | Retentie signalering (cron job, archivering, anonimisatie) |
-| 24 | Superadmin analytics (overzicht, trends, feature usage) |
-
 ## Afhankelijkheden
 
 - Je wacht op Agent 1 voor database tabellen (organization_settings, retention_profiles, governance velden)

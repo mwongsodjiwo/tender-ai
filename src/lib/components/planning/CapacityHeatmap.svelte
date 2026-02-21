@@ -68,7 +68,7 @@
 						title="{capitalizeLabel(cell.label)}: {cell.activeProjects} actieve projecten, {cell.utilization}% bezetting"
 					>
 						<span class="text-xs font-medium text-gray-600">{capitalizeLabel(cell.label)}</span>
-						<span class="mt-1 text-lg font-bold {style.text}">{cell.activeProjects}</span>
+						<span class="mt-1 text-lg font-semibold {style.text}">{cell.activeProjects}</span>
 						<span class="text-[10px] text-gray-500">projecten</span>
 						<div class="mt-1.5 w-full rounded-full bg-white/60" style="height: 4px;">
 							<div

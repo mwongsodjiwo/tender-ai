@@ -2,16 +2,15 @@
 <script lang="ts">
 	import type { PhaseActivity } from '$types';
 	import { ACTIVITY_STATUS_LABELS } from '$types';
+	import { PHASE_COLORS, GANTT_CONSTANTS } from './gantt-types';
 	import {
-		PHASE_COLORS,
-		GANTT_CONSTANTS,
-		formatDateShort,
-		getActivityDuration,
 		dateToX,
 		xToDate,
+		formatDateShort,
+		getActivityDuration,
 		snapToDay,
 		daysBetween
-	} from './gantt-utils';
+	} from './gantt-layout';
 	import type { ScaleTime } from 'd3-scale';
 
 	export let activity: PhaseActivity;

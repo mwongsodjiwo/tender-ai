@@ -52,14 +52,13 @@ function createMockSupabase(queryResults: Array<{ data: unknown; error: unknown 
 		const result = queryResults[callIndex] ?? { data: null, error: null };
 		callIndex++;
 
-		const chain = {
-			select: vi.fn().mockReturnValue(chain),
-			eq: vi.fn().mockReturnValue(chain),
-			is: vi.fn().mockReturnValue(chain),
-			order: vi.fn().mockReturnValue(chain),
-			limit: vi.fn().mockReturnValue(chain),
-			single: vi.fn().mockResolvedValue(result)
-		};
+		const chain: Record<string, unknown> = {};
+		chain.select = vi.fn().mockReturnValue(chain);
+		chain.eq = vi.fn().mockReturnValue(chain);
+		chain.is = vi.fn().mockReturnValue(chain);
+		chain.order = vi.fn().mockReturnValue(chain);
+		chain.limit = vi.fn().mockReturnValue(chain);
+		chain.single = vi.fn().mockResolvedValue(result);
 
 		// For listAvailableTemplates (no .single(), returns array)
 		if (result.data && Array.isArray(result.data)) {

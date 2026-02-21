@@ -1,13 +1,8 @@
 <!-- GanttPhaseRow — Collapsible phase group row for the Gantt chart -->
 <script lang="ts">
-	import type { PhaseGroup } from './gantt-utils';
-	import {
-		GANTT_CONSTANTS,
-		PHASE_COLORS,
-		PHASE_BG_COLORS,
-		calculateBarPosition,
-		dateToX
-	} from './gantt-utils';
+	import type { PhaseGroup } from './gantt-types';
+	import { GANTT_CONSTANTS, PHASE_COLORS, PHASE_BG_COLORS } from './gantt-types';
+	import { calculateBarPosition, dateToX } from './gantt-layout';
 	import type { ScaleTime } from 'd3-scale';
 
 	export let group: PhaseGroup;

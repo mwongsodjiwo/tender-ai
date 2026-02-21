@@ -206,7 +206,7 @@
 	<div class="mb-4 flex items-center justify-between">
 		<div>
 			<BackButton />
-			<h1 class="mt-1 text-xl font-bold text-gray-900">{artifact.title}</h1>
+			<h1 class="mt-1 text-xl font-semibold text-gray-900">{artifact.title}</h1>
 			<p class="text-sm text-gray-500">
 				{(artifact as Record<string, unknown>).document_type
 					? ((artifact as Record<string, unknown>).document_type as { name: string }).name

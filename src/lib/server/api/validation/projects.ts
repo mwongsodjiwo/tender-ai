@@ -59,9 +59,7 @@ export const createProjectProfileSchema = z.object({
 	estimated_value: z.number().positive('Waarde moet positief zijn').optional(),
 	currency: z.string().max(3).optional().default('EUR'),
 	cpv_codes: z.array(z.string().max(20)).optional().default([]),
-	nuts_codes: z.array(z.string().max(20)).optional().default([]),
-	timeline_start: z.string().optional(),
-	timeline_end: z.string().optional()
+	nuts_codes: z.array(z.string().max(20)).optional().default([])
 });
 
 export const updateProjectProfileSchema = z.object({
@@ -75,9 +73,7 @@ export const updateProjectProfileSchema = z.object({
 	estimated_value: z.number().positive('Waarde moet positief zijn').optional(),
 	currency: z.string().max(3).optional(),
 	cpv_codes: z.array(z.string().max(20)).optional(),
-	nuts_codes: z.array(z.string().max(20)).optional(),
-	timeline_start: z.string().optional(),
-	timeline_end: z.string().optional()
+	nuts_codes: z.array(z.string().max(20)).optional()
 });
 
 // =============================================================================

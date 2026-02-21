@@ -1,8 +1,10 @@
 // POST /api/projects/:id/export — Export document as Word or PDF
 
 import type { RequestHandler } from './$types';
+import type { ExportParams, DocumentType } from '$server/api/export-utils';
 import { exportDocumentSchema } from '$server/api/validation';
-import { exportToDocx, exportToPdf } from '$server/api/export';
+import { exportToDocx } from '$server/api/export-docx';
+import { exportToPdf } from '$server/api/export-pdf';
 import { logAudit } from '$server/db/audit';
 import { apiError } from '$server/api/response';
 import { selectTemplate } from '$server/templates/template-selector';
@@ -91,7 +93,7 @@ async function handleTemplateExport(
 	supabase: import('@supabase/supabase-js').SupabaseClient,
 	projectId: string,
 	project: { name: string; organization_id: string; organizations: unknown },
-	documentType: { name: string; slug: string },
+	documentType: DocumentType,
 	template: import('$types/db/document-templates').DocumentTemplate,
 	user: { id: string; email?: string }
 ): Promise<Response> {
@@ -106,7 +108,7 @@ async function handleTemplateExport(
 
 	const templateBuffer = Buffer.from(await fileData.arrayBuffer());
 	const data = await collectTemplateData(supabase, projectId, template.document_type_id);
-	const outputBuffer = renderTemplate(templateBuffer, data as Record<string, unknown>);
+	const outputBuffer = renderTemplate(templateBuffer, data as unknown as Record<string, unknown>);
 
 	const fileName = buildFileName(documentType.slug, project.name, 'docx');
 
@@ -133,7 +135,7 @@ async function handleProgrammaticExport(
 	supabase: import('@supabase/supabase-js').SupabaseClient,
 	projectId: string,
 	project: { name: string; organization_id: string; organizations: unknown },
-	documentType: { name: string; slug: string },
+	documentType: DocumentType,
 	format: 'docx' | 'pdf',
 	user: { id: string; email?: string }
 ): Promise<Response> {
@@ -150,7 +152,7 @@ async function handleProgrammaticExport(
 
 	const rawOrg = project.organizations;
 	const orgData = (Array.isArray(rawOrg) ? rawOrg[0] : rawOrg) as { name: string } | null;
-	const exportParams = {
+	const exportParams: ExportParams = {
 		documentType,
 		artifacts,
 		projectName: project.name,

@@ -54,7 +54,7 @@
 		</a>
 	</div>
 
-	<h1 class="text-2xl font-bold text-gray-900">Nieuw aanbestedingsproject</h1>
+	<h1 class="text-2xl font-semibold text-gray-900">Nieuw aanbestedingsproject</h1>
 	<p class="mt-2 text-sm text-gray-600">
 		Vul de basisgegevens in en start vervolgens de AI-begeleide briefing.
 	</p>

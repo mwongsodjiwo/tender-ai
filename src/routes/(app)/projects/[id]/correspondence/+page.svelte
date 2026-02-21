@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
@@ -12,13 +11,12 @@
 		PROJECT_PHASES,
 		PROJECT_PHASE_LABELS
 	} from '$types';
-	import type { Correspondence, ProjectPhase, CorrespondenceStatus } from '$types';
+	import type { Correspondence, ProjectPhase } from '$types';
 
 	export let data: PageData;
 
 	$: project = data.project;
 	$: letters = (data.letters ?? []) as Correspondence[];
-	$: evaluations = data.evaluations ?? [];
 
 	// Letter type definitions (duplicated from correspondence-prompts for client-side)
 	const LETTER_TYPE_LABELS: Record<string, string> = {
@@ -192,7 +190,7 @@
 	<!-- Page header -->
 	<div class="flex items-start justify-between">
 		<div>
-			<h1 class="text-2xl font-bold text-gray-900">Correspondentie</h1>
+			<h1 class="text-2xl font-semibold text-gray-900">Correspondentie</h1>
 			<p class="mt-1 text-sm text-gray-500">
 				Beheer brieven en documenten voor dit aanbestedingsproject.
 			</p>

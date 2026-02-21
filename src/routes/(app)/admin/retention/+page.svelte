@@ -74,7 +74,7 @@
 	<div class="grid gap-4 sm:grid-cols-2">
 		<div class="rounded-lg border border-amber-200 bg-amber-50 p-6">
 			<dt class="text-sm font-medium text-amber-800">Verlopen termijnen</dt>
-			<dd class="mt-2 text-3xl font-bold text-amber-900">
+			<dd class="mt-2 text-3xl font-semibold text-amber-900">
 				{data.statusCounts.retention_expired}
 			</dd>
 		</div>
@@ -82,7 +82,7 @@
 			<dt class="text-sm font-medium text-orange-800">
 				Gearchiveerd (termijn voorbij)
 			</dt>
-			<dd class="mt-2 text-3xl font-bold text-orange-900">
+			<dd class="mt-2 text-3xl font-semibold text-orange-900">
 				{data.statusCounts.archived}
 			</dd>
 		</div>
@@ -138,7 +138,7 @@
 								</span>
 							</td>
 							<td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-								{data.statusLabels[record.archive_status] ?? record.archive_status}
+								{data.statusLabels[record.archive_status as keyof typeof data.statusLabels] ?? record.archive_status}
 							</td>
 							<td class="whitespace-nowrap px-4 py-3 text-right text-sm">
 								<div class="flex justify-end gap-2">

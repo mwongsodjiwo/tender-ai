@@ -24,8 +24,7 @@
 	}
 
 	const FIELD_LABELS: Record<string, string> = {
-		name: 'Naam',
-		handelsnaam: 'Handelsnaam',
+		handelsnaam: 'Naam',
 		kvk_nummer: 'KVK-nummer',
 		rechtsvorm: 'Rechtsvorm',
 		address: 'Adres',
@@ -57,17 +56,10 @@
 		</div>
 
 		<dl class="divide-y divide-gray-100">
-			<div class="flex items-center justify-between px-6 py-4">
-				<dt class="text-sm text-gray-500">{FIELD_LABELS.name}</dt>
-				<dd class="text-sm text-gray-900">{organization.name || '—'}</dd>
-			</div>
-
-			{#if organization.handelsnaam}
-				<div class="flex items-center justify-between px-6 py-4">
-					<dt class="text-sm text-gray-500">{FIELD_LABELS.handelsnaam}</dt>
-					<dd class="text-sm text-gray-900">{organization.handelsnaam}</dd>
-				</div>
-			{/if}
+		<div class="flex items-center justify-between px-6 py-4">
+			<dt class="text-sm text-gray-500">{FIELD_LABELS.handelsnaam}</dt>
+			<dd class="text-sm text-gray-900">{organization.handelsnaam || organization.name || '—'}</dd>
+		</div>
 
 			<div class="flex items-center justify-between px-6 py-4">
 				<dt class="text-sm text-gray-500">{FIELD_LABELS.kvk_nummer}</dt>

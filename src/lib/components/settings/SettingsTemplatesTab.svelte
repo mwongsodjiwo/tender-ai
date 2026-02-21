@@ -51,7 +51,7 @@
 	}
 
 	function getDocTypeName(template: DocumentTemplate): string {
-		const raw = (template as Record<string, unknown>).document_types;
+		const raw = (template as unknown as Record<string, unknown>).document_types;
 		const dt = (Array.isArray(raw) ? raw[0] : raw) as { name: string } | null;
 		return dt?.name ?? 'Onbekend';
 	}

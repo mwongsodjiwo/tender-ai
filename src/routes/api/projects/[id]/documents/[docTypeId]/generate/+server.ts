@@ -3,7 +3,7 @@
 import type { RequestHandler } from './$types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateLeidraadSectionSchema } from '$server/api/validation';
-import { generateSectionContent } from '$server/ai/generation';
+import { generateSectionContent } from '$server/ai/generation-sections';
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import type { TemplateSection } from '$types';

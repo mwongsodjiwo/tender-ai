@@ -17,14 +17,6 @@ Jij bent de AI- en integratie-agent. Je bouwt alles wat met LLM, externe API's, 
 - `src/lib/server/email/` (email parser)
 - `src/lib/utils/markdown-to-tiptap.ts`
 
-## Jouw fasen (v2)
-
-| Fase | Wat |
-|------|-----|
-| 7 | KVK API integratie (client, search, basisprofiel — samen met Agent 1) |
-| 16 | Markdown → TipTap HTML transformatie (conversielaag) |
-| 23 | Email-parsing voor binnenkomende vragen |
-
 ## Doorlopend (uit v1)
 
 - LLM-integratie en prompt engineering

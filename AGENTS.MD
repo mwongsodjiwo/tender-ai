@@ -141,6 +141,30 @@ Instellingen, responsive design, prompt optimalisatie, deployment.
 | 36 | Projectprofiel: sidebar samenvatting | 2 | Fase 34, 35 |
 | 37 | Opschonen: oude velden en tabs verwijderen | 1, 2 | Fase 29, 31, 32, 35 |
 | 38 | Tests & validatie | 6 | Alles |
+| 39 | API: archive/unarchive endpoints documenten en brieven | 1 | — |
+| 40 | Frontend: archivering flow + error handling in drawer | 2 | Fase 39 |
+| 41 | Frontend: archief tab met data loading en weergave | 2 | Fase 39, 40 |
+| 42 | Opschonen: ongebruikte data verwijderen, tests | 6 | Fase 39, 40, 41 |
+| 43 | Enums splitsen per domein | 1 | — |
+| 44 | Pagina's splitsen: Planning (830), Profile (675) | 2 | — |
+| 45 | Pagina's splitsen: Requirements, EMVI, Time-tracking | 2 | — |
+| 46 | Pagina's splitsen: Marktverkenning, Evaluations, Correspondence | 2 | — |
+| 47 | Componenten splitsen: TiptapEditor, PlanningWizard | 2, 3 | — |
+| 48 | Componenten splitsen: Navigation, GanttChart, overige >250 | 2 | — |
+| 49 | Server utils splitsen: generation, rag, export | 1, 4 | — |
+| 50 | Server utils splitsen: briefing, gantt-utils | 1, 2 | — |
+| 51 | Unit tests: core utils | 6 | — |
+| 52 | Unit tests: server utils | 6 | Fase 49, 50 |
+| 53 | Integratietests: API routes (top 20) | 6 | — |
+| 54 | Integratietests: validatie schemas | 6 | — |
+| 55 | Fase 31 afmaken: documentrollen in team drawer | 2 | Fase 29, 30 |
+| 56 | Fase 37 afmaken: opschonen oude velden + dead code sweep | 1, 2 | Fase 44, 55 |
+| 57 | Scrollbar fix: scrollbar-gutter stable + overlay CSS | 2 | — |
+| 58 | Records footer buiten scroll-area, sticky onderaan | 2 | — |
+| 59 | Backend: milestone deadlines laden voor documenten | 1 | — |
+| 60 | Datum kolom fixen + lege cellen opvullen | 2 | Fase 59 |
+| 61 | Regressietest DataTable wijzigingen | 6 | Fase 57, 58 |
+| 62 | Visuele verificatie + edge cases | 6 | Fase 60, 61 |
 
 ---
 

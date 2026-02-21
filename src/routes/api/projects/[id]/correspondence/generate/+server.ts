@@ -2,7 +2,7 @@
 
 import type { RequestHandler } from './$types';
 import { generateLetterSchema } from '$server/api/validation';
-import { generateLetter } from '$server/ai/generation';
+import { generateLetter } from '$server/ai/generation-sections';
 import { searchContext, formatContextForPrompt } from '$server/ai/context';
 import { logAudit } from '$server/db/audit';
 import type { ProjectPhase } from '$types';

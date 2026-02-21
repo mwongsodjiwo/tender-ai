@@ -39,9 +39,17 @@
 		<button
 			type="button"
 			on:click={onAdd}
-			class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+			class="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700 transition-colors"
 		>
-			+ Toevoegen
+			Toevoegen
+			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/>
+				<path d="M16 2v4"/>
+				<path d="M8 2v4"/>
+				<path d="M3 10h18"/>
+				<path d="M16 19h6"/>
+				<path d="M19 16v6"/>
+			</svg>
 		</button>
 	</div>
 </div>

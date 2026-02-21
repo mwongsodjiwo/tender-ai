@@ -4,19 +4,16 @@
 	import type { OrganizationRole } from '$types';
 	import KvkSearchDialog from '$lib/components/suppliers/KvkSearchDialog.svelte';
 	import CodeLookup from '$lib/components/CodeLookup.svelte';
+	import LogoUpload from '$lib/components/LogoUpload.svelte';
 
 	export let data: PageData;
 
 	const ROLE_LABELS: Record<OrganizationRole, string> = {
 		owner: 'Eigenaar',
 		admin: 'Beheerder',
-		member: 'Lid'
-	};
-
-	const ROLE_COLORS: Record<OrganizationRole, string> = {
-		owner: 'bg-yellow-100 text-yellow-800',
-		admin: 'bg-primary-100 text-primary-800',
-		member: 'bg-gray-100 text-gray-800'
+		member: 'Lid',
+		external_advisor: 'Extern adviseur',
+		auditor: 'Auditor'
 	};
 
 	// Organization edit state
@@ -260,6 +257,12 @@
 					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
 				></textarea>
 			</div>
+
+			<LogoUpload
+				currentLogoUrl={data.organization.logo_url}
+				uploadEndpoint={`/api/organizations/${data.organization.id}/logo`}
+				organizationName={data.organization.name}
+			/>
 		</div>
 
 		<!-- KVK & Adresgegevens -->

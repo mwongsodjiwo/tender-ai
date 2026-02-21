@@ -15,16 +15,6 @@ Jij bent de editor- en document-agent. Je bouwt alles wat met de TipTap editor, 
 - `src/lib/server/templates/` (renderer, data-collector, placeholder-registry, template-selector)
 - `src/lib/components/editor/` (EditorToolbar, TiptapEditor, PageThumbnails)
 
-## Jouw fasen (v2)
-
-| Fase | Wat |
-|------|-----|
-| 13 | docxtemplater integratie (renderer, data-collector, placeholder-registry) |
-| 14 | Template storage + upload (samen met Agent 1, 2) |
-| 15 | Editor refactoring (paginaminiaturen, document-level status) |
-| 17 | Correspondentie → documenten (brief-templates, merge editor) |
-| 18 | Document template mapping (template-selector logica) |
-
 ## Afhankelijkheden
 
 - Je wacht op Agent 1 voor types en database tabellen
