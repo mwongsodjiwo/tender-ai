@@ -6,6 +6,9 @@
 	export let showFilterButton = true;
 	export let showOptionsButton = true;
 	export let scrollable = false;
+	export let rowCount = 0;
+
+	$: recordLabel = rowCount === 1 ? '1 record' : `${rowCount} records`;
 </script>
 
 <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200" class:flex={scrollable} class:flex-col={scrollable} class:overflow-hidden={scrollable}>
@@ -66,10 +69,32 @@
 	{:else}
 		<slot />
 	{/if}
+
+	<!-- Footer — outside scroll-area so it stays visible -->
+	{#if rowCount > 0}
+		<div class="shrink-0 border-t border-gray-100 bg-gray-50 px-5 py-3">
+			<p class="text-xs text-gray-900">{recordLabel}</p>
+		</div>
+	{/if}
 </div>
 
 <style>
-	/* Webkit (Chrome/Safari): overlay scrollbar, geen gutter */
+	/* Reserveer scrollbar-ruimte zodat content niet verspringt */
+	.scroll-area {
+		scrollbar-gutter: stable;
+	}
+
+	/* Firefox: altijd thin, transparante thumb bij rust */
+	.scroll-area {
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+	}
+	.scroll-area:hover,
+	.scroll-area:active {
+		scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+	}
+
+	/* Webkit (Chrome/Safari): overlay scrollbar */
 	.scroll-area::-webkit-scrollbar {
 		width: 6px;
 		background: transparent;
@@ -81,14 +106,5 @@
 	.scroll-area:hover::-webkit-scrollbar-thumb,
 	.scroll-area:active::-webkit-scrollbar-thumb {
 		background: rgba(0, 0, 0, 0.2);
-	}
-	/* Firefox */
-	.scroll-area {
-		scrollbar-width: none;
-	}
-	.scroll-area:hover,
-	.scroll-area:active {
-		scrollbar-width: thin;
-		scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 	}
 </style>

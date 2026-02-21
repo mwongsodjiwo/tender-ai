@@ -108,7 +108,8 @@
 
 	<div class="documents-card">
 		<DataTableCard bind:searchQuery bind:showFilter searchPlaceholder="Zoeken"
-			searchLabel="Zoek documenten en brieven" showOptionsButton={false} scrollable>
+			searchLabel="Zoek documenten en brieven" showOptionsButton={false} scrollable
+			rowCount={activeTab === 'documents' ? filteredRows.length : filteredArchivedRows.length}>
 			<svelte:fragment slot="filter">
 				<div class="flex items-center gap-2">
 					<span class="text-xs font-medium text-gray-500">Type:</span>

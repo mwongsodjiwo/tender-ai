@@ -105,6 +105,7 @@
 		searchPlaceholder="Zoeken"
 		searchLabel="Zoek teamleden"
 		bind:showFilter
+		rowCount={filteredMembers.length}
 	>
 		{#if activeTab === 'active'}
 			<TeamTable members={filteredMembers} {documentRoles} onRowClick={handleRowClick} />

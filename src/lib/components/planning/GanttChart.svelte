@@ -24,6 +24,9 @@
 	const { ROW_HEIGHT, PHASE_ROW_HEIGHT, LEFT_PANEL_WIDTH, HEADER_HEIGHT } = GANTT_CONSTANTS;
 
 	let viewMode: ViewMode = 'week';
+	const VIEW_MODE_OPTIONS: { mode: ViewMode; label: string }[] = [
+		{ mode: 'day', label: 'Dag' }, { mode: 'week', label: 'Week' }, { mode: 'month', label: 'Maand' }
+	];
 	let expandedPhases: Set<string> = new Set();
 	let depDragSourceId: string | null = null;
 
@@ -102,7 +105,7 @@
 		</div>
 		<div class="flex items-center gap-2">
 			<div class="flex items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 p-0.5">
-				{#each ([{ mode: 'day', label: 'Dag' }, { mode: 'week', label: 'Week' }, { mode: 'month', label: 'Maand' }]) as item (item.mode)}
+				{#each VIEW_MODE_OPTIONS as item (item.mode)}
 					<button
 						type="button"
 						on:click={() => { viewMode = item.mode; }}

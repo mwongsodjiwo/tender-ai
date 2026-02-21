@@ -79,11 +79,9 @@
 
 | Ronde | Terminal 1 | Terminal 2 | Terminal 3 | Terminal 4 | Terminal 5 | Terminal 6 |
 |-------|-----------|-----------|-----------|-----------|-----------|-----------|
-| 1 | Fase 57 (scrollbar) | Fase 58 (footer refactor) | Fase 59 (deadlines backend) | Fase 39 (archive API)* | Fase 55 (docrollen drawer)* | Fase 43 (enums split)* |
-| 2 | Fase 60 (datum kolom) | Fase 61 (regressietest) | Fase 40 (archive flow)* | Fase 41 (archief tab)* | Fase 56 (opschonen)* | — |
-| 3 | Fase 62 (edge cases) | Fase 42 (archief tests)* | — | — | — | — |
+| 1 | Fase 57 (scrollbar) | Fase 58 (footer refactor) | Fase 59 (deadlines backend) | Fase 60 (datum kolom)* | Fase 61 (regressietest)* | Fase 62 (edge cases)* |
 
-*Fasen uit eerdere plannen die nog open staan. Zo benut je alle 6 terminals optimaal.
+*Fase 60 wacht op 59, fase 61 wacht op 57+58, fase 62 wacht op 60+61. Start deze terminals zodra hun dependencies klaar zijn. In de praktijk draaien 57, 58, 59 direct en starten 60, 61, 62 kort daarna.
 
 ---
 

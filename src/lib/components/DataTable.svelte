@@ -82,7 +82,6 @@
 		return `hidden ${col.visibleFrom}:table-cell`;
 	}
 
-	$: recordLabel = rows.length === 1 ? '1 record' : `${rows.length} records`;
 </script>
 
 {#if rows.length === 0}
@@ -164,10 +163,6 @@
 				{/each}
 			</tbody>
 		</table>
-	</div>
-
-	<div class="sticky bottom-0 rounded-b-xl border-t border-gray-100 bg-gray-50 px-5 py-3">
-		<p class="text-xs text-gray-900">{recordLabel}</p>
 	</div>
 {/if}
 
