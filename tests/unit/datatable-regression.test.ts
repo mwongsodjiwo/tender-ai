@@ -1,5 +1,5 @@
-// Fase 61 — Regression tests for DataTable and DataTableCard changes
-// Verifies the footer-refactor (Fase 58) and scrollbar fix (Fase 57) did not break consumers
+// Fase 61+65 — Regression tests for DataTable and DataTableCard changes
+// Verifies footer-refactor (Fase 58), scrollbar fix (Fase 57), and two-table split (Fase 63+64)
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
@@ -102,8 +102,9 @@ describe('DataTable.svelte — data rendering (rows > 0)', () => {
 		expect(source).toContain('aria-label={ariaLabel}');
 	});
 
-	it('renders thead with sticky positioning', () => {
-		expect(source).toContain('sticky top-0');
+	it('has sticky header wrapper, NOT sticky on thead element', () => {
+		expect(source).not.toContain('sticky top-0');
+		expect(source).toContain('position: sticky');
 	});
 
 	it('iterates over rows with each block', () => {
@@ -181,6 +182,57 @@ describe('DataTable.svelte — column resizing', () => {
 });
 
 // =============================================================================
+// DATATABLE — TWO-TABLE STRUCTURE (Fase 63 scrollbar fix)
+// =============================================================================
+
+describe('DataTable.svelte — two-table split (Fase 63)', () => {
+	const filePath = path.resolve(`${ROOT}/DataTable.svelte`);
+	const source = readFileSync(filePath, 'utf-8');
+
+	it('has two <table> elements when rows > 0', () => {
+		// Extract the {:else} branch (rows > 0 path)
+		const elseBranch = source.slice(source.indexOf('{:else}'));
+		const tableCount = (elseBranch.match(/<table\b/g) ?? []).length;
+		expect(tableCount).toBe(2);
+	});
+
+	it('header-table has aria-hidden="true"', () => {
+		expect(source).toContain('aria-hidden="true"');
+	});
+
+	it('body-table has role="grid"', () => {
+		expect(source).toContain('role="grid"');
+	});
+
+	it('both tables have a <colgroup>', () => {
+		const elseBranch = source.slice(source.indexOf('{:else}'));
+		const colgroupCount = (elseBranch.match(/<colgroup>/g) ?? []).length;
+		expect(colgroupCount).toBe(2);
+	});
+
+	it('header-table uses headerTableEl binding', () => {
+		expect(source).toContain('bind:this={headerTableEl}');
+	});
+
+	it('body-table uses tableEl binding', () => {
+		expect(source).toContain('bind:this={tableEl}');
+	});
+
+	it('each table has its own overflow-x: clip wrapper', () => {
+		const elseBranch = source.slice(source.indexOf('{:else}'));
+		const clipCount = (elseBranch.match(/overflow-x:\s*clip/g) ?? []).length;
+		expect(clipCount).toBe(2);
+	});
+
+	it('header wrapper is sticky with background color', () => {
+		expect(source).toContain('position: sticky');
+		expect(source).toContain('top: 0');
+		expect(source).toContain('z-index: 10');
+		expect(source).toContain('background-color: #f9fafb');
+	});
+});
+
+// =============================================================================
 // DATATABLECARD COMPONENT — structure & regression
 // =============================================================================
 
@@ -252,7 +304,6 @@ describe('DataTableCard.svelte — scrollable mode', () => {
 
 	it('wraps content in scroll-area div when scrollable', () => {
 		expect(source).toContain('scroll-area');
-		expect(source).toContain('overflow-y-auto');
 	});
 
 	it('renders slot without scroll wrapper when not scrollable', () => {
@@ -262,12 +313,17 @@ describe('DataTableCard.svelte — scrollable mode', () => {
 	});
 });
 
-describe('DataTableCard.svelte — scrollbar fix (Fase 57)', () => {
+describe('DataTableCard.svelte — scrollbar styling (Fase 57+64)', () => {
 	const filePath = path.resolve(`${ROOT}/DataTableCard.svelte`);
 	const source = readFileSync(filePath, 'utf-8');
 
-	it('has scrollbar-gutter: stable to prevent content shift', () => {
-		expect(source).toContain('scrollbar-gutter: stable');
+	it('uses overflow-y: auto, NOT scroll (Fase 64 scrollbar fix)', () => {
+		expect(source).toContain('overflow-y: auto');
+		expect(source).not.toContain('overflow-y: scroll');
+	});
+
+	it('does NOT have scrollbar-gutter: stable (removed in Fase 64)', () => {
+		expect(source).not.toContain('scrollbar-gutter: stable');
 	});
 
 	it('has Firefox thin scrollbar setting', () => {

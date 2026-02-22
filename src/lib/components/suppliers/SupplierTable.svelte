@@ -11,7 +11,7 @@
 	}
 </script>
 
-<div class="rounded-card bg-white shadow-card overflow-hidden">
+<div class="w-full rounded-card bg-white shadow-card overflow-hidden">
 	<table class="w-full">
 		<thead>
 			<tr class="border-b border-gray-200">

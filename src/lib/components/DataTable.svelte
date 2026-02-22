@@ -14,6 +14,7 @@
 
 	const MIN_COL_WIDTH = 60;
 
+	let headerTableEl: HTMLTableElement;
 	let tableEl: HTMLTableElement;
 	let colWidths: number[] = [];
 	let resizingIndex = -1;
@@ -22,8 +23,8 @@
 	let initialized = false;
 
 	function initWidths(): void {
-		if (!tableEl || initialized) return;
-		const ths = tableEl.querySelectorAll('thead th');
+		if (!headerTableEl || initialized) return;
+		const ths = headerTableEl.querySelectorAll('thead th');
 		colWidths = Array.from(ths).map((th) => (th as HTMLElement).offsetWidth);
 		initialized = true;
 	}
@@ -32,7 +33,7 @@
 		requestAnimationFrame(initWidths);
 	});
 
-	$: if (columns && tableEl && !initialized) {
+	$: if (columns && headerTableEl && !initialized) {
 		requestAnimationFrame(initWidths);
 	}
 
@@ -81,7 +82,6 @@
 		if (!col.visibleFrom) return '';
 		return `hidden ${col.visibleFrom}:table-cell`;
 	}
-
 </script>
 
 {#if rows.length === 0}
@@ -98,33 +98,19 @@
 		<p class="mt-2 text-sm text-gray-500">{emptyMessage}</p>
 	</div>
 {:else}
-	<div style="overflow-x: clip">
-		<table
-			bind:this={tableEl}
-			class="w-full table-fixed"
-			role="grid"
-			aria-label={ariaLabel}
-		>
-			{#if initialized && colWidths.length > 0}
-				<colgroup>
-					{#each columns as col, i (col.key)}
-						<col style="width: {colWidths[i]}px" />
-					{/each}
-				</colgroup>
-			{:else}
-				<colgroup>
-					{#each columns as col (col.key)}
-						<col class={col.className ?? ''} />
-					{/each}
-				</colgroup>
-			{/if}
-			<thead class="sticky top-0 z-10 bg-gray-50">
+	<!-- Header table (sticky at top of scroll-area) -->
+	<div style="overflow-x: clip; position: sticky; top: 0; z-index: 10; background-color: #f9fafb">
+		<table bind:this={headerTableEl} class="w-full table-fixed" aria-hidden="true">
+			<colgroup>
+				{#each columns as col, i (col.key)}
+					<col class={initialized ? visibilityClass(col) : `${col.className ?? ''} ${visibilityClass(col)}`}
+						style={initialized ? `width: ${colWidths[i]}px` : ''} />
+				{/each}
+			</colgroup>
+			<thead class="bg-gray-50">
 				<tr class="border-b border-gray-200 bg-gray-50">
 					{#each columns as col, i (col.key)}
-						<th
-							scope="col"
-							class="relative px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-900 {visibilityClass(col)}"
-						>
+						<th scope="col" class="relative px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-900 {visibilityClass(col)}">
 							{#if col.srOnly}
 								<span class="sr-only">{col.label}</span>
 							{:else}
@@ -142,6 +128,17 @@
 					{/each}
 				</tr>
 			</thead>
+		</table>
+	</div>
+	<!-- Body table (scrollable via parent scroll-area) -->
+	<div style="overflow-x: clip; background-color: #fff">
+		<table bind:this={tableEl} class="w-full table-fixed" role="grid" aria-label={ariaLabel}>
+			<colgroup>
+				{#each columns as col, i (col.key)}
+					<col class={initialized ? visibilityClass(col) : `${col.className ?? ''} ${visibilityClass(col)}`}
+						style={initialized ? `width: ${colWidths[i]}px` : ''} />
+				{/each}
+			</colgroup>
 			<tbody class="divide-y divide-gray-100">
 				{#each rows as row (row.id)}
 					<tr
@@ -151,9 +148,7 @@
 						on:keydown={(e) => handleKeydown(e, row)}
 					>
 						{#each columns as col, colIdx (col.key)}
-							<td
-								class="overflow-hidden text-ellipsis px-5 py-3.5 {visibilityClass(col)}"
-							>
+							<td class="overflow-hidden text-ellipsis px-5 py-3.5 {visibilityClass(col)}">
 								<slot name="cell" {row} column={col} index={colIdx} value={cellValue(row, col)}>
 									<span class="text-sm text-gray-600">{cellValue(row, col)}</span>
 								</slot>

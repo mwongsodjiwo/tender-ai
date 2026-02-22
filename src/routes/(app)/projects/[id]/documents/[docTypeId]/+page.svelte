@@ -2,9 +2,10 @@
 	import { tick } from 'svelte';
 	import type { Editor } from '@tiptap/core';
 	import TiptapEditor from '$components/TiptapEditor.svelte';
-	import PageThumbnails from '$lib/components/editor/PageThumbnails.svelte';
+	import DocumentChapterNav from '$lib/components/editor/DocumentChapterNav.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
-	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import { DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_STYLES } from '$lib/types/enums/document.js';
+	import type { DocumentStatus } from '$lib/types/enums/document.js';
 	import EditorToolbar from '$lib/components/editor/EditorToolbar.svelte';
 	import EditorSearchBar from '$lib/components/editor/EditorSearchBar.svelte';
 	import EditorRightSidebar from '$lib/components/editor/EditorRightSidebar.svelte';
@@ -24,6 +25,7 @@
 	$: { for (const a of artifacts) { if (!(a.id in sectionContents)) { sectionContents[a.id] = a.content ?? ''; sectionSavedContents[a.id] = a.content ?? ''; } } }
 	$: hasChanges = artifacts.some((a) => (sectionContents[a.id] ?? '') !== (sectionSavedContents[a.id] ?? ''));
 	let saving = false;
+	$: totalCount = artifacts.length;
 	let saveMessage = '';
 	let editorComponents: Record<string, TiptapEditor> = {};
 	let focusedEditor: Editor | null = null;
@@ -46,14 +48,11 @@
 		if (!documentType.template_structure) return '';
 		return documentType.template_structure.find((s: { key: string; description?: string }) => s.key === key)?.description ?? '';
 	}
-	$: approvedCount = artifacts.filter((a) => a.status === 'approved').length;
-	$: totalCount = artifacts.length;
-	$: pageSections = artifacts.map((a) => ({
-		id: a.id,
-		title: a.title,
-		status: a.status as 'draft' | 'generated' | 'review' | 'approved',
-		contentPreview: sectionContents[a.id] ?? a.content ?? ''
-	}));
+	$: documentStatus = ((): DocumentStatus => {
+		if (artifacts.length === 0) return 'open';
+		if (artifacts.every((a) => a.status === 'approved')) return 'afgerond';
+		return artifacts.some((a) => a.status !== 'draft') ? 'gestart' : 'open';
+	})();
 	let documentScrollContainer: HTMLElement;
 	function scrollToSection(i: number) { currentSectionIndex = i; const a = artifacts[i]; if (a && sectionElements[a.id]) sectionElements[a.id].scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 	function handleScroll() {
@@ -147,7 +146,10 @@
 <div class="fixed inset-0 z-[60] flex flex-col bg-[#F5F5F5]">
 	<header class="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 sm:px-6">
 		<div class="flex items-center gap-4"><BackButton /></div>
-		<h1 class="text-sm font-semibold text-gray-900">{documentType.name}</h1>
+		<div class="flex items-center gap-2">
+			<h1 class="text-sm font-semibold text-gray-900">{documentType.name}</h1>
+			<span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {DOCUMENT_STATUS_STYLES[documentStatus]}">{DOCUMENT_STATUS_LABELS[documentStatus]}</span>
+		</div>
 		<div class="flex items-center gap-3">
 			{#if hasChanges}<span class="flex items-center gap-1.5 text-xs text-amber-600"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>Niet-opgeslagen wijzigingen</span>{/if}
 			{#if saveMessage}<span class="text-xs text-success-600">{saveMessage}</span>{/if}
@@ -159,9 +161,8 @@
 	{#if showSearch}<EditorSearchBar {editorComponents} {artifacts} {sectionElements} hasReplace={true} on:close={() => showSearch = false} on:contentChanged={handleSearchContentChanged} />{/if}
 
 	<div class="flex min-h-0 flex-1 overflow-hidden">
-		<aside class="hidden shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 lg:block" style="width: 20%;">
-			<div class="mb-4"><div class="flex items-center justify-between text-xs text-gray-500"><span>Voortgang</span><span>{approvedCount}/{totalCount}</span></div><div class="mt-1.5"><ProgressBar value={approvedCount} max={totalCount || 1} showPercentage={false} size="sm" /></div></div>
-			<PageThumbnails sections={pageSections} currentIndex={currentSectionIndex} onSectionClick={(i) => scrollToSection(i)} />
+		<aside class="hidden shrink-0 overflow-y-auto border-r border-gray-200 bg-white py-3 lg:block" style="width: 20%;">
+			<DocumentChapterNav chapters={artifacts.map((a) => ({ id: a.id, title: a.title }))} currentIndex={currentSectionIndex} onChapterClick={(i) => scrollToSection(i)} />
 		</aside>
 
 		<div class="flex min-w-0 flex-col overflow-y-auto" role="region" aria-label="Documentinhoud" style="width: {showRightSidebar ? '60%' : '80%'};" bind:this={documentScrollContainer} on:scroll={handleScroll}>

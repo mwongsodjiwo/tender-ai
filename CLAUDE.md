@@ -8,8 +8,10 @@ Dit is een SvelteKit + Supabase aanbestedingsplatform voor de Nederlandse overhe
 4. `docs/documenten-pagina-fix.md` — implementatieplan documentenpagina bugfix & archivering (fasen 39-42)
 5. `docs/performance-onderhoud-ronde.md` — implementatieplan performance & onderhoud (fasen 43-56)
 6. `docs/tabel-design-verbetering.md` — implementatieplan tabel design fixes (fasen 57-62)
-7. `contracts/structure.md` — mappenstructuur en eigenaarschap
-8. `contracts/api.md` — API-contracten
+7. `docs/tabel-scrollbar-fix.md` — implementatieplan tabel scrollbar & kleur fix (fasen 63-66)
+8. `docs/documenten-navigatie-voortgang.md` — implementatieplan documenten navigatiepanel & voortgangsmodel (fasen 67-71)
+9. `contracts/structure.md` — mappenstructuur en eigenaarschap
+9. `contracts/api.md` — API-contracten
 
 ## Welke agent ben je?
 

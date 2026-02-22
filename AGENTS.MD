@@ -165,6 +165,15 @@ Instellingen, responsive design, prompt optimalisatie, deployment.
 | 60 | Datum kolom fixen + lege cellen opvullen | 2 | Fase 59 |
 | 61 | Regressietest DataTable wijzigingen | 6 | Fase 57, 58 |
 | 62 | Visuele verificatie + edge cases | 6 | Fase 60, 61 |
+| 63 | DataTable splitsen: header buiten scroll, body binnen scroll | 2 | — |
+| 64 | DataTableCard scroll-area vereenvoudigen | 2 | Fase 63 |
+| 65 | Regressietests bijwerken voor twee-tabel structuur | 6 | Fase 63, 64 |
+| 66 | Visuele verificatie scrollbar + edge cases | 6 | Fase 65 |
+| 67 | DocumentStatus type + afleiding in buildBlocks | 1 | — |
+| 68 | DocumentNav navigatiepanel component | 2 | — |
+| 69 | Documentenpagina layout refactor (grid + nav) | 2 | Fase 67, 68 |
+| 70 | DocumentsTable status kolom i.p.v. progress bar | 2 | Fase 67 |
+| 71 | Tests + verificatie documenten navigatie | 6 | Fase 69, 70 |
 
 ---
 

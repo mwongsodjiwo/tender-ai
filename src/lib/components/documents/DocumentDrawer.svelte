@@ -2,7 +2,8 @@
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
-	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import DocumentHistory from './DocumentHistory.svelte';
+	import { DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_STYLES } from '$lib/types/enums/document.js';
 	import { focusTrap } from '$lib/utils/focus-trap';
 	import type { DocumentRow } from './types.js';
 
@@ -92,18 +93,12 @@
 					</p>
 				</div>
 
-				{#if document.type === 'document' && document.progress !== null}
+				{#if document.type === 'document' && document.documentStatus}
 					<div class="mt-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
-						<h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Voortgang</h4>
-						<div class="mt-3 flex items-center gap-3">
-							<div class="flex-1">
-								<ProgressBar value={document.progress} max={100} size="sm" label="" showPercentage={false} />
-							</div>
-							<span class="text-sm font-medium text-primary-600">{document.progress}%</span>
+						<h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Status</h4>
+						<div class="mt-3">
+							<span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {DOCUMENT_STATUS_STYLES[document.documentStatus]}">{DOCUMENT_STATUS_LABELS[document.documentStatus]}</span>
 						</div>
-						{#if document.sections}
-							<p class="mt-2 text-sm text-gray-500">{document.sections} secties goedgekeurd</p>
-						{/if}
 					</div>
 				{/if}
 
@@ -115,13 +110,37 @@
 							{:else}<span class="text-sm text-gray-500">Geen status</span>{/if}
 						</div>
 					</div>
-					{#if document.date}
-						<div class="mt-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
-							<h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Aangemaakt</h4>
-							<p class="mt-2 text-sm text-gray-600">{formatDate(document.date)}</p>
-						</div>
-					{/if}
 				{/if}
+
+				<div class="mt-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+					<h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Toegewezen aan</h4>
+					{#if document.assignees && document.assignees.length > 0}
+						<div class="mt-3 space-y-2">
+							{#each document.assignees as person}
+								<div class="flex items-center gap-2.5">
+									<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700">
+										{person.name.charAt(0).toUpperCase()}
+									</span>
+									<div class="min-w-0">
+										<p class="text-sm font-medium text-gray-900 truncate">{person.name}</p>
+										<p class="text-xs text-gray-500 truncate">{person.email}</p>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<p class="mt-2 text-sm text-gray-400">Nog niemand toegewezen</p>
+					{/if}
+				</div>
+
+				{#if document.deadline}
+					<div class="mt-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+						<h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Deadline</h4>
+						<p class="mt-2 text-sm text-gray-600">{formatDate(document.deadline)}</p>
+					</div>
+				{/if}
+
+				<DocumentHistory entries={document.history ?? []} />
 
 				{#if archiveError}
 					<div class="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{archiveError}</div>

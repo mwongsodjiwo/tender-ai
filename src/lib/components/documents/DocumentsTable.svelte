@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { DataTableColumn } from '$lib/types/data-table.js';
 	import DataTable from '$lib/components/DataTable.svelte';
-	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import { DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_STYLES } from '$lib/types/enums/document.js';
+	import type { DocumentStatus } from '$lib/types/enums/document.js';
 	import type { DocumentRow } from './types.js';
 
 	export let rows: DocumentRow[] = [];
@@ -11,9 +12,9 @@
 	export let exporting = '';
 
 	const columns: DataTableColumn<DocumentRow>[] = [
-		{ key: 'name', label: 'Naam', className: 'w-[35%]', accessor: (r) => r.name },
+		{ key: 'name', label: 'Naam', className: 'w-[40%]', accessor: (r) => r.name },
 		{ key: 'type', label: 'Type', className: 'w-[12%]', accessor: (r) => r.type === 'document' ? 'Document' : 'Brief' },
-		{ key: 'progress', label: 'Voortgang', className: 'w-[20%]', visibleFrom: 'md' },
+		{ key: 'status', label: 'Status', className: 'w-[15%]' },
 		{ key: 'date', label: 'Datum', className: 'w-[18%]', visibleFrom: 'lg', accessor: (r) => r.date ? formatDate(r.date) : '' },
 		{ key: 'export', label: 'Exporteren', srOnly: true, className: 'w-[15%]' }
 	];
@@ -36,14 +37,9 @@
 				{row.type === 'document' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}">
 				{value}
 			</span>
-		{:else if column.key === 'progress'}
-			{#if row.type === 'document' && row.progress !== null}
-				<div class="flex items-center gap-2">
-					<div class="w-20">
-						<ProgressBar value={row.progress} max={100} size="sm" label="" showPercentage={false} />
-					</div>
-					<span class="text-xs font-medium text-primary-600">{row.progress}%</span>
-				</div>
+		{:else if column.key === 'status'}
+			{#if row.type === 'document' && row.documentStatus}
+				<span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {DOCUMENT_STATUS_STYLES[row.documentStatus]}">{DOCUMENT_STATUS_LABELS[row.documentStatus]}</span>
 			{:else if row.type === 'brief' && row.status}
 				<StatusBadge status={row.status} />
 			{:else}

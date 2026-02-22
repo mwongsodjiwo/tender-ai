@@ -1,7 +1,8 @@
 // Row-building helpers for the documents page
 
 import type { Correspondence } from '$types';
-import type { DocumentRow } from './types.js';
+import type { DocumentStatus } from '$lib/types/enums/document.js';
+import type { DocumentRow, DocumentReviewer, DocumentHistoryEntry } from './types.js';
 
 export interface ProductBlock {
 	id: string;
@@ -11,7 +12,9 @@ export interface ProductBlock {
 	items: { id: string; title: string; status: string }[];
 	total: number;
 	approved: number;
-	progress: number;
+	status: DocumentStatus;
+	reviewers: DocumentReviewer[];
+	history: { action: string; actor_name: string | null; entity_type: string; created_at: string }[];
 }
 
 export type TypeFilter = 'all' | 'document' | 'brief';
@@ -42,20 +45,24 @@ function buildDocRows(
 	archived: boolean, nextDeadline: string | null
 ): DocumentRow[] {
 	const date = nextDeadline ?? '';
+	const mapHistory = (h: ProductBlock['history']): DocumentHistoryEntry[] =>
+		h.map((e) => ({ action: e.action, actorName: e.actor_name, entityType: e.entity_type, createdAt: e.created_at }));
 	const rows: DocumentRow[] = blocks.map((b) => ({
 		id: b.id, name: b.name, subtitle: b.description, type: 'document' as const,
-		progress: b.progress, status: null,
+		documentStatus: b.status, status: null,
 		sections: b.total > 0 ? `${b.approved} / ${b.total}` : null,
-		date, href: getProductHref(b.slug, b.id, projectId),
+		date, deadline: nextDeadline, assignees: b.reviewers, history: mapHistory(b.history),
+		href: getProductHref(b.slug, b.id, projectId),
 		exportable: !archived && b.total > 0, archived
 	}));
 	if (!archived) {
 		rows.push({
 			id: 'emvi', name: 'Gunningscriteria (EMVI)',
 			subtitle: 'Gunningssystematiek en wegingscriteria', type: 'document',
-			progress: null, status: null,
+			documentStatus: null, status: null,
 			sections: emviCount > 0 ? `${emviCount} criteria` : null,
-			date, href: `/projects/${projectId}/emvi`, exportable: false, archived: false
+			date, deadline: nextDeadline, assignees: [], history: [],
+			href: `/projects/${projectId}/emvi`, exportable: false, archived: false
 		});
 	}
 	return rows;
@@ -67,7 +74,8 @@ function buildBriefRows(
 	return letters.map((l) => ({
 		id: l.id, name: LETTER_TYPE_LABELS[l.letter_type] ?? l.letter_type,
 		subtitle: l.subject || null, type: 'brief' as const,
-		progress: null, status: l.status, sections: null, date: l.created_at,
+		documentStatus: null, status: l.status, sections: null, date: l.created_at,
+		deadline: null, assignees: [], history: [],
 		href: `/projects/${projectId}/correspondence/${l.id}`, exportable: false, archived
 	}));
 }

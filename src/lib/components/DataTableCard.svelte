@@ -11,7 +11,7 @@
 	$: recordLabel = rowCount === 1 ? '1 record' : `${rowCount} records`;
 </script>
 
-<div class="w-fit min-w-[600px] max-w-full rounded-xl bg-white shadow-sm ring-1 ring-gray-200" class:flex={scrollable} class:flex-col={scrollable} class:overflow-hidden={scrollable}>
+<div class="w-full rounded-xl bg-white shadow-sm ring-1 ring-gray-200" class:flex={scrollable} class:flex-col={scrollable} class:overflow-hidden={scrollable}>
 	<!-- Toolbar -->
 	<div class="flex items-center gap-3 border-b border-gray-100 px-5 py-3 shrink-0">
 		<div class="relative flex-1 max-w-xs">

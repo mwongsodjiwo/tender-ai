@@ -141,6 +141,22 @@ export const LETTER_TYPE_PHASES: Record<LetterType, ProjectPhase[]> = {
 	cover_letter: ['contracting']
 };
 
+// Document-level progress status (derived, no DB column)
+export const DOCUMENT_STATUSES = ['open', 'gestart', 'afgerond'] as const;
+export type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
+
+export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
+	open: 'Open',
+	gestart: 'Gestart',
+	afgerond: 'Afgerond'
+};
+
+export const DOCUMENT_STATUS_STYLES: Record<DocumentStatus, string> = {
+	open: 'bg-gray-100 text-gray-600',
+	gestart: 'bg-blue-50 text-blue-700',
+	afgerond: 'bg-green-50 text-green-700'
+};
+
 export const DOCUMENT_TYPE_CATEGORIES = ['document', 'correspondence'] as const;
 export type DocumentTypeCategory = (typeof DOCUMENT_TYPE_CATEGORIES)[number];
 

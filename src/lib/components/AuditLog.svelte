@@ -60,7 +60,7 @@
 	$: totalPages = Math.ceil(total / perPage);
 </script>
 
-<div class="rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-sm">
+<div class="w-full rounded-card border border-gray-200 bg-white shadow-card transition hover:shadow-sm">
 	<div class="border-b border-gray-200 px-6 py-4">
 		<h3 class="text-base font-semibold text-gray-900">Audit log</h3>
 		<p class="mt-1 text-sm text-gray-500">Alle acties op dit project worden hier vastgelegd.</p>
