@@ -11,7 +11,7 @@
 	$: recordLabel = rowCount === 1 ? '1 record' : `${rowCount} records`;
 </script>
 
-<div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200" class:flex={scrollable} class:flex-col={scrollable} class:overflow-hidden={scrollable}>
+<div class="w-fit min-w-[600px] max-w-full rounded-xl bg-white shadow-sm ring-1 ring-gray-200" class:flex={scrollable} class:flex-col={scrollable} class:overflow-hidden={scrollable}>
 	<!-- Toolbar -->
 	<div class="flex items-center gap-3 border-b border-gray-100 px-5 py-3 shrink-0">
 		<div class="relative flex-1 max-w-xs">
@@ -63,7 +63,7 @@
 
 	<!-- Table content -->
 	{#if scrollable}
-		<div class="scroll-area flex-1 min-h-0 overflow-y-auto">
+		<div class="scroll-area flex-1 min-h-0">
 			<slot />
 		</div>
 	{:else}
@@ -79,13 +79,10 @@
 </div>
 
 <style>
-	/* Reserveer scrollbar-ruimte zodat content niet verspringt */
 	.scroll-area {
-		scrollbar-gutter: stable;
-	}
-
-	/* Firefox: altijd thin, transparante thumb bij rust */
-	.scroll-area {
+		overflow-y: auto;
+		background-color: #f9fafb; /* gray-50: scrollbar-track toont dezelfde kleur als de header */
+		/* Firefox: thin scrollbar, transparante track toont achtergrond element */
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 	}
@@ -94,7 +91,7 @@
 		scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 	}
 
-	/* Webkit (Chrome/Safari): overlay scrollbar */
+	/* Webkit (Chrome/Safari): dunne transparante scrollbar */
 	.scroll-area::-webkit-scrollbar {
 		width: 6px;
 		background: transparent;
