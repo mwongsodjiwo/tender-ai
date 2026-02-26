@@ -8,6 +8,7 @@
 	export let editable: boolean = true;
 	export let placeholder: string = 'Begin hier met schrijven...';
 	export let showToolbar: boolean = true;
+	export let enablePlaceholderHighlights: boolean = false;
 
 	/** Expose the Tiptap Editor instance so parent components can control it */
 	export function getEditor(): Editor | null {
@@ -38,7 +39,7 @@
 
 		editor = new Editor({
 			element: editorElement,
-			extensions: createEditorExtensions({ placeholder }),
+			extensions: createEditorExtensions({ placeholder, enablePlaceholderHighlights }),
 			content: initialHtml,
 			editable,
 			onUpdate: ({ editor: e }) => {

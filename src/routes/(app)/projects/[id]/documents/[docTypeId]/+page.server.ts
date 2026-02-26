@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ params, url, locals, parent }) => {
 	// Load all artifacts for this project + document type, sorted by sort_order
 	let { data: artifacts, error: artError } = await supabase
 		.from('artifacts')
-		.select('id, title, section_key, content, status, version, sort_order, updated_at')
+		.select('id, title, section_key, content, status, version, generation_source, sort_order, updated_at')
 		.eq('project_id', params.id)
 		.eq('document_type_id', params.docTypeId)
 		.order('sort_order');
@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ params, url, locals, parent }) => {
 		// Reload artifacts after scaffolding
 		const { data: reloaded } = await supabase
 			.from('artifacts')
-			.select('id, title, section_key, content, status, version, sort_order, updated_at')
+			.select('id, title, section_key, content, status, version, generation_source, sort_order, updated_at')
 			.eq('project_id', params.id)
 			.eq('document_type_id', params.docTypeId)
 			.order('sort_order');

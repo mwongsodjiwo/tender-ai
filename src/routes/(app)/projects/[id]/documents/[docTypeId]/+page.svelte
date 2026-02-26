@@ -33,7 +33,7 @@
 	let showRightSidebar = false;
 	let showSearch = false;
 	let zoomLevel = 100;
-	let fontSize = '11';
+	let fontSize = '11'; let showPlaceholderHighlights = true;
 	let rightSidebar: EditorRightSidebar;
 	let activeCommentsCount = 0;
 	let pendingCommentSelection: { artifactId: string; text: string; from: number; to: number } | null = null;
@@ -43,6 +43,7 @@
 	let conversationId = data.conversationId;
 	$: if (rightSidebar && project?.id) rightSidebar.loadComments();
 	$: if (rightSidebar) activeCommentsCount = rightSidebar.getActiveCommentsCount();
+	$: enablePlaceholderHighlights = artifacts.some((a) => a.generation_source === 'template_initial' || a.generation_source === 'template_regenerated');
 
 	function getSectionDescription(key: string): string {
 		if (!documentType.template_structure) return '';
@@ -157,7 +158,7 @@
 		</div>
 	</header>
 
-	<EditorToolbar bind:focusedEditor bind:showSearch bind:zoomLevel bind:fontSize {activeCommentsCount} isCommentsSidebarActive={showRightSidebar} on:toggleSearch={() => showSearch = !showSearch} on:toggleComments={toggleCommentsSidebar} />
+	<EditorToolbar bind:focusedEditor bind:showSearch bind:zoomLevel bind:fontSize bind:showPlaceholderHighlights {enablePlaceholderHighlights} {activeCommentsCount} isCommentsSidebarActive={showRightSidebar} on:toggleSearch={() => showSearch = !showSearch} on:toggleComments={toggleCommentsSidebar} />
 	{#if showSearch}<EditorSearchBar {editorComponents} {artifacts} {sectionElements} hasReplace={true} on:close={() => showSearch = false} on:contentChanged={handleSearchContentChanged} />{/if}
 
 	<div class="flex min-h-0 flex-1 overflow-hidden">
@@ -165,12 +166,12 @@
 			<DocumentChapterNav chapters={artifacts.map((a) => ({ id: a.id, title: a.title }))} currentIndex={currentSectionIndex} onChapterClick={(i) => scrollToSection(i)} />
 		</aside>
 
-		<div class="flex min-w-0 flex-col overflow-y-auto" role="region" aria-label="Documentinhoud" style="width: {showRightSidebar ? '60%' : '80%'};" bind:this={documentScrollContainer} on:scroll={handleScroll}>
+		<div class="flex min-w-0 flex-col overflow-y-auto" class:hide-placeholder-highlights={!showPlaceholderHighlights} role="region" aria-label="Documentinhoud" style="width: {showRightSidebar ? '60%' : '80%'};" bind:this={documentScrollContainer} on:scroll={handleScroll}>
 			<div class="document-scroll-inner mx-auto py-8" style="transform: scale({(zoomLevel / 100) * 1.25}); transform-origin: top center; --editor-font-size: {fontSize}pt;">
 				{#each artifacts as artifact, index (artifact.id)}
 					<div bind:this={sectionElements[artifact.id]} class="relative scroll-mt-4" id="section-{artifact.id}" on:focusin={() => handleEditorFocus(artifact.id)} on:mouseup={() => handleTextSelection(artifact.id)} role="none">
 						<div class="mb-3 flex items-center gap-2"><span class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">{index + 1}</span><h2 class="text-base font-semibold text-gray-900">{artifact.title}</h2></div>
-						<div class="document-paper mb-10 rounded bg-white"><TiptapEditor bind:this={editorComponents[artifact.id]} content={sectionContents[artifact.id] ?? artifact.content ?? ''} placeholder="Begin hier met het bewerken van de sectie-inhoud..." showToolbar={false} on:change={(e) => { sectionContents[artifact.id] = e.detail; sectionContents = sectionContents; }} /></div>
+						<div class="document-paper mb-10 rounded bg-white"><TiptapEditor bind:this={editorComponents[artifact.id]} content={sectionContents[artifact.id] ?? artifact.content ?? ''} placeholder="Begin hier met het bewerken van de sectie-inhoud..." showToolbar={false} {enablePlaceholderHighlights} on:change={(e) => { sectionContents[artifact.id] = e.detail; sectionContents = sectionContents; }} /></div>
 						<SelectionPopup visible={commentPopup.visible && pendingCommentSelection?.artifactId === artifact.id} y={commentPopup.y} on:aiRewrite={startAiRewrite} on:addComment={startAddComment} />
 					</div>
 				{/each}
@@ -195,4 +196,5 @@
 	.document-paper :global(.tiptap-editor-wrapper .tiptap) { padding: 60px 72px; min-height: 1123px; font-family: 'Asap', sans-serif; font-size: var(--editor-font-size, 11pt); line-height: 1.6; color: #1a1a1a; }
 	.document-paper :global(mark.search-highlight) { background-color: #fef08a; color: inherit; padding: 0; border-radius: 2px; }
 	.document-paper :global(mark.search-highlight.search-current) { background-color: #f97316; color: white; }
+	.hide-placeholder-highlights :global(span[data-placeholder-key]) { background-color: transparent !important; }
 </style>

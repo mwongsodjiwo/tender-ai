@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Editor } from '@tiptap/core';
+	import PlaceholderLegend from './PlaceholderLegend.svelte';
 
 	export let focusedEditor: Editor | null = null;
 	export let activeCommentsCount = 0;
@@ -8,6 +9,9 @@
 	export let showSearch = false;
 	export let zoomLevel = 100;
 	export let fontSize = '11';
+	export let enablePlaceholderHighlights = false;
+	export let showPlaceholderHighlights = true;
+	let showLegend = false;
 
 	const dispatch = createEventDispatcher<{ toggleSearch: void; toggleComments: void }>();
 
@@ -19,13 +23,9 @@
 		{ value: '18', label: '18pt' }
 	];
 	const FONT_FAMILIES = [
-		{ value: '', label: 'Standaard' },
-		{ value: 'Asap', label: 'Asap' },
-		{ value: 'Arial', label: 'Arial' },
-		{ value: 'Times New Roman', label: 'Times New Roman' },
-		{ value: 'Verdana', label: 'Verdana' },
-		{ value: 'Georgia', label: 'Georgia' },
-		{ value: 'Calibri', label: 'Calibri' }
+		{ value: '', label: 'Standaard' }, { value: 'Asap', label: 'Asap' }, { value: 'Arial', label: 'Arial' },
+		{ value: 'Times New Roman', label: 'Times New Roman' }, { value: 'Verdana', label: 'Verdana' },
+		{ value: 'Georgia', label: 'Georgia' }, { value: 'Calibri', label: 'Calibri' }
 	];
 
 	export const ZOOM_BASE = 1.25;
@@ -170,6 +170,18 @@
 			<span class="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-semibold text-white">{activeCommentsCount}</span>
 		{/if}
 	</button>
+	{#if enablePlaceholderHighlights}
+		<span class="toolbar-divider"></span>
+		<div class="relative">
+			<button on:click={() => { showLegend = !showLegend; }} class="toolbar-btn" class:active={showLegend} title="Legenda markeringen" aria-label="Legenda markeringen" aria-haspopup="true" aria-expanded={showLegend} type="button">
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+			</button>
+			<PlaceholderLegend visible={showLegend} />
+		</div>
+		<button on:click={() => { showPlaceholderHighlights = !showPlaceholderHighlights; }} class="toolbar-btn text-[10px] font-medium" class:active={showPlaceholderHighlights} title={showPlaceholderHighlights ? 'Markering uit' : 'Markering aan'} aria-label="Markering aan/uit" aria-pressed={showPlaceholderHighlights} type="button">
+			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+		</button>
+	{/if}
 </div>
 
 <style>
