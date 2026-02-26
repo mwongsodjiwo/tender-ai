@@ -1,16 +1,22 @@
-<!-- Template management component: upload, list, default marking, download -->
+<!-- Template management component: upload, list, default marking, download, editor -->
 <script lang="ts">
 	import type { DocumentTemplate, DocumentType } from '$types';
 	import { CPV_CATEGORY_TYPE_LABELS } from '$types';
+	import PlaceholderStatusList from './PlaceholderStatusList.svelte';
+	import TemplateCreateEditorModal from './TemplateCreateEditorModal.svelte';
+	import type { PlaceholderStatusItem } from './placeholder-status-types';
 
 	export let templates: DocumentTemplate[] = [];
 	export let documentTypes: Pick<DocumentType, 'id' | 'name' | 'slug'>[] = [];
 	export let organizationId: string;
 	export let canEdit = false;
+	export let placeholderStatus: Record<string, PlaceholderStatusItem[]> = {};
+	export let lastUploadedId = '';
 	export let onUpload: (formData: FormData) => Promise<void> = async () => {};
 	export let onDelete: (id: string) => Promise<void> = async () => {};
 	export let onSetDefault: (id: string) => Promise<void> = async () => {};
 	export let onDownload: (id: string) => void = () => {};
+	export let onCreateFromEditor: (data: { name: string; document_type_id: string; description?: string }) => Promise<void> = async () => {};
 
 	let selectedDocTypeId = '';
 	let templateName = '';
@@ -18,6 +24,8 @@
 	let isDefault = false;
 	let fileInput: HTMLInputElement;
 	let uploading = false;
+	let showCreateModal = false;
+	let creatingFromEditor = false;
 
 	async function handleUpload(): Promise<void> {
 		if (!fileInput?.files?.[0] || !selectedDocTypeId || !templateName) return;
@@ -42,6 +50,12 @@
 		templateDescription = '';
 		isDefault = false;
 		if (fileInput) fileInput.value = '';
+	}
+
+	async function handleEditorCreate(data: { name: string; document_type_id: string; description?: string }): Promise<void> {
+		creatingFromEditor = true;
+		try { await onCreateFromEditor(data); showCreateModal = false; }
+		finally { creatingFromEditor = false; }
 	}
 
 	function formatFileSize(bytes: number): string {
@@ -100,6 +114,15 @@
 				{uploading ? 'Uploaden...' : 'Uploaden'}
 			</button>
 		</form>
+
+		<button type="button" on:click={() => (showCreateModal = true)}
+			class="w-full border-dashed border-2 border-primary-300 bg-primary-50 text-primary-700 rounded-md py-3 flex items-center justify-center gap-2 text-sm font-medium hover:bg-primary-100"
+			aria-label="Nieuw sjabloon schrijven in de editor">
+			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+			</svg>
+			Nieuw sjabloon schrijven
+		</button>
 	{/if}
 
 	{#if templates.length === 0}
@@ -137,27 +160,36 @@
 								{#if template.is_default}
 									<span class="inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Standaard</span>
 								{:else if canEdit}
-									<button on:click={() => onSetDefault(template.id)} class="text-xs text-primary-600 hover:text-primary-800">
-										Maak standaard
-									</button>
+									<button on:click={() => onSetDefault(template.id)} class="text-xs text-primary-600 hover:text-primary-800">Maak standaard</button>
 								{/if}
 							</td>
 							<td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-								<button on:click={() => onDownload(template.id)}
-									class="text-primary-600 hover:text-primary-800 mr-2" aria-label="Download {template.name}">
-									Download
-								</button>
+								{#if template.content_html}
+									<a href="/settings/templates/{template.id}/edit" class="text-primary-600 hover:text-primary-800 mr-2" aria-label="Bewerk {template.name} in editor">Bewerken</a>
+								{/if}
+								{#if template.file_path}
+									<button on:click={() => onDownload(template.id)} class="text-primary-600 hover:text-primary-800 mr-2" aria-label="Download {template.name}">Download</button>
+								{/if}
 								{#if canEdit}
-									<button on:click={() => onDelete(template.id)}
-										class="text-red-600 hover:text-red-800" aria-label="Verwijder {template.name}">
-										Verwijderen
-									</button>
+									<button on:click={() => onDelete(template.id)} class="text-red-600 hover:text-red-800" aria-label="Verwijder {template.name}">Verwijderen</button>
 								{/if}
 							</td>
 						</tr>
+						{#if placeholderStatus[template.id]?.length}
+							<tr>
+								<td colspan="6" class="px-4 pb-3">
+									<PlaceholderStatusList items={placeholderStatus[template.id]} expanded={template.id === lastUploadedId} />
+								</td>
+							</tr>
+						{/if}
 					{/each}
 				</tbody>
 			</table>
 		</div>
 	{/if}
 </div>
+
+{#if showCreateModal}
+	<TemplateCreateEditorModal {documentTypes} loading={creatingFromEditor}
+		onConfirm={handleEditorCreate} onCancel={() => (showCreateModal = false)} />
+{/if}

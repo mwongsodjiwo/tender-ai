@@ -1,6 +1,7 @@
 <!-- Template management settings page -->
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { toasts } from '$stores/toast';
 	import type { PageData } from './$types';
 	import SettingsTemplatesTab from '$components/settings/SettingsTemplatesTab.svelte';
 
@@ -8,6 +9,7 @@
 
 	let errorMessage = '';
 	let successMessage = '';
+	let lastUploadedId = '';
 
 	function clearMessages(): void {
 		errorMessage = '';
@@ -16,6 +18,7 @@
 
 	async function handleUpload(formData: FormData): Promise<void> {
 		clearMessages();
+		lastUploadedId = '';
 		try {
 			const res = await fetch('/api/templates', { method: 'POST', body: formData });
 			if (!res.ok) {
@@ -23,6 +26,8 @@
 				errorMessage = json.message ?? 'Upload mislukt';
 				return;
 			}
+			const json = await res.json();
+			lastUploadedId = json.data?.id ?? '';
 			successMessage = 'Sjabloon succesvol geüpload.';
 			await invalidateAll();
 		} catch { errorMessage = 'Netwerkfout. Probeer het opnieuw.'; }
@@ -62,6 +67,33 @@
 
 	function handleDownload(id: string): void {
 		window.open(`/api/templates/${id}`, '_blank');
+	}
+
+	async function handleCreateFromEditor(formValues: { name: string; document_type_id: string; description?: string }): Promise<void> {
+		clearMessages();
+		try {
+			const res = await fetch('/api/templates', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					organization_id: data.organization!.id,
+					document_type_id: formValues.document_type_id,
+					name: formValues.name,
+					description: formValues.description ?? null,
+					content_html: '<p></p>'
+				})
+			});
+			if (!res.ok) {
+				const json = await res.json();
+				toasts.add(json.message ?? 'Aanmaken mislukt', 'error');
+				return;
+			}
+			const json = await res.json();
+			const id = json.data?.id;
+			if (id) await goto(`/settings/templates/${id}/edit`);
+		} catch {
+			toasts.add('Netwerkfout. Probeer het opnieuw.', 'error');
+		}
 	}
 </script>
 
@@ -106,10 +138,13 @@
 			documentTypes={data.documentTypes}
 			organizationId={data.organization.id}
 			canEdit={data.canEdit}
+			placeholderStatus={data.placeholderStatus}
+			{lastUploadedId}
 			onUpload={handleUpload}
 			onDelete={handleDelete}
 			onSetDefault={handleSetDefault}
 			onDownload={handleDownload}
+			onCreateFromEditor={handleCreateFromEditor}
 		/>
 	{/if}
 </div>
