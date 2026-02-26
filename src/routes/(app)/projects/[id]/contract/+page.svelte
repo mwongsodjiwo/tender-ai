@@ -148,7 +148,7 @@
 		</div>
 	</header>
 
-	<EditorToolbar bind:focusedEditor bind:showSearch bind:zoomLevel bind:fontSize {activeCommentsCount} isCommentsSidebarActive={showRightSidebar} on:toggleSearch={() => showSearch = !showSearch} on:toggleComments={toggleCommentsSidebar} />
+	<EditorToolbar bind:focusedEditor bind:showSearch bind:zoomLevel {activeCommentsCount} isCommentsSidebarActive={showRightSidebar} on:toggleSearch={() => showSearch = !showSearch} on:toggleComments={toggleCommentsSidebar} />
 	{#if showSearch}<EditorSearchBar {editorComponents} {artifacts} {sectionElements} hasReplace={false} on:close={() => showSearch = false} />{/if}
 
 	<div class="flex min-h-0 flex-1 overflow-hidden">

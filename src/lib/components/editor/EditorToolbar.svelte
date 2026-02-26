@@ -2,55 +2,47 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Editor } from '@tiptap/core';
 	import PlaceholderLegend from './PlaceholderLegend.svelte';
+	import FontPicker from './FontPicker.svelte';
+	import FontSizePicker from './FontSizePicker.svelte';
+	import ColorPicker from './ColorPicker.svelte';
 
 	export let focusedEditor: Editor | null = null;
 	export let activeCommentsCount = 0;
 	export let isCommentsSidebarActive = false;
 	export let showSearch = false;
 	export let zoomLevel = 100;
-	export let fontSize = '11';
 	export let enablePlaceholderHighlights = false;
 	export let showPlaceholderHighlights = true;
 	let showLegend = false;
 
 	const dispatch = createEventDispatcher<{ toggleSearch: void; toggleComments: void }>();
-
 	const ZOOM_LEVELS = [75, 90, 100, 110, 125, 150];
-	const FONT_SIZES = [
-		{ value: '9', label: '9pt' }, { value: '10', label: '10pt' },
-		{ value: '11', label: '11pt' }, { value: '12', label: '12pt' },
-		{ value: '14', label: '14pt' }, { value: '16', label: '16pt' },
-		{ value: '18', label: '18pt' }
-	];
-	const FONT_FAMILIES = [
-		{ value: '', label: 'Standaard' }, { value: 'Asap', label: 'Asap' }, { value: 'Arial', label: 'Arial' },
-		{ value: 'Times New Roman', label: 'Times New Roman' }, { value: 'Verdana', label: 'Verdana' },
-		{ value: 'Georgia', label: 'Georgia' }, { value: 'Calibri', label: 'Calibri' }
-	];
-
 	export const ZOOM_BASE = 1.25;
 
-	let isBold = false; let isItalic = false; let isStrike = false;
+	let isBold = false; let isItalic = false; let isUnderline = false; let isStrike = false;
 	let isBulletList = false; let isOrderedList = false; let isBlockquote = false;
 	let headingLevel: number | null = null;
 	let isInTable = false; let showTableMenu = false;
-	let activeFontFamily = '';
+	let activeAlign = 'left';
 
 	function updateToolbar(editor: Editor | null) {
 		if (!editor) {
-			isBold = isItalic = isStrike = isBulletList = isOrderedList = isBlockquote = isInTable = false;
-			headingLevel = null;
-			activeFontFamily = '';
+			isBold = isItalic = isUnderline = isStrike = false;
+			isBulletList = isOrderedList = isBlockquote = isInTable = false;
+			headingLevel = null; activeAlign = 'left';
 			return;
 		}
 		isBold = editor.isActive('bold');
 		isItalic = editor.isActive('italic');
+		isUnderline = editor.isActive('underline');
 		isStrike = editor.isActive('strike');
 		isBulletList = editor.isActive('bulletList');
 		isOrderedList = editor.isActive('orderedList');
 		isBlockquote = editor.isActive('blockquote');
 		isInTable = editor.isActive('table');
-		activeFontFamily = (editor.getAttributes('textStyle').fontFamily as string) ?? '';
+		activeAlign = editor.isActive({ textAlign: 'center' }) ? 'center'
+			: editor.isActive({ textAlign: 'right' }) ? 'right'
+			: editor.isActive({ textAlign: 'justify' }) ? 'justify' : 'left';
 		headingLevel = editor.isActive('heading', { level: 1 }) ? 1
 			: editor.isActive('heading', { level: 2 }) ? 2
 			: editor.isActive('heading', { level: 3 }) ? 3 : null;
@@ -68,6 +60,7 @@
 		const c = focusedEditor.chain().focus();
 		if (action === 'bold') c.toggleBold().run();
 		else if (action === 'italic') c.toggleItalic().run();
+		else if (action === 'underline') c.toggleUnderline().run();
 		else if (action === 'strike') c.toggleStrike().run();
 		else if (action === 'bulletList') c.toggleBulletList().run();
 		else if (action === 'orderedList') c.toggleOrderedList().run();
@@ -90,10 +83,9 @@
 		else focusedEditor.chain().focus().toggleHeading({ level: Number(val) as 1 | 2 | 3 }).run();
 	}
 
-	function setFontFamily(val: string) {
+	function setAlign(align: string) {
 		if (!focusedEditor) return;
-		if (!val) focusedEditor.chain().focus().unsetFontFamily().run();
-		else focusedEditor.chain().focus().setFontFamily(val).run();
+		focusedEditor.chain().focus().setTextAlign(align).run();
 	}
 
 	function zoomIn() { const i = ZOOM_LEVELS.indexOf(zoomLevel); if (i < ZOOM_LEVELS.length - 1) zoomLevel = ZOOM_LEVELS[i + 1]; }
@@ -107,15 +99,27 @@
 
 	<select on:change={(e) => setHeading((e.target as HTMLSelectElement).value)} value={headingLevel ? String(headingLevel) : 'p'} class="toolbar-select" title="Tekststijl" aria-label="Tekststijl" disabled={!focusedEditor}>
 		<option value="p">Paragraaf</option>
-		<option value="1">Kop 1</option>
-		<option value="2">Kop 2</option>
-		<option value="3">Kop 3</option>
+		<option value="1">Kop 1</option><option value="2">Kop 2</option><option value="3">Kop 3</option>
 	</select>
+	<span class="toolbar-divider"></span>
+
+	<FontPicker editor={focusedEditor} />
+	<FontSizePicker editor={focusedEditor} />
 	<span class="toolbar-divider"></span>
 
 	<button on:click={() => cmd('bold')} class="toolbar-btn" class:active={isBold} title="Vet (Ctrl+B)" aria-label="Vet" aria-pressed={isBold} type="button" disabled={!focusedEditor}><span class="text-sm font-semibold">B</span></button>
 	<button on:click={() => cmd('italic')} class="toolbar-btn" class:active={isItalic} title="Cursief (Ctrl+I)" aria-label="Cursief" aria-pressed={isItalic} type="button" disabled={!focusedEditor}><span class="text-sm italic">I</span></button>
+	<button on:click={() => cmd('underline')} class="toolbar-btn" class:active={isUnderline} title="Onderstrepen (Ctrl+U)" aria-label="Onderstrepen" aria-pressed={isUnderline} type="button" disabled={!focusedEditor}><span class="text-sm underline">U</span></button>
 	<button on:click={() => cmd('strike')} class="toolbar-btn" class:active={isStrike} title="Doorhalen" aria-label="Doorhalen" aria-pressed={isStrike} type="button" disabled={!focusedEditor}><span class="text-sm line-through">S</span></button>
+	<span class="toolbar-divider"></span>
+
+	<ColorPicker editor={focusedEditor} />
+	<span class="toolbar-divider"></span>
+
+	<button on:click={() => setAlign('left')} class="toolbar-btn" class:active={activeAlign === 'left'} title="Links uitlijnen" aria-label="Links uitlijnen" aria-pressed={activeAlign === 'left'} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M3 10h12M3 14h18M3 18h12" /></svg></button>
+	<button on:click={() => setAlign('center')} class="toolbar-btn" class:active={activeAlign === 'center'} title="Centreren" aria-label="Centreren" aria-pressed={activeAlign === 'center'} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M6 10h12M3 14h18M6 18h12" /></svg></button>
+	<button on:click={() => setAlign('right')} class="toolbar-btn" class:active={activeAlign === 'right'} title="Rechts uitlijnen" aria-label="Rechts uitlijnen" aria-pressed={activeAlign === 'right'} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M9 10h12M3 14h18M9 18h12" /></svg></button>
+	<button on:click={() => setAlign('justify')} class="toolbar-btn" class:active={activeAlign === 'justify'} title="Uitvullen" aria-label="Uitvullen" aria-pressed={activeAlign === 'justify'} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 6h18M3 10h18M3 14h18M3 18h18" /></svg></button>
 	<span class="toolbar-divider"></span>
 
 	<button on:click={() => cmd('bulletList')} class="toolbar-btn" class:active={isBulletList} title="Opsommingslijst" aria-label="Opsommingslijst" aria-pressed={isBulletList} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
@@ -126,14 +130,7 @@
 	<div class="relative">
 		<button on:click={() => { if (isInTable) showTableMenu = !showTableMenu; else cmd('insertTable'); }} class="toolbar-btn" class:active={isInTable} title={isInTable ? 'Tabelopties' : 'Tabel invoegen'} aria-label={isInTable ? 'Tabelopties' : 'Tabel invoegen'} aria-expanded={isInTable ? showTableMenu : undefined} aria-haspopup={isInTable ? 'menu' : undefined} type="button" disabled={!focusedEditor}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" /></svg></button>
 		{#if showTableMenu && isInTable}
-			<div
-				class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
-				role="menu"
-				tabindex="-1"
-				aria-label="Tabelopties"
-				on:mouseleave={() => { showTableMenu = false; }}
-				on:keydown={(e) => { if (e.key === 'Escape') { showTableMenu = false; } }}
-			>
+			<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg" role="menu" tabindex="-1" aria-label="Tabelopties" on:mouseleave={() => { showTableMenu = false; }} on:keydown={(e) => { if (e.key === 'Escape') showTableMenu = false; }}>
 				<button on:click={() => { cmd('addColBefore'); showTableMenu = false; }} class="table-menu-btn" type="button" role="menuitem">Kolom links invoegen</button>
 				<button on:click={() => { cmd('addColAfter'); showTableMenu = false; }} class="table-menu-btn" type="button" role="menuitem">Kolom rechts invoegen</button>
 				<button on:click={() => { cmd('deleteCol'); showTableMenu = false; }} class="table-menu-btn text-error-600" type="button" role="menuitem">Kolom verwijderen</button>
@@ -146,14 +143,6 @@
 			</div>
 		{/if}
 	</div>
-	<span class="toolbar-divider"></span>
-
-	<select on:change={(e) => setFontFamily((e.target as HTMLSelectElement).value)} value={activeFontFamily} class="toolbar-select" title="Lettertype" aria-label="Lettertype" disabled={!focusedEditor}>
-		{#each FONT_FAMILIES as font}<option value={font.value}>{font.label}</option>{/each}
-	</select>
-	<select bind:value={fontSize} class="toolbar-select" title="Lettergrootte" aria-label="Lettergrootte">
-		{#each FONT_SIZES as size}<option value={size.value}>{size.label}</option>{/each}
-	</select>
 	<span class="toolbar-divider"></span>
 
 	<button on:click={zoomOut} class="toolbar-btn" title="Uitzoomen" aria-label="Uitzoomen" type="button" disabled={zoomLevel <= ZOOM_LEVELS[0]}><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" /></svg></button>

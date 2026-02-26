@@ -148,7 +148,7 @@
 <div class="fixed inset-0 z-[60] flex flex-col bg-[#F5F5F5]">
 	<LetterPreview {letterTitle} status={letter.status} phase={letter.phase} sentAt={letter.sent_at} {saveError} {saveMessage} {isEditable} {saving} {updatingStatus} on:save={saveLetter} on:updateStatus={updateStatus} />
 
-	<EditorToolbar bind:focusedEditor bind:zoomLevel bind:fontSize showSearch={false} activeCommentsCount={0} isCommentsSidebarActive={false} on:toggleSearch={() => {}} on:toggleComments={() => {}} />
+	<EditorToolbar bind:focusedEditor bind:zoomLevel showSearch={false} activeCommentsCount={0} isCommentsSidebarActive={false} on:toggleSearch={() => {}} on:toggleComments={() => {}} />
 
 	<LetterActions letterStatus={letter.status} {projectProfile} {needsEvaluation} {evaluations} {hasContent} {generating} {generateError} on:generate={generateWithAI} />
 
